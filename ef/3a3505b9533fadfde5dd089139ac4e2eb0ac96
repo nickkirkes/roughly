@@ -1,0 +1,36 @@
+docs/plans/E03-S5-tooling-pitfalls-plan.md
+  35d000a02216df41 1-61
+CONTRIBUTING.md
+  s_35d000a02216df::t_6c65bf49f62324 50-53,61-68,70
+  s_35d000a02216df::t_c1ecff8547926a 69
+  s_35d000a02216df::t_585826310deb61 54-60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "ef3a3505b9533fadfde5dd089139ac4e2eb0ac96",
+  "prompts": {
+    "35d000a02216df41": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "36100e4a-2199-42af-955d-314e6735140c",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>",
+      "total_additions": 61,
+      "total_deletions": 0,
+      "accepted_lines": 61,
+      "overriden_lines": 0
+    }
+  },
+  "sessions": {
+    "s_35d000a02216df": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "36100e4a-2199-42af-955d-314e6735140c",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
