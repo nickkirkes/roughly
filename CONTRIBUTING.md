@@ -47,6 +47,27 @@ All conventions are documented in [CLAUDE.md](CLAUDE.md). The key ones:
 - Templates: use `{{PLACEHOLDER}}` markers — never hardcode project-specific values
 - Maturity check IDs must be versioned (e.g., `investigator-v1`)
 
+## Tooling Pitfalls
+
+Bulk replacement of a token silently corrupts code when the same token serves dual semantic roles in one file — for example, user-facing prose AND a legacy detector that intentionally references the old name. The replace succeeds, the build passes, and the detector becomes a no-op no one notices.
+
+At-risk tools:
+
+- `Edit` with `replace_all: true`
+- `sed -i` (and any non-interactive stream replace)
+- IDE find/replace ("replace all in file")
+
+Each rewrites every match in one pass with no per-site review.
+
+Worked example: `.claude/hooks/verify-all.sh`. During the `ruckus` → `roughly` migration, the intent was to update user-facing comment prose at lines 2 and 11. A single `replace_all: true` edit also rewrote the legacy drift detector at lines 17–19 — the comment, the `rg` pattern, and the error string all flipped from `.ruckus/known-pitfalls` to `.roughly/known-pitfalls`. The detector was designed to catch stale references to the *old* path; after the bulk replace it hunted for the *current* path and would never fire. Surgical `Edit` calls scoped by surrounding context restored the legacy lines.
+
+Before any bulk replace, scan the file for occurrences where the OLD form is intentional — legacy detectors, migration-context strings, "renamed FROM X" prose — and use targeted `Edit` calls per site instead. Verify with two greps that should match expectations exactly:
+
+- `rg -nw 'ruckus' .claude/hooks/verify-all.sh` should return 3 matches at lines 17, 18, 19 (legacy detector lines that MUST retain `ruckus`)
+- `rg -nw 'roughly' .claude/hooks/verify-all.sh` should return 2 matches at lines 2 and 11 (user-facing prose, legitimately renamed)
+
+New pitfalls discovered during a build are recorded in `.roughly/known-pitfalls.md` — the runtime catalog the build pipeline updates at wrap-up when a contributor confirms a new one.
+
 ## Testing
 
 There is no automated test suite — this is pure markdown. To verify changes:
