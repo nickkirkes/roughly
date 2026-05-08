@@ -6,6 +6,9 @@ on:
       - main
   pull_request:
 
+env:
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
 jobs:
   dogfood-build-cycle:
     runs-on: ubuntu-latest
@@ -17,5 +20,3 @@ jobs:
 
       - name: Run dogfood scaffolding
         run: bash scripts/ci-dogfood.sh
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
