@@ -59,7 +59,7 @@ PM handoff: detail level sufficient for an epic-writing agent to expand into sto
 3. **Retire test-verify-v1 and pitfalls-organized-v1.** ✅ Done — triggers folded into doc-writer's known-pitfalls write path (E03.S3).
 4. **Pre-flight migration check in remaining 2 skills** (currently 6/9, upgrade excluded by design). ✅ Done — landed in E03.S4.
 5. **Document Edit `replace_all` dual-semantic-token failure** in CONTRIBUTING.md. Prose-only.
-6. **Plan-format version field.** Added now, read in v0.2.0.
+6. **Plan-format version field.** Added now, read in v0.2.0. ✅ Done — landed in E03.S6.
 
 ### Ergonomics
 7. **In-session maturity offers at Stage 1**, not just Stage 8 wrap-up.

@@ -1,6 +1,6 @@
 # E03 — Trust hardening + ergonomics + CI
 
-**Status:** In Progress (6/16 stories complete — E03.S0 spike merged 2026-05-01 via PR #24; E03.S1 merged 2026-05-02 via PR #25; E03.S3 merged 2026-05-04 via PR #26; E03.S2 merged 2026-05-06 via PR #27 (24 commits); E03.S5 merged 2026-05-07 via PR #28; E03.S4 merged 2026-05-07 via PR #29 (`b3a6750`, 2 commits). Trust-hardening cluster now 6/7 done (S0/S1/S2/S3/S4/S5); remaining: **S6 plan-format version field**. Maturity-check loop reduced from 5 → 3 active checks; `stop-hook-v1` is now an installing offer rather than a no-op. Pre-flight migration check now lives in 8 skills (upgrade is the migration target, excluded by design; setup uses an intentional soft-abort form). New deferred-investigations catalog seeded with DI-001 (Stage 6 review-depth observation). [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) at 66/80 lines.)
+**Status:** In Progress (7/16 stories complete — **trust-hardening cluster 7/7 DONE**: S0 PR #24, S1 PR #25, S3 PR #26, S2 PR #27, S5 PR #28, S4 PR #29, S6 PR #30 (`b22144f`, merged 2026-05-08). Maturity-check loop reduced from 5 → 3 active checks; `stop-hook-v1` is now an installing offer rather than a no-op. Pre-flight migration check now lives in 8 skills (upgrade excluded by design; setup uses an intentional soft-abort form). Plan-format version marker `Plan-format-version: 1` now emitted by build/fix Stage 3 templates — forward-compat for v0.2.0's plan-format-v2 migration. New deferred-investigations catalog seeded with DI-001. Remaining v0.1.5 scope: **ergonomics** (S8, S9, S10), **CI** (S11a, S11b-1, S11b-2), **docs** (S12.0, S12a, S12b). [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) at 66/80; [skills/fix/SKILL.md](../../../skills/fix/SKILL.md) at 299/300 — binding line-cap constraint for any future fix-touching story.)
 **Target version:** v0.1.5
 **Target effort:** 6-7 wk
 **Dependencies:** E01 (pipeline foundation, audit follow-up shipped v0.1.3); E02 (rename to `roughly` shipped v0.1.4 — namespace, dotdir, version-line identifier all assumed in place)
@@ -40,6 +40,8 @@ Scope is frozen. Items surfaced during epic writing that are clearly related but
    **Status update (2026-05-04, post-S3):** Risk substantially reduced. S1 was substitution-only (L11; counts preserved at 296/299). S3 deleted two maturity-check blocks: build is now 288/300 (12 lines headroom) and fix 291/300 (9 lines). Remaining additive stories (S2, S6, S9, S10) have meaningful room to operate without invoking the budget contract's prose-extraction off-ramp. Risk does not close — additive cumulative pressure from 4 more stories could still force extraction — but is no longer immediate.
 
    **Status update (2026-05-06, post-S2):** Risk re-tightens but stays open. S2 added 6 lines to build (288 → 294) and 6 lines to fix (291 → 297) for the restructured Stage 8 stop-hook-v1 block. Headroom now: build 6/300, fix 3/300. [skills/setup/SKILL.md](../../../skills/setup/SKILL.md) grew from 213 to 287 (still under 300, but a 74-line jump). Remaining additive stories on build/fix are S6 (forward-compat single-line addition), S9 (abort prose sweep — extraction likely), S10 (retry-loop tuning — surgical edits, possibly net-zero). S9 is the most likely to invoke the budget contract's prose-extraction off-ramp. The line-cap pressure now applies to setup as well as build/fix.
+
+   **Status update (2026-05-08, post-S6):** Binding constraint reached on fix. S6 added 2 lines to each of build (294 → 296) and fix (297 → 299) for the `Plan-format-version: 1` marker. Headroom now: build 4/300, **fix 1/300**. Any S9 or S10 net-positive change to fix must invoke the prose-extraction off-ramp; in practice this means S9's abort-prose sweep should extract before adding, or operate via substitution. S10 is the lower-risk path (surgical edits, possibly net-zero per its current ACs). Risk does not close until S9/S10 land without breach.
 
 7. **CI cost.** A full `/roughly:build` cycle in CI invokes Sonnet for orchestration, investigator, plan-reviewer, three parallel review agents, spec-reviewer per task, and code-reviewer at Stage 6. A single happy-path run is plausibly 100K+ Sonnet tokens; at ~100 PR pushes per release cycle, this is non-trivial spend. Risk: CI becomes a hidden release-cost driver; mitigated by S11b-2's minimal-task fixture and explicit token-budget AC.
 
@@ -432,35 +434,55 @@ Code-level defense is explicitly deferred per the roadmap's "Deferred" section (
 #### E03.S6: Plan-format version field
 
 **Maps to roadmap item:** #6
+**Status:** Complete on `feat/E03.S6-plan-format-version-field`; merged 2026-05-08 via PR #30 (`b22144f`, squashed from local commit `57f78f3`). All 6 ACs met. Net behavioral delta: +6 lines across 3 files (build +2, fix +2, CHANGELOG +2). **Closes the trust-hardening cluster (7/7 done).** Greppability confirmed: `rg '^Plan-format-version:'` returns 2 matches (build:50, fix:63), both with value `1`; byte-identical hex dumps confirmed during review.
 
-**Files touched:**
-- [skills/build/SKILL.md](../../skills/build/SKILL.md) — Stage 3 plan template
-- [skills/fix/SKILL.md](../../skills/fix/SKILL.md) — Stage 3 plan template
-- (Possibly) [skills/build/spec-reviewer-prompt.md](../../skills/build/spec-reviewer-prompt.md) reference copy — for sync only, not behavior
+**Files delivered:**
+
+Modified:
+- [skills/build/SKILL.md](../../../skills/build/SKILL.md) — 294 → 296 lines (+2). Marker inserted at L50 between `# Implementation Plan: [feature name]` title and `## File Table` section.
+- [skills/fix/SKILL.md](../../../skills/fix/SKILL.md) — 297 → 299 lines (+2). Marker inserted at L63 between `# Fix Plan: [issue ID or short description]` title and `## Root Cause` section. **Now at 299/300 — binding line-cap constraint going forward.**
+- [CHANGELOG.md](../../../CHANGELOG.md) — S6 bullet prepended at top of `[Unreleased]` v0.1.5 Added section.
+
+New:
+- `docs/plans/E03-S6-plan-format-version-field-plan.md` — implementation plan, bundled per project convention.
+
+**Deliberately NOT modified:**
+- [skills/review-plan/SKILL.md](../../../skills/review-plan/SKILL.md) — AC3 requires no parsing/branching on the field in v0.1.5. Verified zero matches for `Plan-format-version|format-version|format_version`.
+- [skills/build/spec-reviewer-prompt.md](../../../skills/build/spec-reviewer-prompt.md) and [skills/build/implementer-prompt.md](../../../skills/build/implementer-prompt.md) — these reference copies do not reproduce the plan template (only task-variable placeholders). AC4's sync requirement is vacuously satisfied — confirmed by direct inspection during discovery and re-confirmed in plan review.
+- 14 historical plan files in [docs/plans/](../../plans/) — not back-filled. v0.2.0 migration handles their absence of the field as "pre-v1".
 
 **Context:**
 
-v0.2.0 will introduce plan format v2 (complexity flag, ADR-009). v0.1.5 adds a forward-compat version line so v0.2.0's migration step can detect existing plans by version. **review-plan does NOT consume the field in v0.1.5** — that's v0.2.0's job. The field exists; nothing reads it yet.
+v0.2.0 will introduce plan format v2 (complexity flag, **ADR-010** — bumped from ADR-009 to make room for S1's plan-mode detection ADR). v0.1.5 adds a forward-compat version line so v0.2.0's migration step can detect existing plans by version. **review-plan does NOT consume the field in v0.1.5** — that's v0.2.0's job. The field exists; nothing reads it yet.
+
+**Format details (for downstream tooling):**
+- Exact text: `Plan-format-version: 1` (capital P, hyphenated, colon + single space, value `1`)
+- Position: markdown body line inside the ` ```markdown ` fenced code block of each skill's Stage 3 plan template, with one blank line above and below — matching the precedent already in `docs/plans/E03-S0-plan-mode-detection-spike-plan.md`
+- Style: single-line key-value, no YAML frontmatter delimiters, no HTML comment, no trailing whitespace. Mirrors `.roughly/workflow-upgrades` style intentionally.
+- Greppability: `rg '^Plan-format-version:'` returns 2 matches (build:50, fix:63), both with value `1`. Byte-identical hex dumps confirmed during review.
 
 **Acceptance criteria:**
-- [ ] Plan template in [skills/build/SKILL.md](../../skills/build/SKILL.md) Stage 3 includes a `Plan-format-version: 1` line as a markdown body line, placed between the `# Implementation Plan: [feature name]` title and the `## File Table` section. Format mirrors `.roughly/workflow-upgrades` style (single-line key-value, no frontmatter delimiters, no HTML comment) so a future migration step can grep for it with `rg '^Plan-format-version:'`
-- [ ] Plan template in [skills/fix/SKILL.md](../../skills/fix/SKILL.md) Stage 3 includes the same line in the same position
-- [ ] [skills/review-plan/SKILL.md](../../skills/review-plan/SKILL.md) is unchanged — it does not validate, parse, or branch on the version field in v0.1.5
-- [ ] The template change is reflected in spec-reviewer prompt reference copies (no runtime impact)
-- [ ] No new ADR for the version field itself — the plan-format-v2 ADR (now **ADR-010**, bumped from ADR-009 to make room for S1's plan-mode detection ADR) lands in v0.2.0 per roadmap and folds the version-field rationale in
-- [ ] Documentation (CHANGELOG entry under "Added") notes the field is forward-compat only
+- [x] Plan template in [skills/build/SKILL.md](../../../skills/build/SKILL.md) Stage 3 includes `Plan-format-version: 1` as a markdown body line at L50, between the title and `## File Table`. Format mirrors `.roughly/workflow-upgrades` style; greppable with `rg '^Plan-format-version:'`.
+- [x] Plan template in [skills/fix/SKILL.md](../../../skills/fix/SKILL.md) Stage 3 includes the same line at L63, between the title and `## Root Cause`.
+- [x] [skills/review-plan/SKILL.md](../../../skills/review-plan/SKILL.md) unchanged — does not validate, parse, or branch on the version field in v0.1.5 (verified zero matches).
+- [x] Spec-reviewer/implementer reference copies do not reproduce the plan template — sync requirement is vacuously satisfied.
+- [x] No new ADR for the version field itself — plan-format-v2 ADR (now ADR-010) lands in v0.2.0 and folds the rationale in.
+- [x] CHANGELOG entry under "Added" notes the field is forward-compat only.
 
-**Verification:**
-- Dogfood `/roughly:build`; confirm generated plan file at `docs/plans/<name>-plan.md` has `Plan-format-version: 1` near the top
-- Dogfood `/roughly:fix`; same
-- `rg -n 'Plan-format-version' skills/review-plan/SKILL.md` returns no matches (review-plan doesn't consume the field)
+**Verification (delivered):**
+- review-plan subagent: PASS at iteration 1 (0 concerns / 0 blockers).
+- Three-agent code review: code-reviewer 0 critical / 0 warning / 1 info (non-blocking); static-analysis 10/10 PASS; silent-failure-hunter PASS.
+- `bash .claude/hooks/verify-all.sh` → exit 0.
+- `cubic review --json` → clean on first pass.
+- Maturity checks at wrap-up: all 5 inactive (no upgrades to offer); CLAUDE.md quality OK; pitfalls 66/80; investigator-v1 + stop-hook-v1 already added.
+- No pitfalls captured during S6 wrap-up — build was smooth, no recurring traps surfaced.
 
-**Dependencies:** None. Lands early so v0.2.0 work can begin parallel.
+**Dependencies:** None.
 
 **Out of scope:**
-- Any logic that reads or validates the version field
-- Migration of existing plans in `docs/plans/` to add the field (those are historical artifacts)
-- ADR for the field itself (folded into ADR-009 in v0.2.0)
+- Any logic that reads or validates the version field — v0.2.0
+- Migration of existing plans in [docs/plans/](../../plans/) to add the field (historical artifacts; v0.2.0 migration handles their absence as "pre-v1")
+- ADR for the field itself (folded into ADR-010 in v0.2.0)
 
 ---
 
@@ -881,7 +903,7 @@ Order is by dependency, not roadmap item number.
 | 3 | **E03.S1** (plan-mode auto-detect/exit) ✅ | Highest-value item; unblocks safe CI dogfood runs. Merged 2026-05-02 via PR #25 (`c598ef6`) with follow-up fixes through 2026-05-03. ADR-009 authoritative. |
 | 4 | **E03.S11b-1** (CLI plumbing smoke test) | Proves auth + CLI plumbing in CI before subsequent prose-touching stories land |
 | 5 | **E03.S12.0** (resolve roughly.dev source location) | Gates S12a/S12b; ½-day decision |
-| 6 | **E03.S6** (plan-format version field) | Additive, low-risk; lands next so v0.2.0 work can begin parallel |
+| 6 | **E03.S6** (plan-format version field) ✅ | Additive, low-risk. Merged 2026-05-08 via PR #30 (`b22144f`, squash from `57f78f3`). Closes trust-hardening cluster (7/7). +2 lines each to build (294→296) and fix (297→299). Fix now at binding 1-line headroom. v0.2.0's ADR-010 plan-format-v2 work unblocked. |
 | 7 | **E03.S5** (CONTRIBUTING prose) ✅ | Independent, prose-only. Merged 2026-05-07 via PR #28 (`b58f4bd`, 2 commits). Section landed at 20 content lines; self-verification holds against live verify-all.sh. |
 | 8 | **E03.S4** (pre-flight in audit-epic + verify-all) ✅ | Independent of pipeline changes. Merged 2026-05-07 via PR #29 (`b3a6750`, 2 commits). Pre-flight now in 8 skills; setup's soft-abort form intentionally retained (recorded in known-pitfalls.md to prevent future "drift fix"). Audit-epic 141, verify-all 80. |
 | 9 | **E03.S3** (retire test-verify-v1 / pitfalls-organized-v1) ✅ | Folds triggers into doc-writer; doesn't break anything. Merged 2026-05-04 ahead of original sequence position — landed before S11a/S11b-1/S12.0/S6/S5/S4. Build/fix line counts now 288/291 (12 and 9 lines headroom). Stage 8 maturity-check loop reduced to 3 active checks. |
