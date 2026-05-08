@@ -109,7 +109,7 @@ Run from the plugin repo root, ideally from a clean working tree. The script ass
 
 CI cost is a non-trivial release-cost driver at high PR push frequency — flag for monitoring.
 
-**Auth.** Requires the `ANTHROPIC_API_KEY` repo secret (Settings → Secrets and variables → Actions). The S11a stub does not consume it; the env is plumbed at the workflow level so S11b-1 inherits without scaffolding changes.
+**Auth.** Requires the `ANTHROPIC_API_KEY` repo secret (Settings → Secrets and variables → Actions). The S11a stub does not consume it; the env is scoped to the step that runs the script — narrowly, by design, to keep secret exposure on a least-privilege basis. S11b-1 will add its own step-level `env:` mapping when it consumes the secret.
 
 ## License
 
