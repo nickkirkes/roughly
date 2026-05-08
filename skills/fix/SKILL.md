@@ -60,6 +60,8 @@ Using the investigation report, write a fix plan. Same format as `/roughly:build
 ```markdown
 # Fix Plan: [issue ID or short description]
 
+Plan-format-version: 1
+
 ## Root Cause
 [One paragraph explaining why the bug exists]
 

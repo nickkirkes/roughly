@@ -47,6 +47,8 @@ Using the discovery report, write an implementation plan. The plan MUST be struc
 ```markdown
 # Implementation Plan: [feature name]
 
+Plan-format-version: 1
+
 ## File Table
 | File | Action | Task(s) |
 |------|--------|---------|
