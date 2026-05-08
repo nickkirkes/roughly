@@ -1,0 +1,19 @@
+CONTRIBUTING.md
+  s_9efe68f5e747b0::t_d95e86eeaac7e6 102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "743cbea08b37283771c1432b828e0d44da1e477e",
+  "prompts": {},
+  "sessions": {
+    "s_9efe68f5e747b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "348509c4-9179-42e7-985a-900f042b1537",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
