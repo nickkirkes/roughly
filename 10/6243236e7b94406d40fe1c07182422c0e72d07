@@ -1,0 +1,27 @@
+skills/verify-all/SKILL.md
+  s_8973f32eedb60c::t_cc4f45181eb4b5 15-16
+docs/ROADMAP.md
+  s_8973f32eedb60c::t_e60efb1ee19b81 60
+docs/plans/E03-S4-pre-flight-migration-check-plan.md
+  s_8973f32eedb60c::t_f19d20f02a2da1 1-75,77,82-84,87-104
+  s_8973f32eedb60c::t_66eac1661c8360 76,78-81,85-86
+  s_8973f32eedb60c::t_f4c64597a88e10 105
+skills/audit-epic/SKILL.md
+  s_8973f32eedb60c::t_4e28b049d7c4b4 19-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "106243236e7b94406d40fe1c07182422c0e72d07",
+  "prompts": {},
+  "sessions": {
+    "s_8973f32eedb60c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e4306923-0bc9-43f5-ab9a-cae1a437e653",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
