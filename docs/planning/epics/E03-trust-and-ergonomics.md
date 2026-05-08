@@ -1,6 +1,6 @@
 # E03 — Trust hardening + ergonomics + CI
 
-**Status:** In Progress (7/16 stories complete — **trust-hardening cluster 7/7 DONE**: S0 PR #24, S1 PR #25, S3 PR #26, S2 PR #27, S5 PR #28, S4 PR #29, S6 PR #30 (`b22144f`, merged 2026-05-08). Maturity-check loop reduced from 5 → 3 active checks; `stop-hook-v1` is now an installing offer rather than a no-op. Pre-flight migration check now lives in 8 skills (upgrade excluded by design; setup uses an intentional soft-abort form). Plan-format version marker `Plan-format-version: 1` now emitted by build/fix Stage 3 templates — forward-compat for v0.2.0's plan-format-v2 migration. New deferred-investigations catalog seeded with DI-001. Remaining v0.1.5 scope: **ergonomics** (S8, S9, S10), **CI** (S11a, S11b-1, S11b-2), **docs** (S12.0, S12a, S12b). [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) at 66/80; [skills/fix/SKILL.md](../../../skills/fix/SKILL.md) at 299/300 — binding line-cap constraint for any future fix-touching story.)
+**Status:** In Progress (7/13 implementation stories merged + S12.0 decision resolved — **trust-hardening cluster 7/7 DONE**: S0 PR #24, S1 PR #25, S3 PR #26, S2 PR #27, S5 PR #28, S4 PR #29, S6 PR #30 (merged 2026-05-08). E03.S12.0 resolved 2026-05-08 via **option (c) defer** (decision-only, no PR — kept as historical record outside the implementation-story count); S12a + S12b removed from v0.1.5 and tracked in v0.1.6 candidates for separate-repo handling, reducing implementation scope from 15 → 13 stories. Maturity-check loop reduced from 5 → 3 active checks; `stop-hook-v1` is now an installing offer rather than a no-op. Pre-flight migration check now lives in 8 skills (upgrade excluded by design; setup uses an intentional soft-abort form). Plan-format version marker `Plan-format-version: 1` now emitted by build/fix Stage 3 templates — forward-compat for v0.2.0's plan-format-v2 migration. New deferred-investigations catalog seeded with DI-001. Remaining v0.1.5 scope: **ergonomics** (S8, S9, S10), **CI** (S11a, S11b-1, S11b-2). [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) at 66/80; [skills/fix/SKILL.md](../../../skills/fix/SKILL.md) at 299/300 — binding line-cap constraint for any future fix-touching story.)
 **Target version:** v0.1.5
 **Target effort:** 6-7 wk
 **Dependencies:** E01 (pipeline foundation, audit follow-up shipped v0.1.3); E02 (rename to `roughly` shipped v0.1.4 — namespace, dotdir, version-line identifier all assumed in place)
@@ -11,7 +11,7 @@
 
 Roughly's value is enforcement. Enforcement with known holes is theater. v0.1.5 closes the silent-failure modes still present in the pipeline — plan-mode hijack, untested maturity gaps, ambiguous abort UX — and lays the regression-coverage groundwork (plugin self-test CI) that every subsequent release will depend on.
 
-Three clusters: **trust hardening** (S0–S6), **ergonomics** (S8–S10, S7 punted to v0.1.6), **CI** (S11). Plus **docs** (S12), which lands incrementally rather than as a final-week dump.
+Three clusters: **trust hardening** (S0–S6), **ergonomics** (S8–S10, S7 punted to v0.1.6), **CI** (S11). Docs (S12.x) was scoped during epic writing but deferred to a separate repo/epic post-v0.1.5 via S12.0 option (c) on 2026-05-08 — see [v0.1.6 candidates](#v016-candidates).
 
 Scope is frozen. Items surfaced during epic writing that are clearly related but out of scope are listed under [v0.1.6 candidates](#v016-candidates).
 
@@ -27,7 +27,7 @@ Scope is frozen. Items surfaced during epic writing that are clearly related but
 
 2. **CI bootstrapping (S11).** The plugin tests itself against the repo containing the plugin. A naive run mutates `.roughly/`, writes plan files in `docs/plans/`, and may dirty the working tree. Self-test must run in an ephemeral worktree/checkout with strict teardown, or CI poisons source-repo state visible to subsequent commits. Risk: a CI run that "passes" but corrupts the dogfood `.roughly/` state masks bugs; mitigated by isolation contract in S11a.
 
-3. **Docs scope creep (S12).** "roughly.dev v0.1.5 floor" is four pages, but the underlying surface area is 9 (10 with `/roughly:help`) skills + 7 agents + 8 ADRs. Without explicit per-page outlines and word budgets in the story, docs balloons and slips the release. Risk: docs becomes a final-week landmine; mitigated by docs stories laddering throughout the release rather than batch-landing.
+3. ~~**Docs scope creep (S12).**~~ **Resolved (2026-05-08, S12.0 option c):** docs cluster deferred to a separate repo/epic post-v0.1.5. Risk no longer applies to v0.1.5; preserved here for historical context. The underlying surface (9-10 skills + 7 agents + 9 ADRs) was the trigger for the deferral — pages would have ballooned against tight release-cycle attention. Re-emerges if/when the docs work picks up in its own epic.
 
 4. **Retry-loop tuning regressions (S10).** Raising caps on cheap checks can hide flakiness; replacing hard escalation with prompts shifts cost to humans mid-pipeline. Each adjustment needs a before/after dogfood pass on a known case. Risk: silent trust degradation; mitigated by per-cap rationale recorded inline and dogfood verification gated by S11 CI.
 
@@ -727,110 +727,32 @@ Options for the format are documented in [open questions](#open-questions); the 
 
 ---
 
-### Docs cluster
-
-> **Note:** Per [docs/planning/README.md:84](../../docs/planning/README.md#L84), the `roughly.dev` site is "out of repo scope; tracked separately." The PM prompt asserts docs are part of v0.1.5 DoD. **S12.0 must land before S12a/S12b** to resolve this contradiction; the docs cluster is gated on its outcome.
+### Docs cluster — DEFERRED to a separate repo/epic post-v0.1.5
 
 #### E03.S12.0: Resolve roughly.dev source location
 
-**Maps to roadmap item:** #12 (gates S12a, S12b)
+**Maps to roadmap item:** #12 (gated S12a, S12b)
 **Type:** Decision/scoping (½-day timebox)
+**Status:** Complete 2026-05-08 (in-session decision, no PR — entirely doc-only). **Decision: option (c) — defer.** S12a and S12b are removed from this epic and tracked in [v0.1.6 candidates](#v016-candidates) for handling in a separate repo/epic post-v0.1.5.
 
-**Files touched:**
-- [docs/planning/README.md](../../docs/planning/README.md) — L84 deferred-items entry
-- [docs/ROADMAP.md](../../docs/ROADMAP.md) — v0.1.5 item #12 wording
-- [docs/planning/epics/E03-trust-and-ergonomics.md](./E03-trust-and-ergonomics.md) — S12a/S12b "Files touched" lists, after the decision
+**Decision rationale:**
 
-**Context:**
+Three options were considered: (a) in-repo `docs/site/*.md`, (b) separate `roughly-dev` repo, (c) defer the entire docs cluster. The contradiction prompting the decision: [docs/planning/README.md:84](../../planning/README.md#L84) calls roughly.dev "out of repo scope; tracked separately"; the PM prompt and [docs/ROADMAP.md](../../ROADMAP.md) item #12 asserted docs were v0.1.5 DoD.
 
-The DoD-vs-deferred-items contradiction was identified during epic writing. S12a and S12b cannot start until one of three options is chosen:
-- **(a) In-repo source:** `docs/site/*.md` ships with the plugin; manual publish to roughly.dev is a separate, untracked step.
-- **(b) Separate repo:** S12a/S12b are restructured to work against a `roughly-dev` repo with cross-repo coordination.
-- **(c) Defer docs cluster from v0.1.5 DoD entirely:** roadmap item #12 moves to v0.1.6; docs/planning/README.md L84 stays as-is.
+Option (c) was chosen because: (1) the v0.1.5 release thesis is *"enforcement with known holes is theater"* — docs document what got filled, but they aren't themselves a hole; (2) `docs/planning/README.md:84` represents the more-recent intent (post-ROADMAP authoring); (3) the existing contributor surface (README, CLAUDE.md, CONTRIBUTING.md, ADR-001 through ADR-009, this epic) already serves the v0.1.5 primary user (solo-dev contributors); (4) v1.0 criterion #5 ("roughly.dev complete enough that a stranger gets the pipeline without reading SKILL.md") is explicitly a v1.0 milestone, not v0.1.5; (5) v0.1.6 is currently un-scoped beyond candidates, so docs land naturally in a separate repo/epic without disturbing the v0.1.5 release cadence.
 
-**Acceptance criteria:**
-- [ ] One of (a), (b), or (c) is chosen and rationale recorded inline (1-2 paragraphs in the epic body where the cluster note currently sits)
-- [ ] [docs/planning/README.md](../../docs/planning/README.md) L84 entry is updated or struck per the decision
-- [ ] [docs/ROADMAP.md](../../docs/ROADMAP.md) v0.1.5 item #12 wording reflects the decision (possibly removed from v0.1.5 if (c))
-- [ ] If (a): S12a/S12b "Files touched" lists confirmed accurate as `docs/site/*.md`
-- [ ] If (b): S12a/S12b "Files touched" lists rewritten with cross-repo paths and the cross-repo coordination cost added to the risk register
-- [ ] If (c): S12a/S12b are removed from the epic and listed in [v0.1.6 candidates](#v016-candidates); remaining stories renumbered if needed
+**Doc edits made under this decision:**
+- This epic: header story count 16 → 13; Risk #3 closed; cluster summary updated; S12a/S12b story bodies removed (this section becomes the historical record); Open Question 4 already marked resolved by S12.0 — re-pointed at option (c); v0.1.6 candidates list gains the docs cluster; sequencing table renumbered (rows 5/11/16 removed); DoD rewritten
+- [docs/ROADMAP.md](../../ROADMAP.md) item #12 marked deferred with pointer to a separate repo/epic
+- [docs/planning/README.md:84](../../planning/README.md#L84): retained as-is (already says "out of repo scope; tracked separately" — now confirmed)
 
-**Verification:**
-- Decision is recorded; no story in this epic still references "open question 4" as unresolved
-- A reviewer can read the docs cluster intro and know exactly what files are produced and where they live
+**Out of scope (consequence of option c):**
+- Implementation of any docs page (S12a, S12b — moved to v0.1.6 candidates)
+- Site framework / build tooling for roughly.dev (always separate from this repo regardless)
 
-**Dependencies:** None — must land before S12a starts.
+#### E03.S12a, E03.S12b — REMOVED
 
-**Out of scope:**
-- Implementation of any docs page (S12a/S12b)
-- Site framework / build tooling for roughly.dev (always separate repo regardless of decision)
-
----
-
-#### E03.S12a: roughly.dev landing + setup walkthrough
-
-**Maps to roadmap item:** #12 (part 1)
-
-**Files touched:**
-- `docs/site/index.md` (new — landing page source)
-- `docs/site/setup.md` (new — setup walkthrough source)
-
-**Context:**
-
-The roadmap floor for v0.1.5 docs is four pages: landing, pipeline overview, commands reference, setup walkthrough. S12a covers landing + setup walkthrough; S12b covers the other two. Splitting reduces final-week landmine risk.
-
-**Acceptance criteria:**
-- [ ] `docs/site/index.md` (landing): one-paragraph thesis (paraphrased from ROADMAP), three-bullet "what Roughly does" summary, install command, link to setup walkthrough; budget: 80-150 lines including markdown
-- [ ] `docs/site/setup.md` (setup walkthrough): `/roughly:setup` step-by-step for a single-project install, including the maturity check decision tree (which checks fire when, what they offer); budget: 120-200 lines including code blocks
-- [ ] Both pages cross-link to commands reference (S12b) with placeholder anchors that resolve once S12b lands
-- [ ] No prose contradicts the in-repo SKILL.md files. Verified by extracting canonical claims (number of stages, command list, maturity check IDs) from the docs and comparing to the same claims grepped from SKILL.md sources; mismatches block landing
-- [ ] No marketing voice ("industry-leading", "revolutionary", "powerful", "seamlessly", "robust", etc.) — banned-word list checked by `rg -i '<word>' docs/site/*.md`. **Tone verification:** a reviewer reads both pages cold and produces three takeaways; if those takeaways diverge from what SKILL.md / ROADMAP.md actually say, prose is rewritten
-
-**Verification:**
-- Reviewer reads both pages cold; can describe what Roughly does and run `/roughly:setup` correctly without reading SKILL.md
-- `wc -l` on each file is within budget
-
-**Dependencies:** None blocking; ladders early in the release.
-
-**Out of scope:**
-- Pipeline overview (S12b)
-- Commands reference (S12b)
-- Site framework / build tooling for roughly.dev (separate repo)
-- Visual design beyond plain markdown
-
----
-
-#### E03.S12b: roughly.dev pipeline overview + commands reference
-
-**Maps to roadmap item:** #12 (part 2)
-
-**Files touched:**
-- `docs/site/pipeline.md` (new — pipeline overview)
-- `docs/site/commands.md` (new — commands reference)
-
-**Context:**
-
-Pipeline overview = the 8 build stages + abort handling + maturity checks, written for a stranger who has not read SKILL.md. Commands reference = the 10 commands (post-S8) with one-line summary, when to use, what they produce.
-
-**Acceptance criteria:**
-- [ ] `docs/site/pipeline.md`: covers all 8 build stages with one paragraph each, plus abort handling and maturity checks; budget: 200-350 lines
-- [ ] `docs/site/commands.md`: lists all 10 commands (`/roughly:build`, `/roughly:fix`, `/roughly:review`, `/roughly:review-plan`, `/roughly:review-epic`, `/roughly:audit-epic`, `/roughly:verify-all`, `/roughly:setup`, `/roughly:upgrade`, `/roughly:help`); each entry has: one-line summary, when to use, what it produces, link to relevant SKILL.md anchor; budget: 150-250 lines
-- [ ] Cross-links from S12a's landing/setup pages resolve correctly
-- [ ] No prose contradicts the in-repo SKILL.md files. Verified by extracting canonical claims from the docs (stage count, command list, maturity check IDs, ADR count) and grepping the same in SKILL.md sources; mismatches block landing
-- [ ] No marketing voice; same banned-word check as S12a (`rg -i` against the list); reviewer-cold-read takeaways match SKILL.md content
-
-**Verification:**
-- Reviewer reads both pages cold; can describe the build pipeline accurately and pick the right command for a given situation
-- `wc -l` on each file is within budget
-- All cross-references resolve (no broken anchor links)
-
-**Dependencies:** S8 (must include `/roughly:help` in commands reference — sequence S12b after S8 lands).
-
-**Out of scope:**
-- ADR summaries (deferred — link to ADRs is sufficient)
-- Tutorial content beyond setup
-- Migration guides from other workflows
+Removed from v0.1.5 epic per S12.0 option (c). Tracked in [v0.1.6 candidates](#v016-candidates) under "Docs cluster (former S12a/S12b)" for separate-repo handling.
 
 ---
 
@@ -854,7 +776,7 @@ These are surfaced in story bodies but consolidated here for the implementer's c
    - **Stage 6 review-fix cycles cap:** keep at 2. Most expensive loop in the pipeline; raising it amplifies cost on already-expensive work. Consider converting hard escalation to a prompt only if dogfood evidence shows cycles 2-3 land legitimate fixes.
    The implementer should prepare a per-cap rationale comment in the SKILL.md edits documenting which default was kept vs. challenged and why, with a before/after dogfood case backing each change.
 
-4. ~~**roughly.dev source location (S12).**~~ **Resolved by S12.0** — the docs cluster is gated on a ½-day decision story that picks one of (a) in-repo `docs/site/`, (b) separate repo, or (c) defer docs from v0.1.5 DoD. See [E03.S12.0](#e03s120-resolve-roughlydev-source-location).
+4. ~~**roughly.dev source location (S12).**~~ **Resolved 2026-05-08 by S12.0 — option (c) defer.** Docs cluster (S12a, S12b) removed from v0.1.5 and tracked in [v0.1.6 candidates](#v016-candidates) for separate-repo handling. See [E03.S12.0](#e03s120-resolve-roughlydev-source-location) for the full rationale.
 
 5. ~~**Hook registration scope (S1 / ADR-009).**~~ **Resolved by S1 (2026-05-02).** Claude Code's hook `matcher` field is tool-name only — it does not support slash-command matching. Per-skill scoping is therefore done in-script via `prompt`-field regex (`^/roughly:(build|fix)`), not via `matcher`. Recorded in [ADR-009 §"Hook Registration Scope"](../../adrs/ADR-009-plan-mode-detection.md). The "per-skill vs global" framing was a false dichotomy — the hook is registered once globally on `UserPromptSubmit`, and scoping is the script's responsibility.
 
@@ -869,6 +791,7 @@ These are surfaced in story bodies but consolidated here for the implementer's c
 
 Items surfaced during epic writing that are clearly related to v0.1.5 work but explicitly out of frozen scope:
 
+- **Docs cluster (former S12a, S12b) — separate repo/epic.** Originally scoped as four roughly.dev pages in v0.1.5 (landing, setup walkthrough, pipeline overview, commands reference). Deferred 2026-05-08 via S12.0 option (c). Will land in a separate repo/epic post-v0.1.5; no v0.1.5 release-cycle dependency. Acceptance criteria from the original S12a/S12b stories (page outlines, line-budget targets, no-marketing-voice tone gates, anti-drift verification against SKILL.md sources) remain useful starting context for the future work. Path-to-v1.0 criterion #5 — "roughly.dev complete enough that a stranger gets the pipeline without reading SKILL.md" — is the long-term home for this work.
 - **In-session maturity offers at Stage 1 (former S7).** Originally scoped for v0.1.5 to evaluate `investigator-v1` and `stop-hook-v1` triggers up-front, before the user has invested effort in the build/fix run. Moved to v0.1.6 because: (a) line-cap budget on build/fix is tight, (b) the "users are tired by Stage 8" premise is unmeasured, (c) Stage-1 acceptance changes the semantics of `.roughly/workflow-upgrades` (records can persist for runs that subsequently abort). Revisit with v0.1.5 dogfood data on Stage 8 acceptance/decline rates.
 - **Marker-aware resume improvements in [skills/upgrade/SKILL.md](../../skills/upgrade/SKILL.md)** — surfaced while scoping S4. Today's `/roughly:upgrade` migration logic handles `.ruckus/.migration-in-progress` markers, but there's room to make resume reporting cleaner (which steps already ran, which still need to). Not blocking v0.1.5 since the marker mechanism is correct as-is.
 - ~~**Expanded plan-mode signals if S0 spike reveals additional gaps**~~ **Subsumed by S1 outcomes:** the spike concluded preamble + hook (no preamble-only known holes); residual S1 deferred items below absorb the remaining surface.
@@ -902,30 +825,29 @@ Order is by dependency, not roadmap item number.
 | 2 | **E03.S11a** (CI scaffolding) | Lands ahead of S1 — scaffolding script is a stub at the `claude` invocation point until S11b-1, so doesn't depend on plan-mode detection |
 | 3 | **E03.S1** (plan-mode auto-detect/exit) ✅ | Highest-value item; unblocks safe CI dogfood runs. Merged 2026-05-02 via PR #25 (`c598ef6`) with follow-up fixes through 2026-05-03. ADR-009 authoritative. |
 | 4 | **E03.S11b-1** (CLI plumbing smoke test) | Proves auth + CLI plumbing in CI before subsequent prose-touching stories land |
-| 5 | **E03.S12.0** (resolve roughly.dev source location) | Gates S12a/S12b; ½-day decision |
-| 6 | **E03.S6** (plan-format version field) ✅ | Additive, low-risk. Merged 2026-05-08 via PR #30 (`b22144f`, squash from `57f78f3`). Closes trust-hardening cluster (7/7). +2 lines each to build (294→296) and fix (297→299). Fix now at binding 1-line headroom. v0.2.0's ADR-010 plan-format-v2 work unblocked. |
-| 7 | **E03.S5** (CONTRIBUTING prose) ✅ | Independent, prose-only. Merged 2026-05-07 via PR #28 (`b58f4bd`, 2 commits). Section landed at 20 content lines; self-verification holds against live verify-all.sh. |
-| 8 | **E03.S4** (pre-flight in audit-epic + verify-all) ✅ | Independent of pipeline changes. Merged 2026-05-07 via PR #29 (`b3a6750`, 2 commits). Pre-flight now in 8 skills; setup's soft-abort form intentionally retained (recorded in known-pitfalls.md to prevent future "drift fix"). Audit-epic 141, verify-all 80. |
-| 9 | **E03.S3** (retire test-verify-v1 / pitfalls-organized-v1) ✅ | Folds triggers into doc-writer; doesn't break anything. Merged 2026-05-04 ahead of original sequence position — landed before S11a/S11b-1/S12.0/S6/S5/S4. Build/fix line counts now 288/291 (12 and 9 lines headroom). Stage 8 maturity-check loop reduced to 3 active checks. |
-| 10 | **E03.S2** (stop-hook-v1 templating) ✅ | After S3 to avoid double-touching maturity check section. Merged 2026-05-06 via PR #27 (`a3d7afc`, 24 commits). 4-phase transactional commit in setup Step 5d Branch 4; lighter install path in build/fix Stage 8. Build/fix line counts now 294/297; setup 287. DI-001 (Stage 6 review-depth observation) seeded in new deferred-investigations catalog. |
-| 11 | **E03.S12a** (docs landing + setup) | Ladders mid-release rather than batch-landing; gated on S12.0 |
-| 12 | **E03.S9** (situation-specific abort prose) | Sweep across pipeline skills; lands late to avoid merge churn |
-| 13 | **E03.S10** (retry-loop tuning) | Late; benefits from CI regression coverage from S11 |
-| 14 | **E03.S11b-2** (full dogfood scenario) | After pipeline-touching stories stabilize. NOT dependent on S6 or S9 — S6 is a compatibility check post-merge; S9 improves diagnosis but isn't required for the happy path |
-| 15 | **E03.S8** (`/roughly:help` command) | Late; documents the final shape of the release |
-| 16 | **E03.S12b** (docs pipeline + commands) | After S8 so commands reference includes `/roughly:help`; gated on S12.0 |
+| 5 | **E03.S6** (plan-format version field) ✅ | Additive, low-risk. Merged 2026-05-08 via PR #30 (`b22144f`, squash from `57f78f3`). Closes trust-hardening cluster (7/7). +2 lines each to build (294→296) and fix (297→299). Fix now at binding 1-line headroom. v0.2.0's ADR-010 plan-format-v2 work unblocked. |
+| 6 | **E03.S5** (CONTRIBUTING prose) ✅ | Independent, prose-only. Merged 2026-05-07 via PR #28 (`b58f4bd`, 2 commits). Section landed at 20 content lines; self-verification holds against live verify-all.sh. |
+| 7 | **E03.S4** (pre-flight in audit-epic + verify-all) ✅ | Independent of pipeline changes. Merged 2026-05-07 via PR #29 (`b3a6750`, 2 commits). Pre-flight now in 8 skills; setup's soft-abort form intentionally retained (recorded in known-pitfalls.md to prevent future "drift fix"). Audit-epic 141, verify-all 80. |
+| 8 | **E03.S3** (retire test-verify-v1 / pitfalls-organized-v1) ✅ | Folds triggers into doc-writer; doesn't break anything. Merged 2026-05-04 ahead of original sequence position — landed before S11a/S11b-1/S6/S5/S4. Build/fix line counts now 288/291 (12 and 9 lines headroom). Stage 8 maturity-check loop reduced to 3 active checks. |
+| 9 | **E03.S2** (stop-hook-v1 templating) ✅ | After S3 to avoid double-touching maturity check section. Merged 2026-05-06 via PR #27 (`a3d7afc`, 24 commits). 4-phase transactional commit in setup Step 5d Branch 4; lighter install path in build/fix Stage 8. Build/fix line counts now 294/297; setup 287. DI-001 (Stage 6 review-depth observation) seeded in new deferred-investigations catalog. |
+| 10 | **E03.S9** (situation-specific abort prose) | Sweep across pipeline skills; lands late to avoid merge churn |
+| 11 | **E03.S10** (retry-loop tuning) | Late; benefits from CI regression coverage from S11 |
+| 12 | **E03.S11b-2** (full dogfood scenario) | After pipeline-touching stories stabilize. NOT dependent on S6 or S9 — S6 is a compatibility check post-merge; S9 improves diagnosis but isn't required for the happy path |
+| 13 | **E03.S8** (`/roughly:help` command) | Late; documents the final shape of the release |
 
-**Removed from v0.1.5:** S7 (in-session maturity offers at Stage 1) — moved to [v0.1.6 candidates](#v016-candidates).
+**Removed from v0.1.5:**
+- S7 (in-session maturity offers at Stage 1) — moved to [v0.1.6 candidates](#v016-candidates)
+- E03.S12.0 resolved 2026-05-08 (decision-only, no PR); S12a + S12b deferred to a separate repo/epic post-v0.1.5 — see [v0.1.6 candidates](#v016-candidates)
 
 ---
 
 ## Definition of done
 
-- All 16 stories merged (S0, S1, S2, S3, S4, S5, S6, S8, S9, S10, S11a, S11b-1, S11b-2, S12.0, S12a, S12b — note S7 punted to v0.1.6, S11b split into -1/-2, S12.0 added)
+- All 13 stories merged (S0, S1, S2, S3, S4, S5, S6, S8, S9, S10, S11a, S11b-1, S11b-2 — note S7 punted to v0.1.6; S11b split into -1/-2; S12.0 resolved 2026-05-08 with option (c) defer; S12a and S12b removed from v0.1.5, tracked in v0.1.6 candidates for separate-repo handling)
 - v0.1.5 tag pushed
 - CHANGELOG entry covers Added / Changed / Fixed / Notes for each story
-- ROADMAP.md updated to reflect v0.1.5 shipped + v0.1.6 candidates surfaced (including former S7)
+- ROADMAP.md updated to reflect v0.1.5 shipped + v0.1.6 candidates surfaced (including former S7 and the deferred docs cluster)
 - CI dogfood run passing on main (S11b-2 happy path)
-- roughly.dev pages live OR S12.0 chose option (c) and the docs cluster is explicitly deferred — both outcomes satisfy DoD
+- Docs cluster deferral satisfies DoD per S12.0 option (c) — no roughly.dev pages required for v0.1.5
 - ADR-009 (plan-mode detection) merged; CLAUDE.md ADR count updated to 9
 - After every merge, `wc -l skills/build/SKILL.md skills/fix/SKILL.md` is recorded in PR description; final values both ≤300
