@@ -16,6 +16,8 @@ Epic file: $ARGUMENTS
 
 If `$ARGUMENTS` is empty, ask: **"Which epic file should I audit? (provide path)"**
 
+**Pre-flight migration check:** If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, or `.ruckus/workflow-upgrades` exists, abort with: "Legacy `.ruckus/` state detected (v0.1.3 install or incomplete v0.1.4 migration). Run `/roughly:upgrade` to migrate or resume, then re-run." A `.ruckus/` directory containing only user-extras (post-`leave` state from a completed upgrade) is fine — proceed.
+
 ---
 
 ## STEP 1: PARSE EPIC
