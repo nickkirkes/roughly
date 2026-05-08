@@ -1,0 +1,21 @@
+name: dogfood
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  dogfood-build-cycle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run dogfood scaffolding
+        run: bash scripts/ci-dogfood.sh
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
