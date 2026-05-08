@@ -94,8 +94,16 @@ if [ "$PLUGIN_EXIT" != 0 ]; then
   printf '%s\n' "$PLUGIN_OUT" | sed 's/^/    /' >&2
   exit 1
 fi
-if ! printf '%s\n' "$PLUGIN_OUT" | grep -q "roughly:setup"; then
-  echo "ci-dogfood: FAIL — plugin loading not verified (no /roughly:setup in slash command list)" >&2
+# Anchor: line start, optional list-decoration prefix (whitespace, dashes,
+# asterisks, digits, dots, pipes — covers `- `, `* `, `1. `, `| `, indentation),
+# the literal `/roughly:setup`, then EOL or whitespace. Rejects prose mentions
+# (lines starting with a letter — "I have access to /roughly:setup ...") AND
+# rejects substring drift (`/roughly:setupx`, `/roughly:setup-other` — char
+# after command must be EOL or whitespace). Liberal enough to accept common
+# list formats; strict enough to require evidence the model treated this as
+# a command-list item, not prose.
+if ! printf '%s\n' "$PLUGIN_OUT" | grep -qE "^[[:space:]0-9.*|-]*/roughly:setup($|[[:space:]])"; then
+  echo "ci-dogfood: FAIL — plugin loading not verified (no /roughly:setup list-item line in output)" >&2
   printf '%s\n' "$PLUGIN_OUT" | sed 's/^/    /' >&2
   exit 1
 fi

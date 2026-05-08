@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code && claude --version
+        run: npm install -g @anthropic-ai/claude-code@2 && claude --version
 
       - name: Run dogfood scaffolding
         run: bash scripts/ci-dogfood.sh
