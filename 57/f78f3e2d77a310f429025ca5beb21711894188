@@ -1,0 +1,25 @@
+docs/plans/E03-S6-plan-format-version-field-plan.md
+  s_95fb1750c54228::t_d6542f3b20cc71 1-166
+skills/fix/SKILL.md
+  s_95fb1750c54228::t_7f417a467c5a33 63-64
+skills/build/SKILL.md
+  s_95fb1750c54228::t_1b0a4ebe425f75 50-51
+CHANGELOG.md
+  s_95fb1750c54228::t_8b697bb86337af 9-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "57f78f3e2d77a310f429025ca5beb21711894188",
+  "prompts": {},
+  "sessions": {
+    "s_95fb1750c54228": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "822556cd-c5ba-4970-a2c2-6a1da904c948",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
