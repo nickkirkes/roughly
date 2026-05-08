@@ -1,0 +1,23 @@
+.github/workflows/dogfood.yml
+  s_9efe68f5e747b0::t_7de3b3a3eb290e 21
+CHANGELOG.md
+  s_9efe68f5e747b0::t_06e230ab3ff338 11
+scripts/ci-dogfood.sh
+  s_9efe68f5e747b0::t_c5c6ef5e321b97 97-106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "b74a4720e771a864e996d33505bcb097359e954b",
+  "prompts": {},
+  "sessions": {
+    "s_9efe68f5e747b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "348509c4-9179-42e7-985a-900f042b1537",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
