@@ -1,0 +1,35 @@
+scripts/ci-dogfood.sh
+  s_d5c165698de3a8::t_95de721b3dd694 1-3,9-11,15-20,23,26-29,34,37-61
+  s_d5c165698de3a8::t_56bcf9aa6a4d69 21-22,24-25,30-33,35-36
+  s_d5c165698de3a8::t_4e7f5832cdc66b 4-8,12-14
+CONTRIBUTING.md
+  s_d5c165698de3a8::t_828568134a8050 81-86,88-90,92-113
+  s_d5c165698de3a8::t_926619f70b1255 87
+  s_d5c165698de3a8::t_53536fe4b86437 91
+.github/workflows/dogfood.yml
+  s_d5c165698de3a8::t_7d26f3805053af 1-21
+docs/ROADMAP.md
+  s_d5c165698de3a8::t_787940030ed169 71
+CHANGELOG.md
+  s_d5c165698de3a8::t_9283d1894dc103 9-10
+docs/plans/E03-S11a-plugin-self-test-ci-scaffolding-plan.md
+  s_d5c165698de3a8::t_929001cbb79730 1-27,36-44,46-112
+  s_d5c165698de3a8::t_1c6bfca7c5fd0f 45
+  s_d5c165698de3a8::t_f61ef65a851ee5 28-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "8036a81287726ce819e730c00caa8d0003ceab25",
+  "prompts": {},
+  "sessions": {
+    "s_d5c165698de3a8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2adc6247-928b-42c5-b9c7-99377a92ff1d",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
