@@ -1,6 +1,6 @@
 # E03 — Trust hardening + ergonomics + CI
 
-**Status:** In Progress (7/13 implementation stories merged + S12.0 decision resolved — **trust-hardening cluster 7/7 DONE**: S0 PR #24, S1 PR #25, S3 PR #26, S2 PR #27, S5 PR #28, S4 PR #29, S6 PR #30 (merged 2026-05-08). E03.S12.0 resolved 2026-05-08 via **option (c) defer** (decision-only, no PR — kept as historical record outside the implementation-story count); S12a + S12b removed from v0.1.5 and tracked in v0.1.6 candidates for separate-repo handling, reducing implementation scope from 15 → 13 stories. Maturity-check loop reduced from 5 → 3 active checks; `stop-hook-v1` is now an installing offer rather than a no-op. Pre-flight migration check now lives in 8 skills (upgrade excluded by design; setup uses an intentional soft-abort form). Plan-format version marker `Plan-format-version: 1` now emitted by build/fix Stage 3 templates — forward-compat for v0.2.0's plan-format-v2 migration. New deferred-investigations catalog seeded with DI-001. Remaining v0.1.5 scope: **ergonomics** (S8, S9, S10), **CI** (S11a, S11b-1, S11b-2). [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) at 66/80; [skills/fix/SKILL.md](../../../skills/fix/SKILL.md) at 299/300 — binding line-cap constraint for any future fix-touching story.)
+**Status:** In Progress (8/13 implementation stories merged + S12.0 decision resolved — **trust-hardening cluster 7/7 DONE** (S0–S6); **CI cluster 1/3 DONE** (S11a). S0 PR #24, S1 PR #25, S3 PR #26, S2 PR #27, S5 PR #28, S4 PR #29, S6 PR #30, S11a PR #31 (`f73466b`, merged 2026-05-08, 4 commits). E03.S12.0 resolved 2026-05-08 via **option (c) defer** (decision-only, no PR — kept as historical record outside the implementation-story count); S12a + S12b removed from v0.1.5 and tracked in v0.1.6 candidates for separate-repo handling, reducing implementation scope from 15 → 13 stories. Maturity-check loop reduced from 5 → 3 active checks; `stop-hook-v1` is now an installing offer rather than a no-op. Pre-flight migration check now lives in 8 skills. Plan-format version marker `Plan-format-version: 1` now emitted by build/fix Stage 3 templates. CI dogfood scaffolding online — `claude` invocation point is a no-op stub awaiting S11b-1. Remaining v0.1.5 scope: **ergonomics** (S8, S9, S10), **CI** (S11b-1, S11b-2). [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) at 66/80; [skills/fix/SKILL.md](../../../skills/fix/SKILL.md) at 299/300 — binding line-cap constraint for any future fix-touching story.)
 **Target version:** v0.1.5
 **Target effort:** 6-7 wk
 **Dependencies:** E01 (pipeline foundation, audit follow-up shipped v0.1.3); E02 (rename to `roughly` shipped v0.1.4 — namespace, dotdir, version-line identifier all assumed in place)
@@ -27,6 +27,8 @@ Scope is frozen. Items surfaced during epic writing that are clearly related but
 
 2. **CI bootstrapping (S11).** The plugin tests itself against the repo containing the plugin. A naive run mutates `.roughly/`, writes plan files in `docs/plans/`, and may dirty the working tree. Self-test must run in an ephemeral worktree/checkout with strict teardown, or CI poisons source-repo state visible to subsequent commits. Risk: a CI run that "passes" but corrupts the dogfood `.roughly/` state masks bugs; mitigated by isolation contract in S11a.
 
+   **Status update (2026-05-08, post-S11a):** Isolation contract delivered. Ephemeral worktree at `/tmp/roughly-dogfood-${SHA}`, `trap cleanup EXIT` registered before worktree creation, stale-worktree guard for same-SHA reruns, and `git status --porcelain` symmetry verified pre/post. `claude` invocation point is currently a no-op stub — pollution risk doesn't fully reify until S11b-1 lands a real invocation against the worktree. Risk narrows to "S11b-1 must consume the secret and write inside the worktree without leaking to source"; closes when S11b-1 ships green.
+
 3. ~~**Docs scope creep (S12).**~~ **Resolved (2026-05-08, S12.0 option c):** docs cluster deferred to a separate repo/epic post-v0.1.5. Risk no longer applies to v0.1.5; preserved here for historical context. The underlying surface (9-10 skills + 7 agents + 9 ADRs) was the trigger for the deferral — pages would have ballooned against tight release-cycle attention. Re-emerges if/when the docs work picks up in its own epic.
 
 4. **Retry-loop tuning regressions (S10).** Raising caps on cheap checks can hide flakiness; replacing hard escalation with prompts shifts cost to humans mid-pipeline. Each adjustment needs a before/after dogfood pass on a known case. Risk: silent trust degradation; mitigated by per-cap rationale recorded inline and dogfood verification gated by S11 CI.
@@ -44,6 +46,8 @@ Scope is frozen. Items surfaced during epic writing that are clearly related but
    **Status update (2026-05-08, post-S6):** Binding constraint reached on fix. S6 added 2 lines to each of build (294 → 296) and fix (297 → 299) for the `Plan-format-version: 1` marker. Headroom now: build 4/300, **fix 1/300**. Any S9 or S10 net-positive change to fix must invoke the prose-extraction off-ramp; in practice this means S9's abort-prose sweep should extract before adding, or operate via substitution. S10 is the lower-risk path (surgical edits, possibly net-zero per its current ACs). Risk does not close until S9/S10 land without breach.
 
 7. **CI cost.** A full `/roughly:build` cycle in CI invokes Sonnet for orchestration, investigator, plan-reviewer, three parallel review agents, spec-reviewer per task, and code-reviewer at Stage 6. A single happy-path run is plausibly 100K+ Sonnet tokens; at ~100 PR pushes per release cycle, this is non-trivial spend. Risk: CI becomes a hidden release-cost driver; mitigated by S11b-2's minimal-task fixture and explicit token-budget AC.
+
+   **Status update (2026-05-08, post-S11a):** Token-cost expectations are now documented in [CONTRIBUTING.md](../../../CONTRIBUTING.md) `## CI` section: S11b-1 ~5K Sonnet tokens; S11b-2 ≤150K. S11a itself is zero — stub invocation. Risk holds until S11b-1 and S11b-2 ship and the actual per-run cost is observed against the documented budgets.
 
 ---
 
@@ -611,11 +615,19 @@ Each cap decision needs a before/after dogfood pass on a known case to verify be
 #### E03.S11a: Plugin self-test CI scaffolding
 
 **Maps to roadmap item:** #11 (part 1)
+**Status:** Complete on `feat/E03.S11a-plugin-self-test-ci-scaffolding`; merged 2026-05-08 via PR #31 (`f73466b`, 4 commits). All 8 ACs met. **CI cluster now 1/3** — S11b-1 plumbing and S11b-2 happy-path remain.
 
-**Files touched:**
-- `.github/workflows/dogfood.yml` (new)
-- `scripts/ci-dogfood.sh` (new)
-- [CONTRIBUTING.md](../../CONTRIBUTING.md) — CI section (where to find logs, how to reproduce locally)
+**Files delivered:**
+
+New:
+- [.github/workflows/dogfood.yml](../../../.github/workflows/dogfood.yml) — GitHub Actions: `dogfood-build-cycle` job, push-to-main + PR triggers, job-level `permissions: contents: read` declared explicitly (does not inherit org defaults)
+- [scripts/ci-dogfood.sh](../../../scripts/ci-dogfood.sh) (executable) — driver: ephemeral worktree at `/tmp/roughly-dogfood-${SHA}`, `trap cleanup EXIT` registered before worktree creation, stale-worktree guard for same-SHA reruns (`prune` + force-remove + `rm -rf`), repo-guard runs before SHA/ROOT resolution (friendly diagnostic on wrong-cwd), no-op `claude` invocation stub
+- `docs/plans/E03-S11a-plugin-self-test-ci-scaffolding-plan.md` — implementation plan, bundled per repo convention
+
+Modified:
+- [CONTRIBUTING.md](../../../CONTRIBUTING.md) — new `## CI` section between Testing and License (+33 lines): logs location, local repro steps, in-scope vs out-of-scope for v0.1.5, token-cost expectations (S11b-1 ~5K, S11b-2 ≤150K Sonnet tokens), `ANTHROPIC_API_KEY` setup
+- [CHANGELOG.md](../../../CHANGELOG.md) — `[Unreleased]` v0.1.5 Added entry
+- [docs/ROADMAP.md](../../ROADMAP.md) — item #11 marked S11a ✅; S11b-1 plumbing and S11b-2 happy-path pending
 
 **Context:**
 
@@ -626,28 +638,42 @@ The plugin tests itself against the repo containing the plugin. Bootstrapping co
 
 S11a establishes the isolation contract: an ephemeral worktree, scoped teardown, and a no-pollution AC. The actual CLI invocation lands in S11b-1 (smoke test) and the full build-cycle scenario in S11b-2.
 
+**Key design decisions:**
+- **Step-scoped secret env, not workflow-scoped.** Final form is step-level for least privilege; S11b-1 will add its own step-level `env:` block when it actually consumes the key
+- **`git worktree add "$SHA"`, not `HEAD`** — path and contents stay coherent if HEAD moves between resolution and add
+- **Cleanup silenced failures emit stderr warnings** instead of full silence, per Roughly's "fail loud" principle
+- **No new ADR** — scaffolding only, no novel design decision per Stage 2 discovery
+- **Plan-mode mechanism decoupling preserved** — stub deliberately avoids dependence on S0/S1 findings, allowing S11a to land in parallel
+
 **Acceptance criteria:**
-- [ ] `.github/workflows/dogfood.yml` created; runs on push to main and on PR; jobs named clearly (`dogfood-build-cycle` etc.)
-- [ ] `scripts/ci-dogfood.sh` created; sets up an ephemeral git worktree at `/tmp/roughly-dogfood-${SHA}` containing the plugin checkout
-- [ ] Worktree teardown runs on success AND failure (`trap cleanup EXIT`); failed runs do not leave state behind
-- [ ] No dogfood run mutates the source-repo working tree visible to subsequent commits — verify by checking `git status --porcelain` is unchanged before and after a CI run
-- [ ] `claude` CLI authentication is handled via a documented secret (e.g., `ANTHROPIC_API_KEY`); CONTRIBUTING.md explains how to set it
-- [ ] At the `claude` invocation point, the script is a **no-op stub** in S11a (returns 0 without invoking the CLI). Real invocation lands in S11b-1 (smoke test) and S11b-2 (full scenario). This decouples scaffolding from S0/S1's mechanism findings
-- [ ] `scripts/ci-dogfood.sh` is runnable locally with the same env vars, producing the same behavior
-- [ ] CONTRIBUTING.md gains a CI section: where workflow logs live, how to reproduce a failure locally, what's in scope vs out of scope for CI, and the **token-cost expectations** for CI runs (S11b-1: ~5K tokens; S11b-2: ≤150K Sonnet tokens per run; CI budget caveats around PR push frequency)
+- [x] `.github/workflows/dogfood.yml` created; runs on push to main and on PR; job named `dogfood-build-cycle`
+- [x] `scripts/ci-dogfood.sh` sets up an ephemeral git worktree at `/tmp/roughly-dogfood-${SHA}`
+- [x] `trap cleanup EXIT` registered before worktree creation; failed runs do not leave state behind
+- [x] No dogfood run mutates the source-repo working tree — `git status --porcelain` symmetric pre/post
+- [x] `ANTHROPIC_API_KEY` documented + plumbed at step-scope (least privilege); CONTRIBUTING.md explains setup
+- [x] `claude` invocation point is a no-op stub in S11a; real invocation lands in S11b-1 / S11b-2
+- [x] `scripts/ci-dogfood.sh` runnable locally with same env vars, producing same behavior
+- [x] CONTRIBUTING.md `## CI` section covers logs, local repro, scope, token-cost expectations (S11b-1 ~5K; S11b-2 ≤150K), auth secret setup
 
-**Verification:**
-- Push a no-op branch to a fork; confirm dogfood.yml fires, completes (with a stub scenario), and tears down cleanly
-- Locally invoke `bash scripts/ci-dogfood.sh`; confirm same behavior and no source-tree pollution. To verify no pollution: `git diff --quiet` exits 0 (no tracked diff) AND `[ -z "$(git status --porcelain)" ]` is true (no untracked or modified files in working tree)
-- Inspect the worktree path during a run; confirm it's isolated from the source checkout
+**Verification (delivered):**
+- `shellcheck scripts/ci-dogfood.sh` → 0 issues
+- `bash .claude/hooks/verify-all.sh` → exit 0
+- End-to-end local run → exit 0; `git status --porcelain` symmetric pre/post; worktree cleaned up
+- Outside-repo invocation → friendly diagnostic, exit 1
+- `cubic review --json` → `{"issues": []}`
+- PR review cleared
 
-**Dependencies:** None for the scaffolding itself. The script is a no-op stub at the `claude` invocation point until S11b-1 lands; this decouples scaffolding from S0/S1's plan-mode mechanism findings, allowing S11a to land in parallel with the spike.
+**Known limitations:**
+- Local-repro pre/post symmetry check requires a clean tree to be airtight — documented in CONTRIBUTING.md L91. CI is unaffected (clean checkout).
+- `pull_request` trigger does not pass secrets to fork PRs. Correct behavior for the S11a stub; S11b-1 will need to revisit auth strategy if it wants to test on fork PRs.
 
-**Out of scope:**
-- The CLI plumbing smoke test (S11b-1)
-- The actual build-cycle scenario (S11b-2)
-- Coverage of `/roughly:fix`, `/roughly:setup`, `/roughly:upgrade` (S11b-2 expands; for v0.1.5 happy-path-only)
-- Caching node_modules / Claude state between runs (correctness first, perf later)
+**Dependencies:** None — stub at the `claude` invocation point allowed S11a to land in parallel with S0/S1.
+
+**Out of scope (carried forward):**
+- The CLI plumbing smoke test → S11b-1
+- The actual build-cycle scenario → S11b-2
+- Coverage of `/roughly:fix`, `/roughly:setup`, `/roughly:upgrade` — v0.1.6 candidate
+- Caching node_modules / Claude state between runs — v0.1.6 candidate (correctness first, perf later)
 
 ---
 
@@ -822,7 +848,7 @@ Order is by dependency, not roadmap item number.
 | # | Story | Why this position |
 |---|---|---|
 | 1 | **E03.S0** (plan-mode spike) ✅ | ½-day investigation; gated S1. Merged 2026-05-01 via PR #24 (`e5d630f`). Conclusion: preamble + lightweight hook (`UserPromptSubmit` `permission_mode`; spike's API name corrected during S1). |
-| 2 | **E03.S11a** (CI scaffolding) | Lands ahead of S1 — scaffolding script is a stub at the `claude` invocation point until S11b-1, so doesn't depend on plan-mode detection |
+| 2 | **E03.S11a** (CI scaffolding) ✅ | Stub at `claude` invocation point allowed parallel landing with S0/S1. Merged 2026-05-08 via PR #31 (`f73466b`, 4 commits). `dogfood-build-cycle` job + ephemeral worktree + `git status --porcelain` symmetry verified. Token-cost expectations documented in CONTRIBUTING.md `## CI`. CI cluster 1/3. |
 | 3 | **E03.S1** (plan-mode auto-detect/exit) ✅ | Highest-value item; unblocks safe CI dogfood runs. Merged 2026-05-02 via PR #25 (`c598ef6`) with follow-up fixes through 2026-05-03. ADR-009 authoritative. |
 | 4 | **E03.S11b-1** (CLI plumbing smoke test) | Proves auth + CLI plumbing in CI before subsequent prose-touching stories land |
 | 5 | **E03.S6** (plan-format version field) ✅ | Additive, low-risk. Merged 2026-05-08 via PR #30 (`b22144f`, squash from `57f78f3`). Closes trust-hardening cluster (7/7). +2 lines each to build (294→296) and fix (297→299). Fix now at binding 1-line headroom. v0.2.0's ADR-010 plan-format-v2 work unblocked. |
