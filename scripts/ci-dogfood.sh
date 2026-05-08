@@ -94,15 +94,18 @@ if [ "$PLUGIN_EXIT" != 0 ]; then
   printf '%s\n' "$PLUGIN_OUT" | sed 's/^/    /' >&2
   exit 1
 fi
-# Anchor: line start, optional list-decoration prefix (whitespace, dashes,
-# asterisks, digits, dots, pipes — covers `- `, `* `, `1. `, `| `, indentation),
-# the literal `/roughly:setup`, then EOL or whitespace. Rejects prose mentions
-# (lines starting with a letter — "I have access to /roughly:setup ...") AND
-# rejects substring drift (`/roughly:setupx`, `/roughly:setup-other` — char
-# after command must be EOL or whitespace). Liberal enough to accept common
-# list formats; strict enough to require evidence the model treated this as
-# a command-list item, not prose.
-if ! printf '%s\n' "$PLUGIN_OUT" | grep -qE "^[[:space:]0-9.*|-]*/roughly:setup($|[[:space:]])"; then
+# Anchor: line start, optional non-alphabetic prefix (covers any decoration —
+# whitespace, list markers like `- ` `* ` `1. `, markdown formatting like
+# backticks/quotes/brackets/angle-brackets/hashes, table pipes, indentation,
+# nested combinations like `  - \`/roughly:setup\``), the literal
+# `/roughly:setup`, then EOL or a non-identifier character. Rejects prose
+# mentions (lines starting with a letter — "I have access to /roughly:setup
+# ...") AND rejects substring drift (`/roughly:setupx`, `/roughly:setup-other`,
+# `/roughly:setup_x` — char after command must be a non-identifier boundary,
+# i.e. not letter/digit/`-`/`_`). Liberal enough to accept any common markdown
+# format the model might emit; strict enough to require evidence the model
+# treated this as a command listing, not as prose.
+if ! printf '%s\n' "$PLUGIN_OUT" | grep -qE "^[^A-Za-z]*/roughly:setup($|[^A-Za-z0-9_-])"; then
   echo "ci-dogfood: FAIL — plugin loading not verified (no /roughly:setup list-item line in output)" >&2
   printf '%s\n' "$PLUGIN_OUT" | sed 's/^/    /' >&2
   exit 1
