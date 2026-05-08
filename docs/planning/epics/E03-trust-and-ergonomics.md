@@ -1,6 +1,6 @@
 # E03 — Trust hardening + ergonomics + CI
 
-**Status:** In Progress (4/16 stories complete — E03.S0 spike merged 2026-05-01 via PR #24 (`e5d630f`); E03.S1 implementation merged 2026-05-02 via PR #25; E03.S3 retirement merged 2026-05-04 via PR #26 (`48c9f9a`); E03.S2 stop-hook-v1 templating completion merged 2026-05-06 via PR #27 (`a3d7afc`, 24 commits). Trust-hardening cluster now 4/7 done (S0/S1/S2/S3); remaining: S4 pre-flight, S5 CONTRIBUTING prose, S6 plan-format version field. Maturity-check loop reduced from 5 → 3 active checks; `stop-hook-v1` is now an installing offer rather than a no-op. New deferred-investigations catalog seeded with DI-001 (Stage 6 review-depth observation).)
+**Status:** In Progress (5/16 stories complete — E03.S0 spike merged 2026-05-01 via PR #24; E03.S1 merged 2026-05-02 via PR #25; E03.S3 merged 2026-05-04 via PR #26; E03.S2 merged 2026-05-06 via PR #27 (24 commits); E03.S5 merged 2026-05-07 via PR #28 (`b58f4bd`, 2 commits). Trust-hardening cluster now 5/7 done (S0/S1/S2/S3/S5); remaining: S4 pre-flight, S6 plan-format version field. Maturity-check loop reduced from 5 → 3 active checks; `stop-hook-v1` is now an installing offer rather than a no-op. New deferred-investigations catalog seeded with DI-001 (Stage 6 review-depth observation). [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) at 64/80 lines.)
 **Target version:** v0.1.5
 **Target effort:** 6-7 wk
 **Dependencies:** E01 (pipeline foundation, audit follow-up shipped v0.1.3); E02 (rename to `roughly` shipped v0.1.4 — namespace, dotdir, version-line identifier all assumed in place)
@@ -368,34 +368,49 @@ ROADMAP.md item 4 wording is updated separately as part of this story.
 #### E03.S5: Document Edit `replace_all` dual-semantic-token failure
 
 **Maps to roadmap item:** #5
+**Status:** Complete on `feat/S03.5-document-edit-replace-all-dual-semantic-token-failure`; merged 2026-05-07 via PR #28 (`b58f4bd`, 2 commits — `ef3a350` core section + `b8abb69` cross-file line-number-rot pitfall). All 6 ACs met. Section landed at 20 content lines (15-30 budget). Self-verification holds against live [.claude/hooks/verify-all.sh](../../../.claude/hooks/verify-all.sh) — `rg -nw 'ruckus'` returns 3 matches at L17/18/19; `rg -nw 'roughly'` returns 2 at L2/11.
 
-**Files touched:**
-- [CONTRIBUTING.md](../../CONTRIBUTING.md) — new "Tooling pitfalls" section (or equivalent)
+**Files delivered:**
+
+Modified:
+- [CONTRIBUTING.md](../../../CONTRIBUTING.md) — new `## Tooling Pitfalls` section between `## Code Standards` and `## Testing` (Title-Case for style consistency with surrounding `##` headings); 63 → 83 lines (+20 content lines, L50–L69)
+- [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) — new entry: cross-file line-number rot (commit `b8abb69`); 62 → 64 lines, still under 80-line cap
+
+New:
+- `docs/plans/E03-S5-tooling-pitfalls-plan.md` — implementation plan artifact
 
 **Context:**
 
-The S02.7 wrap-up incident (recorded at [.roughly/known-pitfalls.md:38](../../.roughly/known-pitfalls.md#L38)) showed that `Edit`'s `replace_all: true` is dangerous when the same token serves dual semantic roles in a file — legacy detection code and user-facing prose both contained "ruckus" in [.claude/hooks/verify-all.sh](../../.claude/hooks/verify-all.sh), and a bulk replacement silently inverted the legacy detector. This is a contributor pitfall, not a runtime issue — prose-only documentation is sufficient.
+The S02.7 wrap-up incident (recorded at [.roughly/known-pitfalls.md:38](../../../.roughly/known-pitfalls.md#L38)) showed that `Edit`'s `replace_all: true` is dangerous when the same token serves dual semantic roles in a file — legacy detection code and user-facing prose both contained "ruckus" in [.claude/hooks/verify-all.sh](../../../.claude/hooks/verify-all.sh), and a bulk replacement silently inverted the legacy detector. This is a contributor pitfall, not a runtime issue — prose-only documentation is sufficient.
 
 Code-level defense is explicitly deferred per the roadmap's "Deferred" section ("Edit replace_all code-level defense: prose-only in v0.1.5; code defense waits for a second occurrence").
 
 **Acceptance criteria:**
-- [ ] [CONTRIBUTING.md](../../CONTRIBUTING.md) gains a "Tooling pitfalls" section (or extends an existing pitfalls/conventions section)
-- [ ] The section names the specific failure mode, names the at-risk tools (Edit, IDE find/replace, sed), and includes a worked example drawn from the dual-semantic-token incident recorded in [.roughly/known-pitfalls.md](../../.roughly/known-pitfalls.md) (the `ruckus` token serving as both legacy detector and prose token in `verify-all.sh`)
-- [ ] The section names the verification commands: `rg -nw 'old-token' <file>` and `rg -nw 'new-token' <file>` after a bulk replacement, with the expected match outputs to compare against
-- [ ] **Self-verification:** running the documented verification commands against the actual incident file ([.claude/hooks/verify-all.sh](../../.claude/hooks/verify-all.sh)) produces the expected match counts described in the worked example (validates that the doc's example holds against the real-world artifact)
-- [ ] Section length is 15-30 lines — long enough to be load-bearing, short enough to read in 60 seconds
-- [ ] No skill, agent, or hook changes — prose-only
+- [x] [CONTRIBUTING.md](../../../CONTRIBUTING.md) gains a `## Tooling Pitfalls` section (Title-Case for style consistency with surrounding `##` headings)
+- [x] The section names the specific failure mode (`Edit replace_all: true`), names the at-risk tools (`Edit`, `sed -i`, IDE find/replace), and includes a worked example drawn from the [verify-all.sh](../../../.claude/hooks/verify-all.sh) `ruckus` dual-semantic-token incident
+- [x] The section names the verification commands `rg -nw 'old-token' <file>` and `rg -nw 'new-token' <file>` with claimed counts/lines (3 @ L17/18/19 and 2 @ L2/11)
+- [x] **Self-verification:** both rg commands return claimed counts/lines today against [.claude/hooks/verify-all.sh](../../../.claude/hooks/verify-all.sh)
+- [x] Section length 15–30 lines — landed at 20 content lines (L50–L69)
+- [x] No skill, agent, or hook changes — prose-only
 
-**Verification:**
-- Reviewer reads the section cold (without prior incident context) and can describe the failure mode in their own words
-- `wc -l` of the new section is in 15-30 line range
-- Run the doc's example commands against [.claude/hooks/verify-all.sh](../../.claude/hooks/verify-all.sh); confirm the match counts match the doc's claim
+**Verification (delivered):**
+- `bash .claude/hooks/verify-all.sh` → exit 0 (no drift)
+- `rg -nw 'ruckus' .claude/hooks/verify-all.sh` → 3 matches at L17, L18, L19 (matches claim)
+- `rg -nw 'roughly' .claude/hooks/verify-all.sh` → 2 matches at L2, L11 (matches claim)
+- `cubic review --json` → `{"issues": []}`
+- review-plan subagent → PASS, 1 iteration, 0 blockers
+- Three-agent parallel review (code-reviewer / static-analysis / silent-failure-hunter) → 0 critical, 0 blocking
 
-**Dependencies:** None. Slot wherever fits.
+**Review findings addressed during the run:**
+- *Medium (silent-failure-hunter):* doc said the build pipeline "appends to" `.roughly/known-pitfalls.md`; actually it asks the human at wrap-up first. Reworded to "updates at wrap-up when a contributor confirms a new one." (One-line edit, no length impact.)
+- *Medium (silent-failure-hunter):* line-number citations in CONTRIBUTING.md L66–67 can rot silently if `verify-all.sh` is edited later. AC explicitly required expected match outputs, so kept; rot risk recorded as a new pitfall in [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) (commit `b8abb69`) for future awareness.
+
+**Dependencies:** None. Slotted opportunistically.
 
 **Out of scope:**
-- Code-level defense (Edit tool wrapper, lint rule, etc.) — deferred per roadmap
+- Code-level defense (Edit tool wrapper, lint rule, etc.) — deferred per roadmap; waits for a second occurrence
 - Generalizing to other dual-semantic-token risks beyond this incident
+- ADR — prose-only contributor doc, behavior unchanged. Cross-file line-number rot pitfall recorded informally in known-pitfalls.md, not promoted to ADR.
 
 ---
 
@@ -852,7 +867,7 @@ Order is by dependency, not roadmap item number.
 | 4 | **E03.S11b-1** (CLI plumbing smoke test) | Proves auth + CLI plumbing in CI before subsequent prose-touching stories land |
 | 5 | **E03.S12.0** (resolve roughly.dev source location) | Gates S12a/S12b; ½-day decision |
 | 6 | **E03.S6** (plan-format version field) | Additive, low-risk; lands next so v0.2.0 work can begin parallel |
-| 7 | **E03.S5** (CONTRIBUTING prose) | Independent, prose-only; slot anywhere |
+| 7 | **E03.S5** (CONTRIBUTING prose) ✅ | Independent, prose-only. Merged 2026-05-07 via PR #28 (`b58f4bd`, 2 commits). Section landed at 20 content lines; self-verification holds against live verify-all.sh. |
 | 8 | **E03.S4** (pre-flight in audit-epic + verify-all) | Independent of pipeline changes |
 | 9 | **E03.S3** (retire test-verify-v1 / pitfalls-organized-v1) ✅ | Folds triggers into doc-writer; doesn't break anything. Merged 2026-05-04 ahead of original sequence position — landed before S11a/S11b-1/S12.0/S6/S5/S4. Build/fix line counts now 288/291 (12 and 9 lines headroom). Stage 8 maturity-check loop reduced to 3 active checks. |
 | 10 | **E03.S2** (stop-hook-v1 templating) ✅ | After S3 to avoid double-touching maturity check section. Merged 2026-05-06 via PR #27 (`a3d7afc`, 24 commits). 4-phase transactional commit in setup Step 5d Branch 4; lighter install path in build/fix Stage 8. Build/fix line counts now 294/297; setup 287. DI-001 (Stage 6 review-depth observation) seeded in new deferred-investigations catalog. |
