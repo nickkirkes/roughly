@@ -1,0 +1,36 @@
+CONTRIBUTING.md
+  s_9efe68f5e747b0::t_03b9d490edc801 112
+  s_9efe68f5e747b0::t_aa2390d0b81191 91
+docs/ROADMAP.md
+  s_9efe68f5e747b0::t_d6406f0382eac1 71
+.github/workflows/dogfood.yml
+  s_9efe68f5e747b0::t_dc0c8906fe0fe0 27-48
+  s_9efe68f5e747b0::t_5382e37dfa75dc 20-22
+docs/plans/E03-S11b-1-plan.md
+  s_9efe68f5e747b0::t_931f90bd695920 37,39,41
+  s_9efe68f5e747b0::t_3b6020745a4aa0 1-36,38,40,42-84,88,90-93,95-170
+  s_9efe68f5e747b0::t_d5700319d4831e 85-87,89
+  s_9efe68f5e747b0::t_7ee9e1b35e160d 94
+CHANGELOG.md
+  s_9efe68f5e747b0::t_2270f4ac9f07f4 11
+  s_9efe68f5e747b0::t_4bd8b5612892d8 9-10
+scripts/ci-dogfood.sh
+  s_9efe68f5e747b0::t_14cae8d508f0b9 47,49-52,58-59,74-85,97-103
+  s_9efe68f5e747b0::t_ff90a18f9cfb5b 53-57,60-73,86-96
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "3f6ed4392594170a20d7acc605b7e85b49a4d948",
+  "prompts": {},
+  "sessions": {
+    "s_9efe68f5e747b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "348509c4-9179-42e7-985a-900f042b1537",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
