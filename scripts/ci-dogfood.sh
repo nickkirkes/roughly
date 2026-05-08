@@ -37,8 +37,10 @@ if [ -d "$WORKTREE" ]; then
   rm -rf "$WORKTREE"
 fi
 
-# Create ephemeral worktree and enter it
-git -C "$ROOT" worktree add "$WORKTREE" HEAD
+# Create ephemeral worktree and enter it.
+# Use "$SHA" (not HEAD) so the worktree contents match the SHA encoded in the path —
+# guards against HEAD moving between SHA resolution and worktree add.
+git -C "$ROOT" worktree add "$WORKTREE" "$SHA"
 cd "$WORKTREE"
 
 # ──────────────────────────────────────────────────────────────────────
