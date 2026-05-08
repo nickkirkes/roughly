@@ -1,0 +1,23 @@
+docs/planning/epics/E03-trust-and-ergonomics.md
+  s_7bdcdc0a2d4468::t_1bbb970bb7c8da 851
+  s_7bdcdc0a2d4468::t_19516939ea16f4 3
+  s_7bdcdc0a2d4468::t_b71c68d86cae42 30-31
+  s_7bdcdc0a2d4468::t_8959d822be115e 618,620-630,641-647,649-656,658-664,666-668,670-676
+  s_7bdcdc0a2d4468::t_5b07b830f19a24 50-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "504b0247f7d8fcc33308f17a42e9be76d6896893",
+  "prompts": {},
+  "sessions": {
+    "s_7bdcdc0a2d4468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "136846fa-01aa-4afe-ae23-c2889ca8819c",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
