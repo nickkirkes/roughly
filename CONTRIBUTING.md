@@ -99,7 +99,7 @@ Run from the plugin repo root, ideally from a clean working tree. The script ass
 **Out of scope for v0.1.5 CI.**
 
 - `/roughly:fix`, `/roughly:setup`, `/roughly:upgrade` coverage
-- Negative-path scenarios
+- Build-cycle negative-path scenarios (review-plan NEEDS REVISION, Stage 6 max cycles, etc.) — S11b-1 ships an auth-failure regression check at the smoke layer, but full pipeline negative paths land with S11b-2 or later
 - Caching of Claude state or `node_modules` between runs
 
 **Token-cost expectations.**
