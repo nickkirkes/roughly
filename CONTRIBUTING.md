@@ -78,6 +78,39 @@ There is no automated test suite — this is pure markdown. To verify changes:
 4. Check that cross-references (agent names in skills, file paths) are accurate
 5. Verify line/word limits: skills < 300 lines, agents < 500 words
 
+## CI
+
+**Workflow logs.** GitHub Actions tab → `dogfood` workflow → most recent run. Per-job logs live under `dogfood-build-cycle`.
+
+**Reproducing a failure locally.**
+
+```bash
+bash scripts/ci-dogfood.sh
+```
+
+Run from the plugin repo root, ideally from a clean working tree. The script asserts pre/post symmetry of `git status --porcelain`, so a dirty tree at entry will mask any new pollution introduced by the run (the assertion catches deltas, not absolute cleanliness). CI checks out a clean tree, so this concern is local-only. The S11a stub does not require `ANTHROPIC_API_KEY`. Once S11b-1 lands, set the env var to exercise the smoke-test path.
+
+**In scope for v0.1.5 CI.**
+
+- S11a — scaffolding stub (landed in this story)
+- S11b-1 — CLI plumbing smoke test
+- S11b-2 — happy-path build cycle
+
+**Out of scope for v0.1.5 CI.**
+
+- `/roughly:fix`, `/roughly:setup`, `/roughly:upgrade` coverage
+- Negative-path scenarios
+- Caching of Claude state or `node_modules` between runs
+
+**Token-cost expectations.**
+
+- S11b-1: ~5K tokens per run
+- S11b-2: ≤150K Sonnet tokens per run
+
+CI cost is a non-trivial release-cost driver at high PR push frequency — flag for monitoring.
+
+**Auth.** Requires the `ANTHROPIC_API_KEY` repo secret (Settings → Secrets and variables → Actions). The S11a stub does not consume it; the env is scoped to the step that runs the script — narrowly, by design, to keep secret exposure on a least-privilege basis. S11b-1 will add its own step-level `env:` mapping when it consumes the secret.
+
 ## License
 
 By contributing, you agree that your contributions will be licensed under the MIT License.
