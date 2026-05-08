@@ -88,7 +88,7 @@ There is no automated test suite — this is pure markdown. To verify changes:
 bash scripts/ci-dogfood.sh
 ```
 
-Run from the plugin repo root, ideally from a clean working tree. The script asserts pre/post symmetry of `git status --porcelain`, so a dirty tree at entry will mask any new pollution introduced by the run (the assertion catches deltas, not absolute cleanliness). CI checks out a clean tree, so this concern is local-only. The S11a stub does not require `ANTHROPIC_API_KEY`. Once S11b-1 lands, set the env var to exercise the smoke-test path.
+Run from the plugin repo root, ideally from a clean working tree. The script asserts pre/post symmetry of `git status --porcelain`, so a dirty tree at entry will mask any new pollution introduced by the run (the assertion catches deltas, not absolute cleanliness). CI checks out a clean tree, so this concern is local-only. The smoke-test step requires `ANTHROPIC_API_KEY`. Set the env var locally before running, or omit it to exercise the auth-failure path (the script will fail with a recognizable `Invalid API key` or `Not logged in` error rather than hanging).
 
 **In scope for v0.1.5 CI.**
 
@@ -109,7 +109,7 @@ Run from the plugin repo root, ideally from a clean working tree. The script ass
 
 CI cost is a non-trivial release-cost driver at high PR push frequency — flag for monitoring.
 
-**Auth.** Requires the `ANTHROPIC_API_KEY` repo secret (Settings → Secrets and variables → Actions). The S11a stub does not consume it; the env is scoped to the step that runs the script — narrowly, by design, to keep secret exposure on a least-privilege basis. S11b-1 will add its own step-level `env:` mapping when it consumes the secret.
+**Auth.** Requires the `ANTHROPIC_API_KEY` repo secret (Settings → Secrets and variables → Actions). The smoke step consumes the secret via a step-scoped `env:` mapping on `Run dogfood scaffolding`; the auth-failure negative-test step uses a deliberately-invalid placeholder, also step-scoped. The real secret is never exposed at workflow-global scope.
 
 ## License
 

@@ -17,7 +17,32 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code && claude --version
+
       - name: Run dogfood scaffolding
         run: bash scripts/ci-dogfood.sh
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Verify auth failure mode (no hang)
+        env:
+          ANTHROPIC_API_KEY: invalid-key-xyz
+        run: |
+          set -uo pipefail
+          OUT="$(timeout 30 claude --bare --plugin-dir "$GITHUB_WORKSPACE" --no-session-persistence -p "respond with ok" 2>&1)" && EXIT=0 || EXIT=$?
+          if [ "$EXIT" = 124 ]; then
+            echo "::error::auth-failure test FAILED — claude timed out (hang regression?)"
+            exit 1
+          fi
+          if [ "$EXIT" = 0 ]; then
+            echo "::error::auth-failure test FAILED — claude succeeded with invalid key"
+            exit 1
+          fi
+          if ! grep -qE "Invalid API key|Not logged in" <<< "$OUT"; then
+            echo "::error::auth-failure test FAILED — expected 'Invalid API key' or 'Not logged in' in output"
+            printf '%s\n' "$OUT"
+            exit 1
+          fi
+          MATCH="$(grep -E "Invalid API key|Not logged in" <<< "$OUT" | head -1)"
+          echo "auth-failure test PASSED — clean error (no hang): $MATCH"
