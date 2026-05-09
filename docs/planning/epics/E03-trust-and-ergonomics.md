@@ -744,31 +744,43 @@ S11b-1 lands ahead of S11b-2 so subsequent stories (S9, S10) ship with at least 
 **Maps to roadmap item:** #11 (part 2b — split during epic review)
 
 **Files touched:**
-- `scripts/ci-dogfood.sh` (extend with full scenario)
-- `tests/fixtures/<name>/` (new — fixture repo for the scenario)
+- [skills/build/SKILL.md](../../../skills/build/SKILL.md) — Stage 1 (detect `--ci` flag in invocation; set internal `CI_MODE` flag) + Stage 4 (when `CI_MODE` is set, skip blocking subagent dispatch and assume synthetic PASS verdict). Build is at 296/300; expect ~3-4 net additive lines. If the additive change exceeds 4 lines, invoke the [line-cap budget contract](#line-cap-budget-contract)'s prose-extraction off-ramp on the Stage 4 review-plan block before adding `--ci` handling
+- `scripts/ci-dogfood.sh` (extend with full scenario; invokes `/roughly:build --ci` against the fixture)
+- `tests/fixtures/<name>/` (new — fixture repo for the scenario; minimal: CLAUDE.md, one source file, a trivial test)
 
 **Context:**
 
 S11a establishes isolation; S11b-1 proves CLI plumbing; S11b-2 drives the actual scenario. The hard problem: a build cycle includes Stage 4 plan review, which today requires human input on PASS / NEEDS REVISION + override. CI must drive this without a human.
 
-Options for the format are documented in [open questions](#open-questions); the story commits to a happy-path scenario only.
+**OQ1 resolution (2026-05-08): option (c) — `--ci` flag in build skill.** Three options were considered: (a) heredoc-fed answers piped via stdin, (b) override-token env var (e.g., `ROUGHLY_CI_AUTO_PASS=true`), (c) mock-mode flag (`/roughly:build --ci`). Option (c) chosen on DX grounds: the flag is part of the build skill's documented public API, visible in invocation history and self-documenting in scripts, whereas (b)'s env var is a side door that can silently leak from a CI debug session into local development (a user who sets `ROUGHLY_CI_AUTO_PASS=true` once "to skip the slow part" silently breaks ADR-001's enforcement gate for all future runs). (a) was rejected as too brittle to skill-prompt changes — every Stage 4 prompt iteration risks breaking CI's heredoc match. The "skill flags as public API; env vars are debug-only" principle that emerged from this decision is surfaced as a [v0.1.6 candidate](#v016-candidates) for either a small ADR or a CONTRIBUTING.md note.
+
+**`--ci` flag semantics:**
+- Invoke as `/roughly:build --ci` (CI only; never invoke interactively)
+- At Stage 1, the orchestrator detects `--ci` in the user's prompt and sets internal `CI_MODE=true`
+- At Stage 4, when `CI_MODE` is set, the orchestrator skips the blocking subagent dispatch of `/roughly:review-plan` and assumes a synthetic PASS verdict — proceeds directly to Stage 5
+- All other stages run normally — the only bypass is the human gate at Stage 4
+- The flag is documented in build/SKILL.md (frontmatter description and Stage 1 body); CI invocations are explicitly noted as the only legitimate consumer
+- **Out of scope for v0.1.5: fix-side `--ci`.** S11b-2 is build happy-path only; fix-side parity is a v0.1.6 candidate when fix CI scenarios land
 
 **Acceptance criteria:**
+- [ ] [skills/build/SKILL.md](../../../skills/build/SKILL.md) gains `--ci` flag handling: Stage 1 detects the flag and sets `CI_MODE=true`; Stage 4 skips blocking review-plan dispatch when `CI_MODE` is set and assumes synthetic PASS. Flag is documented in skill description and inline at the detection/skip points. Net additive lines ≤ 4 (build is at 296/300); if exceeded, prose-extraction off-ramp is invoked first per the [line-cap budget contract](#line-cap-budget-contract)
 - [ ] `tests/fixtures/<name>/` contains a minimal repo (CLAUDE.md, one source file, a trivial test) that exercises the build pipeline end-to-end
 - [ ] Fixture is a single-task plan ("add a constant" or similar) — explicitly chosen to minimize token cost
-- [ ] `scripts/ci-dogfood.sh` invokes `/roughly:build` against the fixture for a small, deterministic feature
-- [ ] The scenario succeeds: plan written, review-plan returns PASS, implementation runs, verify-all passes, wrap-up records workflow upgrades, no abort
+- [ ] `scripts/ci-dogfood.sh` invokes `/roughly:build --ci` against the fixture for a small, deterministic feature
+- [ ] The scenario succeeds: plan written, Stage 4 takes the synthetic-PASS path under `--ci`, implementation runs, verify-all passes, wrap-up records workflow upgrades, no abort
 - [ ] Scenario assertions check **structural properties** (plan file exists, contains `## Tasks`, has at least one task, review-plan returned PASS, `git status --porcelain` of the fixture repo shows expected diff) rather than full content match — this insulates the test from plan-format changes (e.g., S6's version line, future v0.2.0 format v2)
 - [ ] CI fails loudly if any stage produces unexpected output (silent failure mode protection)
-- [ ] CI fails loudly if Stage 4 review-plan is not invoked (plan-mode hijack regression protection — relies on S1)
+- [ ] CI fails loudly if Stage 4 is reached but the synthetic-PASS branch is not taken under `--ci` — i.e., if the orchestrator attempts a real review-plan dispatch despite `CI_MODE=true`, that's a regression in the `--ci` flag handling. (Plan-mode hijack regression protection from S1 still applies on the non-`--ci` path; this AC adds protection that the `--ci` path itself doesn't drift back to invoking the human gate.)
 - [ ] The scenario completes in under 5 minutes wall-clock on GitHub Actions standard runners
 - [ ] **Token cost cap:** scenario uses ≤150K Sonnet tokens per run (sized for the minimal fixture); CI fails or warns if a run exceeds this, signaling fixture growth or pipeline regression
 - [ ] Failure logs include enough context (stage reached, last 50 lines of output) to diagnose without re-running locally
 - [ ] Fixture state is reset between runs — either via clean re-checkout of `tests/fixtures/<name>/` or explicit teardown of `tests/fixtures/<name>/.roughly/` and `tests/fixtures/<name>/docs/plans/`
 
 **Verification:**
-- Push a change that breaks Stage 4 dispatch; confirm CI fails with a clear message
+- Push a change that removes the `--ci` Stage 1 detection or Stage 4 synthetic-PASS branch; confirm CI fails (the orchestrator either dispatches review-plan and hangs/errors, or aborts visibly)
 - Push a change that breaks plan-mode detection (S1 regression); confirm CI fails with a clear message
+- Manually invoke `/roughly:build --ci` locally against the fixture to confirm the flag's behavior matches the documented semantics (synthetic PASS, no review-plan dispatch)
+- Manually invoke `/roughly:build` (no `--ci`) locally to confirm the human gate still fires — `--ci` does not silently bleed into normal invocations
 - Push a clean change; confirm CI passes in <5 min and ≤150K tokens
 
 **Dependencies:** S11a (scaffolding), S11b-1 (plumbing proven), S1 (plan-mode detection). S6 and S9 are NOT dependencies — S6's version line should not break the scenario (verified post-merge), and S9's abort prose improves diagnosis but is not required for the happy path.
@@ -815,11 +827,7 @@ Removed from v0.1.5 epic per S12.0 option (c). Tracked in [v0.1.6 candidates](#v
 
 These are surfaced in story bodies but consolidated here for the implementer's convenience.
 
-1. **CI scripted build cycle format (S11b-2).** Options:
-   - **(a) Heredoc-fed answers** — pipe canned PASS/override responses via stdin
-   - **(b) Override-token env var** — set `ROUGHLY_CI_AUTO_PASS=true` in the build skill's review-plan dispatch
-   - **(c) Mock-mode flag in build skill** — `/roughly:build --ci` shortcuts review-plan with a synthetic PASS verdict
-   - Each has trade-offs: (a) most realistic but brittle to skill prompt changes; (b) clean but requires skill modification; (c) cleanest but skill modification is more invasive. Decision needed before S11b-2 implementation; S11b-1 (CLI smoke test) does not depend on this resolution.
+1. ~~**CI scripted build cycle format (S11b-2).**~~ **Resolved 2026-05-08 — option (c) `--ci` flag in build skill.** Three options were considered: (a) heredoc-fed answers via stdin, (b) override-token env var (e.g., `ROUGHLY_CI_AUTO_PASS=true`), (c) mock-mode flag (`/roughly:build --ci`). Option (c) chosen on DX grounds: the flag is part of the build skill's documented public API (visible in invocation, self-documenting in scripts, hard to silently leak into normal use), whereas (b)'s env var is a side door that can silently break ADR-001's enforcement gate if a developer sets it once locally and forgets. (a) was rejected as too brittle to Stage 4 prompt iteration. Implementation cost between (b) and (c) is roughly equivalent — both modify the build skill at Stage 4. The "skill flags as public API; env vars are debug-only" principle is surfaced as a v0.1.6 candidate. See [E03.S11b-2](#e03s11b-2-scripted-dogfood-happy-path-build-cycle) for full implementation guidance.
 
 2. ~~**Maturity check replacement coverage (S3).**~~ **Resolved by S3 (2026-05-04):** acceptable coverage loss accepted. Doc-writer's post-write suggestions fire only when (a) the user confirms new pitfalls/conventions at wrap-up AND (b) the agent actually writes to `.roughly/known-pitfalls.md`. Manual edits are explicitly out of the new trigger surface. Two-part gate documented in [agents/doc-writer.md](../../../agents/doc-writer.md) and [README.md:221](../../../README.md#L221). Manual-edit detection remains a [v0.1.6 candidate](#v016-candidates) if real-world usage shows the gap matters.
 
@@ -847,6 +855,8 @@ These are surfaced in story bodies but consolidated here for the implementer's c
 Items surfaced during epic writing that are clearly related to v0.1.5 work but explicitly out of frozen scope:
 
 - **Docs cluster (former S12a, S12b) — separate repo/epic.** Originally scoped as four roughly.dev pages in v0.1.5 (landing, setup walkthrough, pipeline overview, commands reference). Deferred 2026-05-08 via S12.0 option (c). Will land in a separate repo/epic post-v0.1.5; no v0.1.5 release-cycle dependency. Acceptance criteria from the original S12a/S12b stories (page outlines, line-budget targets, no-marketing-voice tone gates, anti-drift verification against SKILL.md sources) remain useful starting context for the future work. Path-to-v1.0 criterion #5 — "roughly.dev complete enough that a stranger gets the pipeline without reading SKILL.md" — is the long-term home for this work.
+- **"Skill flags as public API; env vars are debug-only" principle (S11b-2 OQ1 deferral).** Surfaced during the OQ1 decision (option (c) `--ci` flag chosen over option (b) env var on DX grounds). The principle deserves either a small ADR ("user-facing skill behavior changes are flags, not environment variables") or a `CONTRIBUTING.md` note. Establishes the precedent for v0.2.0's complexity flag (`Task N (Complexity: simple|standard|complex)`) and any future skill-side flags. Not blocking S11b-2 — the principle is implicit in the option (c) choice — but worth codifying.
+- **Fix-side `--ci` flag for `/roughly:fix` CI scenarios (S11b-2 deferral).** S11b-2 ships `--ci` for `/roughly:build` only; fix-side parity comes when fix CI scenarios land. The implementation pattern (Stage 1 flag detection + Stage 4 synthetic-PASS branch) is copy-paste from build's, but should not happen until there's a reason for it.
 - **Explicit `ANTHROPIC_API_KEY` empty-guard before invoking `claude` (S11b-1 deferral).** Silent-failure-hunter's I2 finding from S11b-1 review: a 1-line defensive check before the `claude` invocation would produce a clearer "secret not configured" diagnostic than relying on `claude --bare`'s `Not logged in` output. Real CI hit this exact case post-merge. Not blocking — current fail-loud behavior is correct — but worth tightening if anyone touches `scripts/ci-dogfood.sh` for another reason.
 - **Build-cycle negative-path CI scenarios (former S11b-1 out-of-scope).** Driving NEEDS REVISION recovery, Stage 6 max-cycles, and abort-handling paths in CI. Today's S11b-2 happy-path is the foundation; these are extensions when the happy-path is stable.
 - **In-session maturity offers at Stage 1 (former S7).** Originally scoped for v0.1.5 to evaluate `investigator-v1` and `stop-hook-v1` triggers up-front, before the user has invested effort in the build/fix run. Moved to v0.1.6 because: (a) line-cap budget on build/fix is tight, (b) the "users are tired by Stage 8" premise is unmeasured, (c) Stage-1 acceptance changes the semantics of `.roughly/workflow-upgrades` (records can persist for runs that subsequently abort). Revisit with v0.1.5 dogfood data on Stage 8 acceptance/decline rates.
