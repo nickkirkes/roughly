@@ -177,13 +177,22 @@ if ! grep -qE '^### T1' "$PLAN_FILE"; then
   exit 1
 fi
 
-# Assertion 5: implementation actually ran (proves Stage 5 reached the
-# source and modified it). Anchor on `NAME=` (assignment form) so a
-# comment-only modification like `# add NAME constant here` does not
-# false-positive — the requirement is a real shell assignment, not a
-# mention in prose.
+# Assertion 5a: NAME= assignment present (proves the constant was added).
+# Anchored on `NAME=` (assignment form) so a comment-only modification
+# like `# add NAME constant here` does not false-positive — the
+# requirement is a real shell assignment, not a mention in prose.
 if ! grep -qE '(^|[[:space:]])NAME=' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh"; then
   echo "ci-dogfood: FAIL — src/greeter.sh in worktree shows no NAME= assignment (implementation may not have run, or wrote only a comment)" >&2
+  sed 's/^/    /' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh" >&2
+  exit 1
+fi
+
+# Assertion 5b: NAME is referenced via $NAME or ${NAME} (proves the echo
+# update happened). Without this, an implementation that adds the constant
+# but leaves `echo "hello"` unchanged would silently pass — defeating the
+# scenario's check that both halves of the prompt's feature ran.
+if ! grep -qE '\$\{?NAME\}?' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh"; then
+  echo "ci-dogfood: FAIL — src/greeter.sh has NAME= but does not reference \$NAME or \${NAME} (echo update missing)" >&2
   sed 's/^/    /' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh" >&2
   exit 1
 fi

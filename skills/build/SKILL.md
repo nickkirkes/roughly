@@ -22,9 +22,7 @@ Feature to build: $ARGUMENTS
 
 ## STAGE 1: INTAKE
 
-Parse `$ARGUMENTS`. If it references a file (epic, story, spec), read it. Display a summary of what's being built.
-
-If `$ARGUMENTS` contains `--ci` as a standalone token (preceded by whitespace or string start, followed by whitespace or string end — not as a substring of `--ci-cd` or similar), set `CI_MODE=true` (CI-only; skips Stage 4's blocking review-plan dispatch).
+Parse `$ARGUMENTS`. If it references a file (epic, story, spec), read it. If it contains `--ci` as a standalone token (preceded by whitespace or string start, followed by whitespace or string end — not as a substring of `--ci-cd` or similar), set `CI_MODE=true` (CI-only; skips Stage 4's blocking review-plan dispatch). Display a summary of what's being built.
 
 Ask: **"Is this the correct scope? (yes / adjust / abort)"**
 
