@@ -113,6 +113,83 @@ fi
 
 echo "ci-dogfood: smoke + plugin-load — both assertions passed"
 
+# ──────────────────────────────────────────────────────────────────────
+# Full scenario: /roughly:build --ci against fixture
+# ──────────────────────────────────────────────────────────────────────
+
+cd "$WORKTREE/tests/fixtures/hello-roughly"
+
+# 1.50 USD ≈ ~150K mixed Sonnet tokens at current pricing (3/M in + 15/M
+# out, ~80/20 mix). Recompute if pricing changes.
+SCENARIO_OUT="$(timeout 270 claude --bare --plugin-dir "$WORKTREE" \
+  --no-session-persistence --max-budget-usd 1.50 \
+  -p "/roughly:build --ci add a NAME constant to src/greeter.sh and update the echo to use it" 2>&1)" \
+  && SCENARIO_EXIT=0 || SCENARIO_EXIT=$?
+if [ "$SCENARIO_EXIT" = 124 ]; then
+  echo "ci-dogfood: FAIL — full-scenario step timed out (claude did not return within 270s)" >&2
+  printf '%s\n' "$SCENARIO_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+if [ "$SCENARIO_EXIT" != 0 ]; then
+  echo "ci-dogfood: FAIL — full-scenario step claude exited $SCENARIO_EXIT" >&2
+  printf '%s\n' "$SCENARIO_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Assertion 1: synthetic-PASS marker present (proves Stage 4 took the
+# --ci branch instead of attempting real review-plan dispatch; AC5).
+# Full-string match (-F) keeps this in lockstep with skills/build/SKILL.md
+# Stage 4's emit instruction — drift in either side fails CI loudly.
+if ! printf '%s\n' "$SCENARIO_OUT" | grep -qF '[--ci] plan review skipped — synthetic PASS'; then
+  echo "ci-dogfood: FAIL — synthetic-PASS marker missing (Stage 4 may have attempted real review-plan dispatch despite --ci)" >&2
+  printf '%s\n' "$SCENARIO_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Assertion 2: plan file exists (proves Stage 3 ran, plan was written).
+# Exit-capture idiom required: under set -euo pipefail with pipefail, a
+# failing `ls` (no matches, missing dir) propagates through the pipe and
+# would silently kill the script before the [-z "$PLAN_FILE"] guard runs.
+PLAN_FILE="$(ls "$WORKTREE/tests/fixtures/hello-roughly/docs/plans/"*-plan.md 2>/dev/null | head -1)" \
+  && PLAN_FILE_EXIT=0 || PLAN_FILE_EXIT=$?
+if [ "$PLAN_FILE_EXIT" != 0 ] || [ -z "$PLAN_FILE" ] || [ ! -f "$PLAN_FILE" ]; then
+  echo "ci-dogfood: FAIL — no plan file found in $WORKTREE/tests/fixtures/hello-roughly/docs/plans/" >&2
+  printf '%s\n' "$SCENARIO_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Assertion 3: plan has '## Tasks' section (structural; AC4 — survives
+# plan-format drift).
+if ! grep -q '^## Tasks' "$PLAN_FILE"; then
+  echo "ci-dogfood: FAIL — plan file at $PLAN_FILE has no '## Tasks' section" >&2
+  sed 's/^/    /' "$PLAN_FILE" >&2
+  exit 1
+fi
+
+# Assertion 4: plan has at least T1 (per S6 epic note, the ### T1 anchor
+# is stable across Plan-format-version evolution). Match `### T1` with no
+# required trailing char so minor heading variations (`### T1`, `### T1 -
+# title`, `### T1: title`) all pass — the assertion's purpose is to
+# confirm T1 exists, not to validate its title format.
+if ! grep -qE '^### T1' "$PLAN_FILE"; then
+  echo "ci-dogfood: FAIL — plan file at $PLAN_FILE has no T1 task" >&2
+  sed 's/^/    /' "$PLAN_FILE" >&2
+  exit 1
+fi
+
+# Assertion 5: implementation actually ran (proves Stage 5 reached the
+# source and modified it). Anchor on `NAME=` (assignment form) so a
+# comment-only modification like `# add NAME constant here` does not
+# false-positive — the requirement is a real shell assignment, not a
+# mention in prose.
+if ! grep -qE '(^|[[:space:]])NAME=' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh"; then
+  echo "ci-dogfood: FAIL — src/greeter.sh in worktree shows no NAME= assignment (implementation may not have run, or wrote only a comment)" >&2
+  sed 's/^/    /' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh" >&2
+  exit 1
+fi
+
+echo "ci-dogfood: full-scenario — all 5 structural assertions passed"
+
 # Post-state check: confirm no source-tree pollution
 POST_STATE="$(git -C "$ROOT" status --porcelain)"
 if [ "$PRE_STATE" != "$POST_STATE" ]; then

@@ -1,6 +1,6 @@
 ---
 name: build
-description: "Full feature pipeline: discover → plan → review plan → implement (subagent-per-task with two-stage review) → review → verify build. Detects UI work and loads frontend-design skill automatically. Use for new features, stories, or epics."
+description: "Full feature pipeline: discover → plan → review plan → implement (subagent-per-task with two-stage review) → review → verify build. Detects UI work and loads frontend-design skill automatically. Use for new features, stories, or epics. CI: pass `--ci` for non-interactive runs (synthesizes Stage 4 PASS; CI-only)."
 disable-model-invocation: true
 ---
 
@@ -23,6 +23,8 @@ Feature to build: $ARGUMENTS
 ## STAGE 1: INTAKE
 
 Parse `$ARGUMENTS`. If it references a file (epic, story, spec), read it. Display a summary of what's being built.
+
+If `$ARGUMENTS` contains `--ci` as a standalone token (preceded by whitespace or string start, followed by whitespace or string end — not as a substring of `--ci-cd` or similar), set `CI_MODE=true` (CI-only; skips Stage 4's blocking review-plan dispatch).
 
 Ask: **"Is this the correct scope? (yes / adjust / abort)"**
 
@@ -96,6 +98,8 @@ Do NOT present the plan to the human yet — proceed directly to Stage 4.
 1. Confirm the file exists at the expected path
 2. Confirm it contains a `## Tasks` section with at least one task (T1)
 3. If either check fails: warn the human and loop back to Stage 3
+
+**`--ci` short-circuit:** If `CI_MODE=true`, skip the dispatch below, emit `[--ci] plan review skipped — synthetic PASS`, and proceed to Stage 5. CI-only puncture of ADR-001's blocking-subagent enforcement; never invoke `--ci` interactively.
 
 Dispatch `/roughly:review-plan` as a blocking subagent call. Use model `sonnet`. Pass the plan file path from Stage 3 as the input.
 
