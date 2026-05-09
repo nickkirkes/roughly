@@ -1,0 +1,45 @@
+docs/plans/E03-S11b-2-scripted-dogfood-happy-path-build-cycle-plan.md
+  s_eb2c77e4ac5322::t_1766608ac5166e 149
+  s_eb2c77e4ac5322::t_dfc16f4d51a2f6 1-48,50-105,107-137,139-148,150-162,164-178
+  s_eb2c77e4ac5322::t_ffcb45d760fae8 163
+  s_eb2c77e4ac5322::t_31c8b7e49c89f2 138
+  s_eb2c77e4ac5322::t_32a2ca17a5a81b 49
+  s_eb2c77e4ac5322::t_024c1dfb12e5b2 106
+scripts/ci-dogfood.sh
+  s_eb2c77e4ac5322::t_2b7a1e3059f54b 116-140,144-149,156-169,175-180,187-192
+  s_eb2c77e4ac5322::t_c9ecedeebfea20 141-143,150-155
+  s_eb2c77e4ac5322::t_48e011e882f92a 170-174,181-186
+skills/build/SKILL.md
+  s_eb2c77e4ac5322::t_5f0175b7202b1f 3
+  s_eb2c77e4ac5322::t_d161452eb954f6 27
+  s_eb2c77e4ac5322::t_79e9c7f403b33a 28
+  s_eb2c77e4ac5322::t_47e197619ef358 102-103
+tests/fixtures/hello-roughly/CLAUDE.md
+  s_eb2c77e4ac5322::t_11b518bc02b32f 1-15
+tests/fixtures/hello-roughly/tests/greeter.test.sh
+  s_eb2c77e4ac5322::t_0f1479fd27dff1 1-8
+CHANGELOG.md
+  s_eb2c77e4ac5322::t_8f12182608bfba 13
+  s_eb2c77e4ac5322::t_321824ce6a8fcc 14
+tests/fixtures/hello-roughly/src/greeter.sh
+  s_eb2c77e4ac5322::t_fc9f72ab180e82 1-2
+CONTRIBUTING.md
+  s_eb2c77e4ac5322::t_1dfe298ef19e01 99
+  s_eb2c77e4ac5322::t_88567852bb6a2c 91-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "2e6548dc6f001dfb3b3ce295151e7b55648e5984",
+  "prompts": {},
+  "sessions": {
+    "s_eb2c77e4ac5322": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f2a1101b-2f80-4d91-93ee-f926b597dc9a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
