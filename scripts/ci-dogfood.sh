@@ -44,10 +44,74 @@ git -C "$ROOT" worktree add "$WORKTREE" "$SHA"
 cd "$WORKTREE"
 
 # ──────────────────────────────────────────────────────────────────────
-# STUB: real claude invocation lands in S11b-1 (smoke test) and S11b-2
-# (full scenario). For now this is a no-op that returns 0.
+# Smoke test: auth + API exercise, then plugin-load verification
 # ──────────────────────────────────────────────────────────────────────
-echo "ci-dogfood: stub claude invocation, returning 0"
+
+# --bare is mandatory: forces strict ANTHROPIC_API_KEY-only auth with no
+# keychain/OAuth fallback. Without it, a missing/invalid secret in CI may
+# hang or prompt for OAuth instead of failing cleanly.
+#
+# The `... && EXIT=0 || EXIT=$?` idiom captures the exit code explicitly.
+# Without it, `set -e` would kill the script at the assignment on any
+# non-zero exit (timeout 124, auth failure, budget breach), producing a
+# bare exit with no diagnostic instead of the FAIL message below.
+SMOKE_OUT="$(timeout 25 claude --bare --plugin-dir "$WORKTREE" \
+  --no-session-persistence --max-budget-usd 0.05 \
+  -p "respond with the literal string ok" 2>&1)" && SMOKE_EXIT=0 || SMOKE_EXIT=$?
+if [ "$SMOKE_EXIT" = 124 ]; then
+  echo "ci-dogfood: FAIL — smoke step timed out (claude did not return within 25s)" >&2
+  printf '%s\n' "$SMOKE_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+if [ "$SMOKE_EXIT" != 0 ]; then
+  echo "ci-dogfood: FAIL — smoke step claude exited $SMOKE_EXIT" >&2
+  printf '%s\n' "$SMOKE_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+# `grep -qx` requires the entire line to be exactly "ok" — guards against
+# false-positive matches in incidental prose (e.g., "looks ok to me").
+if ! printf '%s\n' "$SMOKE_OUT" | grep -qx "ok"; then
+  echo "ci-dogfood: FAIL — smoke step did not produce expected response" >&2
+  printf '%s\n' "$SMOKE_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# NOTE: The slash-command listing relies on the model's compliance
+# with the prompt format. claude has no deterministic --list-commands
+# flag in -p mode, so this is the most reliable approximation. The
+# /roughly:setup anchor is the deterministic plugin-load proof:
+# if it appears in the response, --plugin-dir was honored.
+PLUGIN_OUT="$(timeout 25 claude --bare --plugin-dir "$WORKTREE" \
+  --no-session-persistence --max-budget-usd 0.05 \
+  -p "List each of your available slash commands on a separate line with the / prefix. Do not include any other text." 2>&1)" && PLUGIN_EXIT=0 || PLUGIN_EXIT=$?
+if [ "$PLUGIN_EXIT" = 124 ]; then
+  echo "ci-dogfood: FAIL — plugin-load step timed out (claude did not return within 25s)" >&2
+  printf '%s\n' "$PLUGIN_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+if [ "$PLUGIN_EXIT" != 0 ]; then
+  echo "ci-dogfood: FAIL — plugin-load step claude exited $PLUGIN_EXIT" >&2
+  printf '%s\n' "$PLUGIN_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+# Anchor: line start, optional non-alphabetic prefix (covers any decoration —
+# whitespace, list markers like `- ` `* ` `1. `, markdown formatting like
+# backticks/quotes/brackets/angle-brackets/hashes, table pipes, indentation,
+# nested combinations like `  - \`/roughly:setup\``), the literal
+# `/roughly:setup`, then EOL or a non-identifier character. Rejects prose
+# mentions (lines starting with a letter — "I have access to /roughly:setup
+# ...") AND rejects substring drift (`/roughly:setupx`, `/roughly:setup-other`,
+# `/roughly:setup_x` — char after command must be a non-identifier boundary,
+# i.e. not letter/digit/`-`/`_`). Liberal enough to accept any common markdown
+# format the model might emit; strict enough to require evidence the model
+# treated this as a command listing, not as prose.
+if ! printf '%s\n' "$PLUGIN_OUT" | grep -qE "^[^A-Za-z]*/roughly:setup($|[^A-Za-z0-9_-])"; then
+  echo "ci-dogfood: FAIL — plugin loading not verified (no /roughly:setup list-item line in output)" >&2
+  printf '%s\n' "$PLUGIN_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+echo "ci-dogfood: smoke + plugin-load — both assertions passed"
 
 # Post-state check: confirm no source-tree pollution
 POST_STATE="$(git -C "$ROOT" status --porcelain)"

@@ -68,7 +68,7 @@ PM handoff: detail level sufficient for an epic-writing agent to expand into sto
 10. **Retry-loop tuning.** Audit caps at Stages 5c (quality), 5c (questions), 6 (review-fix). Raise on cheap checks or replace hard escalation with prompt.
 
 ### CI
-11. **Plugin self-test CI.** GitHub Actions running dogfood through scripted build/fix on push. Happy path minimum. **Architecturally novel** — plugin tests itself against the repo containing the plugin. Probably needs its own story. **S11a scaffolding ✅ — landed in this story; S11b-1 plumbing and S11b-2 happy-path pending.**
+11. **Plugin self-test CI.** GitHub Actions running dogfood through scripted build/fix on push. Happy path minimum. **Architecturally novel** — plugin tests itself against the repo containing the plugin. Probably needs its own story. **S11a scaffolding ✅ — landed; S11b-1 plumbing ✅ — landed; S11b-2 happy-path pending.**
 
 ### Docs
 12. ~~**roughly.dev v0.1.5.** Landing, pipeline overview, commands reference, setup walkthrough.~~ **Deferred to a separate repo/epic post-v0.1.5** (E03.S12.0 option (c), 2026-05-08). Aligns with [`docs/planning/README.md:84`](planning/README.md#L84) ("out of repo scope; tracked separately"). Long-term home: v1.0 criterion #5.
