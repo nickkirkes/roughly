@@ -1,6 +1,6 @@
 # E03 — Trust hardening + ergonomics + CI
 
-**Status:** In Progress (8/13 implementation stories merged + S12.0 decision resolved — **trust-hardening cluster 7/7 DONE** (S0–S6); **CI cluster 1/3 DONE** (S11a). S0 PR #24, S1 PR #25, S3 PR #26, S2 PR #27, S5 PR #28, S4 PR #29, S6 PR #30, S11a PR #31 (`f73466b`, merged 2026-05-08, 4 commits). E03.S12.0 resolved 2026-05-08 via **option (c) defer** (decision-only, no PR — kept as historical record outside the implementation-story count); S12a + S12b removed from v0.1.5 and tracked in v0.1.6 candidates for separate-repo handling, reducing implementation scope from 15 → 13 stories. Maturity-check loop reduced from 5 → 3 active checks; `stop-hook-v1` is now an installing offer rather than a no-op. Pre-flight migration check now lives in 8 skills. Plan-format version marker `Plan-format-version: 1` now emitted by build/fix Stage 3 templates. CI dogfood scaffolding online — `claude` invocation point is a no-op stub awaiting S11b-1. Remaining v0.1.5 scope: **ergonomics** (S8, S9, S10), **CI** (S11b-1, S11b-2). [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) at 66/80; [skills/fix/SKILL.md](../../../skills/fix/SKILL.md) at 299/300 — binding line-cap constraint for any future fix-touching story.)
+**Status:** In Progress (9/13 implementation stories merged + S12.0 decision resolved — **trust-hardening cluster 7/7 DONE** (S0–S6); **CI cluster 2/3 DONE** (S11a, S11b-1). S0 PR #24, S1 PR #25, S3 PR #26, S2 PR #27, S5 PR #28, S4 PR #29, S6 PR #30, S11a PR #31, S11b-1 PR #32 (`ea66e9b`, merged 2026-05-08, 5 commits). E03.S12.0 resolved 2026-05-08 via **option (c) defer** (decision-only, no PR — kept as historical record outside the implementation-story count); S12a + S12b removed from v0.1.5 and tracked in v0.1.6 candidates for separate-repo handling, reducing implementation scope from 15 → 13 stories. CI plumbing now real: real `claude --bare` invocation, plugin-load assertion, auth-failure no-hang regression check, ≤5K-token budget gate. **`ANTHROPIC_API_KEY` repo secret must be configured in GitHub Settings before the smoke step passes** — script's fail-loud behavior is correct (`Not logged in` until the secret lands). Remaining v0.1.5 scope: **ergonomics** (S8, S9, S10), **CI** (S11b-2). [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) at 68/80; [skills/fix/SKILL.md](../../../skills/fix/SKILL.md) at 299/300 — binding line-cap constraint for any future fix-touching story.)
 **Target version:** v0.1.5
 **Target effort:** 6-7 wk
 **Dependencies:** E01 (pipeline foundation, audit follow-up shipped v0.1.3); E02 (rename to `roughly` shipped v0.1.4 — namespace, dotdir, version-line identifier all assumed in place)
@@ -29,6 +29,8 @@ Scope is frozen. Items surfaced during epic writing that are clearly related but
 
    **Status update (2026-05-08, post-S11a):** Isolation contract delivered. Ephemeral worktree at `/tmp/roughly-dogfood-${SHA}`, `trap cleanup EXIT` registered before worktree creation, stale-worktree guard for same-SHA reruns, and `git status --porcelain` symmetry verified pre/post. `claude` invocation point is currently a no-op stub — pollution risk doesn't fully reify until S11b-1 lands a real invocation against the worktree. Risk narrows to "S11b-1 must consume the secret and write inside the worktree without leaking to source"; closes when S11b-1 ships green.
 
+   **Closure (2026-05-08, post-S11b-1):** Closed. Real `claude --bare --plugin-dir "$WORKTREE" --no-session-persistence -p` invocations now run against the worktree with `git status --porcelain` symmetry holding. `--no-session-persistence` plus the worktree boundary keep `.roughly/`, `docs/plans/`, and Claude session state out of the source tree. **Caveat:** the GitHub repo secret `ANTHROPIC_API_KEY` must be configured in Settings → Secrets and variables → Actions before the CI smoke step succeeds; until then, the script fails loud with `Not logged in` (correct fail-loud behavior, not a regression).
+
 3. ~~**Docs scope creep (S12).**~~ **Resolved (2026-05-08, S12.0 option c):** docs cluster deferred to a separate repo/epic post-v0.1.5. Risk no longer applies to v0.1.5; preserved here for historical context. The underlying surface (9-10 skills + 7 agents + 9 ADRs) was the trigger for the deferral — pages would have ballooned against tight release-cycle attention. Re-emerges if/when the docs work picks up in its own epic.
 
 4. **Retry-loop tuning regressions (S10).** Raising caps on cheap checks can hide flakiness; replacing hard escalation with prompts shifts cost to humans mid-pipeline. Each adjustment needs a before/after dogfood pass on a known case. Risk: silent trust degradation; mitigated by per-cap rationale recorded inline and dogfood verification gated by S11 CI.
@@ -48,6 +50,8 @@ Scope is frozen. Items surfaced during epic writing that are clearly related but
 7. **CI cost.** A full `/roughly:build` cycle in CI invokes Sonnet for orchestration, investigator, plan-reviewer, three parallel review agents, spec-reviewer per task, and code-reviewer at Stage 6. A single happy-path run is plausibly 100K+ Sonnet tokens; at ~100 PR pushes per release cycle, this is non-trivial spend. Risk: CI becomes a hidden release-cost driver; mitigated by S11b-2's minimal-task fixture and explicit token-budget AC.
 
    **Status update (2026-05-08, post-S11a):** Token-cost expectations are now documented in [CONTRIBUTING.md](../../../CONTRIBUTING.md) `## CI` section: S11b-1 ~5K Sonnet tokens; S11b-2 ≤150K. S11a itself is zero — stub invocation. Risk holds until S11b-1 and S11b-2 ship and the actual per-run cost is observed against the documented budgets.
+
+   **Status update (2026-05-08, post-S11b-1):** S11b-1 introduces a hard budget gate via `--max-budget-usd 0.05` (~5K Sonnet tokens at blended rate) — converts AC5's cost cap from aspirational to mechanically enforced. Per-run cost will be observable once `ANTHROPIC_API_KEY` is configured. Risk narrows to S11b-2's ≤150K budget; closes when S11b-2 ships and observed cost holds against the documented ceiling.
 
 ---
 
@@ -680,10 +684,20 @@ S11a establishes the isolation contract: an ephemeral worktree, scoped teardown,
 #### E03.S11b-1: CLI plumbing smoke test
 
 **Maps to roadmap item:** #11 (part 2a — split during epic review)
+**Status:** Complete on `feat/E03.S11b-1-cli-plumbing-smoke-test`; merged 2026-05-08 via PR #32 (`ea66e9b`, 5 commits — `3f6ed43` core + `5b35422` `set -e` pitfall + `b74a472` regex tightening + npm pin + `b9b8a61` regex generalization + `743cbea` CONTRIBUTING reconciliation). All 5 ACs met. **CI cluster now 2/3** — S11b-2 (happy-path build cycle) remains.
 
-**Files touched:**
-- `scripts/ci-dogfood.sh` (extend with smoke step)
-- `.github/workflows/dogfood.yml` (extend smoke job)
+**Files delivered:**
+
+Modified:
+- [scripts/ci-dogfood.sh](../../../scripts/ci-dogfood.sh) — stub replaced with two `claude --bare --plugin-dir "$WORKTREE" --no-session-persistence --max-budget-usd 0.05 -p "..."` invocations, each `timeout 25`-wrapped. Exit-code-capture idiom (`... && EXIT=0 || EXIT=$?`) with distinct `timeout` (124) / non-zero / assertion-failure diagnostics. Plugin-load regex generalized to `^[^A-Za-z]*/roughly:setup($|[^A-Za-z0-9_-])` — accepts any non-prose decoration (whitespace, dashes, asterisks, backticks, quotes, brackets, angle brackets, hashes, table pipes) while rejecting prose mentions and substring drift. Validated against 20 representative cases.
+- [.github/workflows/dogfood.yml](../../../.github/workflows/dogfood.yml) — added `Install Claude Code` step (`npm install -g @anthropic-ai/claude-code@2`, pinned to major v2 to block unannounced breaking releases) and permanent `Verify auth failure mode (no hang)` step with step-scoped `ANTHROPIC_API_KEY: invalid-key-xyz` placeholder.
+- [CONTRIBUTING.md](../../../CONTRIBUTING.md) — past-tense S11b-1 prose; out-of-scope bullet narrowed to "Build-cycle negative-path scenarios" to disambiguate from the auth-failure regression check.
+- [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) — 66 → 68 lines (+2). New pitfall in Build & Deploy section: `set -e` + command-substitution silent-failure mode (both reviewers caught independently; canonical fix is `... && EXIT=0 || EXIT=$?` idiom).
+- [CHANGELOG.md](../../../CHANGELOG.md) — `[Unreleased]` v0.1.5 Added entry; CI tracker bumped 1/3 → 2/3.
+- [docs/ROADMAP.md](../../ROADMAP.md) — item #11 marked S11b-1 plumbing ✅.
+
+New:
+- `docs/plans/E03-S11b-1-plan.md` — implementation plan (1 NEEDS REVISION → PASS cycle, 6 tasks).
 
 **Context:**
 
@@ -691,22 +705,37 @@ Before driving a full build cycle, prove the CLI plumbing works in CI: `claude -
 
 S11b-1 lands ahead of S11b-2 so subsequent stories (S9, S10) ship with at least minimal regression scaffolding even if the full scenario isn't ready.
 
-**Acceptance criteria:**
-- [ ] `scripts/ci-dogfood.sh` smoke step invokes `claude` non-interactively in a way that **provably exercises both plugin loading and authenticated API access**. A minimal `--print`/`-p` invocation against a trivial prompt is the expected shape (e.g., `claude --plugin-dir $WORKTREE -p "respond with the literal string ok"` and assert the response contains `ok`). A bare `--version` is **not sufficient** — it can succeed without loading the plugin or making any API call, which would let the smoke test pass while the real integration path is still broken
-- [ ] Plugin loading is asserted: the smoke step verifies that at least one plugin-defined slash command (e.g., `/roughly:setup`) appears in the CLI's command list / autocomplete output, not just that the CLI starts
-- [ ] Auth via the documented `ANTHROPIC_API_KEY` secret is exercised — a missing/invalid secret produces a clear error in CI logs, not a hang. Tested by running the same step with the secret deliberately removed and confirming a recognizable auth-error string in the output
-- [ ] The smoke step completes in under 60 seconds wall-clock
-- [ ] Token cost cap: smoke step uses ≤5K tokens (the trivial-prompt invocation is sized to be a few hundred tokens; the cap leaves headroom for retries)
+**Key learnings:**
+- **`--bare` is mandatory for CI auth.** Without it, `claude` falls back to keychain/OAuth on missing/invalid `ANTHROPIC_API_KEY`, which on Ubuntu runners hangs or prompts. `--bare` forces strict env-only auth — `Invalid API key` for bad key, `Not logged in` for empty/missing.
+- **`set -e` + `OUT="$(timeout N cmd)"` silently masks CI assertion failures.** Both reviewers caught this independently; the `... && EXIT=0 || EXIT=$?` idiom is the canonical fix. Captured as a new pitfall.
+- **GitHub Actions expands unconfigured `${{ secrets.X }}` to an empty string, not unset.** Auth-failure assertion must accept BOTH `Invalid API key` (literal-bad-key path) and `Not logged in` (empty-string-from-unconfigured-secret path).
+- **Plugin-load assertion needs a balanced regex.** Initial version (`grep -q "roughly:setup"`) over-matched prose; first tightening (`^/roughly:setup($| )`) under-matched markdown decorations. Final form accepts any non-prose decoration while rejecting prose mentions and substring drift.
+- **Token-budget enforcement.** `--max-budget-usd 0.05` (~5K Sonnet tokens at blended rate) converts AC5's cost cap from aspirational to hard-gated.
 
-**Verification:**
-- Push a change with an unset `ANTHROPIC_API_KEY` secret; confirm CI fails with the expected error message, not a timeout
-- Push a clean change; confirm smoke step passes in <60s
+**Acceptance criteria:**
+- [x] `scripts/ci-dogfood.sh` smoke step invokes `claude` non-interactively in a way that provably exercises both plugin loading and authenticated API access — `claude --bare --plugin-dir "$WORKTREE" --no-session-persistence -p` against a trivial prompt; response asserted.
+- [x] Plugin loading asserted via the generalized regex against `/roughly:setup` in CLI command-list output.
+- [x] Auth via `ANTHROPIC_API_KEY` exercised — both `Invalid API key` (bad key) and `Not logged in` (empty/missing) accepted as recognizable failure strings; permanent `Verify auth failure mode (no hang)` step in CI workflow.
+- [x] Smoke step completes in under 60s wall-clock — each invocation `timeout 25`-wrapped.
+- [x] Token cost cap: ≤5K tokens — hard-gated via `--max-budget-usd 0.05`.
+
+**Verification (delivered):**
+- Plan review (`/roughly:review-plan`): 1 NEEDS REVISION → PASS
+- 3-agent parallel code review at Stage 6: 1 critical fix + re-verify
+- `shellcheck scripts/ci-dogfood.sh` clean; `actionlint` clean; YAML parse OK
+- `bash .claude/hooks/verify-all.sh` exit 0
+- `cubic review --json` empty across all post-commit iterations
+- 4 PR review rounds: 3 valid findings fixed (stricter plugin-load regex P2; npm pin P2; CONTRIBUTING contradiction P3); 1 invalid finding documented
 
 **Dependencies:** S11a (scaffolding).
 
-**Out of scope:**
-- The full build-cycle scenario (S11b-2)
-- Driving any pipeline command (`/roughly:build`, `/roughly:fix`, etc.)
+**Out of scope (carried forward):**
+- The full build-cycle scenario → S11b-2
+- Driving any pipeline command (`/roughly:build`, `/roughly:fix`, etc.) → S11b-2
+- Build-cycle negative-path scenarios → v0.1.6 candidate (NEEDS REVISION recovery, Stage 6 max-cycles, abort handling)
+
+**Pre-merge gate (deployment task, not v0.1.5 implementation):**
+- Configure `ANTHROPIC_API_KEY` repo secret in GitHub Settings → Secrets and variables → Actions before relying on the CI smoke step. Until configured, the script fails loud with `Not logged in` (correct fail-loud behavior, not a regression). The auth-failure regression step itself does **not** depend on the real secret being configured.
 
 ---
 
@@ -818,6 +847,8 @@ These are surfaced in story bodies but consolidated here for the implementer's c
 Items surfaced during epic writing that are clearly related to v0.1.5 work but explicitly out of frozen scope:
 
 - **Docs cluster (former S12a, S12b) — separate repo/epic.** Originally scoped as four roughly.dev pages in v0.1.5 (landing, setup walkthrough, pipeline overview, commands reference). Deferred 2026-05-08 via S12.0 option (c). Will land in a separate repo/epic post-v0.1.5; no v0.1.5 release-cycle dependency. Acceptance criteria from the original S12a/S12b stories (page outlines, line-budget targets, no-marketing-voice tone gates, anti-drift verification against SKILL.md sources) remain useful starting context for the future work. Path-to-v1.0 criterion #5 — "roughly.dev complete enough that a stranger gets the pipeline without reading SKILL.md" — is the long-term home for this work.
+- **Explicit `ANTHROPIC_API_KEY` empty-guard before invoking `claude` (S11b-1 deferral).** Silent-failure-hunter's I2 finding from S11b-1 review: a 1-line defensive check before the `claude` invocation would produce a clearer "secret not configured" diagnostic than relying on `claude --bare`'s `Not logged in` output. Real CI hit this exact case post-merge. Not blocking — current fail-loud behavior is correct — but worth tightening if anyone touches `scripts/ci-dogfood.sh` for another reason.
+- **Build-cycle negative-path CI scenarios (former S11b-1 out-of-scope).** Driving NEEDS REVISION recovery, Stage 6 max-cycles, and abort-handling paths in CI. Today's S11b-2 happy-path is the foundation; these are extensions when the happy-path is stable.
 - **In-session maturity offers at Stage 1 (former S7).** Originally scoped for v0.1.5 to evaluate `investigator-v1` and `stop-hook-v1` triggers up-front, before the user has invested effort in the build/fix run. Moved to v0.1.6 because: (a) line-cap budget on build/fix is tight, (b) the "users are tired by Stage 8" premise is unmeasured, (c) Stage-1 acceptance changes the semantics of `.roughly/workflow-upgrades` (records can persist for runs that subsequently abort). Revisit with v0.1.5 dogfood data on Stage 8 acceptance/decline rates.
 - **Marker-aware resume improvements in [skills/upgrade/SKILL.md](../../skills/upgrade/SKILL.md)** — surfaced while scoping S4. Today's `/roughly:upgrade` migration logic handles `.ruckus/.migration-in-progress` markers, but there's room to make resume reporting cleaner (which steps already ran, which still need to). Not blocking v0.1.5 since the marker mechanism is correct as-is.
 - ~~**Expanded plan-mode signals if S0 spike reveals additional gaps**~~ **Subsumed by S1 outcomes:** the spike concluded preamble + hook (no preamble-only known holes); residual S1 deferred items below absorb the remaining surface.
@@ -850,7 +881,7 @@ Order is by dependency, not roadmap item number.
 | 1 | **E03.S0** (plan-mode spike) ✅ | ½-day investigation; gated S1. Merged 2026-05-01 via PR #24 (`e5d630f`). Conclusion: preamble + lightweight hook (`UserPromptSubmit` `permission_mode`; spike's API name corrected during S1). |
 | 2 | **E03.S11a** (CI scaffolding) ✅ | Stub at `claude` invocation point allowed parallel landing with S0/S1. Merged 2026-05-08 via PR #31 (`f73466b`, 4 commits). `dogfood-build-cycle` job + ephemeral worktree + `git status --porcelain` symmetry verified. Token-cost expectations documented in CONTRIBUTING.md `## CI`. CI cluster 1/3. |
 | 3 | **E03.S1** (plan-mode auto-detect/exit) ✅ | Highest-value item; unblocks safe CI dogfood runs. Merged 2026-05-02 via PR #25 (`c598ef6`) with follow-up fixes through 2026-05-03. ADR-009 authoritative. |
-| 4 | **E03.S11b-1** (CLI plumbing smoke test) | Proves auth + CLI plumbing in CI before subsequent prose-touching stories land |
+| 4 | **E03.S11b-1** (CLI plumbing smoke test) ✅ | Proves auth + CLI plumbing in CI before subsequent prose-touching stories land. Merged 2026-05-08 via PR #32 (`ea66e9b`, 5 commits). Real `claude --bare` invocation, plugin-load regex, auth-failure no-hang regression check, hard `--max-budget-usd 0.05` token gate. CI cluster 2/3. |
 | 5 | **E03.S6** (plan-format version field) ✅ | Additive, low-risk. Merged 2026-05-08 via PR #30 (`b22144f`, squash from `57f78f3`). Closes trust-hardening cluster (7/7). +2 lines each to build (294→296) and fix (297→299). Fix now at binding 1-line headroom. v0.2.0's ADR-010 plan-format-v2 work unblocked. |
 | 6 | **E03.S5** (CONTRIBUTING prose) ✅ | Independent, prose-only. Merged 2026-05-07 via PR #28 (`b58f4bd`, 2 commits). Section landed at 20 content lines; self-verification holds against live verify-all.sh. |
 | 7 | **E03.S4** (pre-flight in audit-epic + verify-all) ✅ | Independent of pipeline changes. Merged 2026-05-07 via PR #29 (`b3a6750`, 2 commits). Pre-flight now in 8 skills; setup's soft-abort form intentionally retained (recorded in known-pitfalls.md to prevent future "drift fix"). Audit-epic 141, verify-all 80. |
