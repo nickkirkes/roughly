@@ -190,22 +190,41 @@ if ! grep -qE '^[[:space:]]*(readonly[[:space:]]+|export[[:space:]]+)?NAME=' "$W
   exit 1
 fi
 
-# Assertion 5b: NAME is referenced via $NAME or ${NAME} with a strict
-# variable-name boundary (proves the echo update happened). The boundary
-# guard rejects $NAMESPACE / $NAME_VAR / ${NAME_X} / ${NAMESPACE}: bash
-# variable names use [A-Za-z0-9_], so `$NAME` followed by any of those
-# means the reference is to a different variable. Three accepted forms:
+# Assertion 5b: an `echo` statement uses $NAME or ${NAME} (proves the
+# echo update happened in the right place — the prompt asked to "update
+# the echo to use it"). The line must start with `echo` (with optional
+# leading whitespace), then contain a NAME reference somewhere on the
+# same line. Without the `echo` anchor, `# Could use $NAME here` (a
+# comment) or `OTHER=$NAME` (a different statement) would silently pass
+# while the original `echo "hello"` line remained unchanged. Variable-
+# name boundary preserved from the prior fix: rejects $NAMESPACE,
+# ${NAME_VAR}, etc. Three accepted forms within an echo line:
 # (a) `${NAME}` — fully-braced; (b) `$NAME` followed by a non-identifier
-# char (whitespace, punctuation, end of quoted string, etc.); (c) `$NAME`
-# at end of line. Without the boundary, `$NAMESPACE` would silently
-# false-positive an "echo update" that never touched the greeting.
-if ! grep -qE '\$\{NAME\}|\$NAME[^A-Za-z0-9_]|\$NAME$' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh"; then
-  echo "ci-dogfood: FAIL — src/greeter.sh has NAME= but does not reference \$NAME or \${NAME} as a standalone variable (echo update missing)" >&2
+# char; (c) `$NAME` at end of line.
+if ! grep -qE '^[[:space:]]*echo[[:space:]].*(\$\{NAME\}|\$NAME([^A-Za-z0-9_]|$))' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh"; then
+  echo "ci-dogfood: FAIL — src/greeter.sh has NAME= but no echo line references \$NAME or \${NAME} (echo update missing or NAME used elsewhere)" >&2
   sed 's/^/    /' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh" >&2
   exit 1
 fi
 
-echo "ci-dogfood: full-scenario — all 5 structural assertions passed"
+# Assertion 5c: the original `echo "hello"` substring is gone (proves
+# the original line was actually replaced, not just supplemented). The
+# fixture's initial state has the literal `echo "hello"` line. Without
+# this check, an LLM that leaves the original line untouched and adds a
+# parallel `echo "$NAME"` would pass 5b (some echo line has $NAME) yet
+# fail the prompt's "update the echo to use it" intent. Fixed-string
+# match (-F) on `echo "hello"` (with closing quote) — does NOT
+# false-positive on the desired `echo "hello $NAME"` because there's a
+# space (not `"`) immediately after `hello` in that case. Catches both
+# whole-line preservation and compound-statement preservation
+# (e.g., `echo "hello"; echo "$NAME"`).
+if grep -qF 'echo "hello"' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh"; then
+  echo "ci-dogfood: FAIL — src/greeter.sh still contains the original \`echo \"hello\"\` substring; the echo was added to, not updated" >&2
+  sed 's/^/    /' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh" >&2
+  exit 1
+fi
+
+echo "ci-dogfood: full-scenario — all 6 structural assertions passed"
 
 # Post-state check: confirm no source-tree pollution
 POST_STATE="$(git -C "$ROOT" status --porcelain)"
