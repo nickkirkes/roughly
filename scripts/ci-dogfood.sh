@@ -209,7 +209,10 @@ fi
 
 # Assertion 5c: the original `echo "hello"` statement was not preserved
 # (proves the line was actually replaced or extended, not supplemented
-# with a parallel statement or redirected). The character class
+# with a parallel statement or redirected). Whitespace between `echo`
+# and `"hello"` matches `[[:space:]]+` — covers a single space (the
+# fixture's original form), multiple spaces, and tabs (any form an LLM
+# might emit while otherwise preserving the line). The character class
 # [#;&|<>] covers every shell construct that terminates or redirects
 # the original `echo "hello"` while leaving its output behavior intact:
 # `;`, `&`, `&&`, `|`, `||`, `>`, `>>`, `<`, `<<`, `#` (trailing
@@ -219,7 +222,7 @@ fi
 # bare-word args after `echo "hello"` are NOT in this class, so the
 # regex correctly accepts: `echo "hello" "$NAME"`, `echo "hello $NAME"`,
 # `echo "hello, $NAME"`, `echo "hello" $NAME`, `echo "hello" world`.
-if grep -qE '^[[:space:]]*echo "hello"[[:space:]]*($|[#;&|<>])' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh"; then
+if grep -qE '^[[:space:]]*echo[[:space:]]+"hello"[[:space:]]*($|[#;&|<>])' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh"; then
   echo "ci-dogfood: FAIL — src/greeter.sh still contains the original \`echo \"hello\"\` statement unchanged (preserved via redirect, pipe, sequence, or as-is); the echo was added to, not updated" >&2
   sed 's/^/    /' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh" >&2
   exit 1
