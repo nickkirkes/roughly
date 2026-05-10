@@ -1,0 +1,32 @@
+skills/build/SKILL.md
+  s_9d6eefdb530ba2::t_b5cf85479bc403 176
+  s_9d6eefdb530ba2::t_1b43cebbc01925 185
+  s_9d6eefdb530ba2::t_48f7280225cacd 203
+  s_9d6eefdb530ba2::t_6ca9fffa6632e4 180
+docs/plans/E03-S10-retry-loop-tuning-plan.md
+  s_9d6eefdb530ba2::t_3c722f3e899ba8 1-86,92-174
+  s_9d6eefdb530ba2::t_292d1bd3707ea3 87-91
+CHANGELOG.md
+  s_9d6eefdb530ba2::t_dc627e87a23f7b 50
+skills/fix/SKILL.md
+  s_9d6eefdb530ba2::t_4951a377828924 183
+  s_9d6eefdb530ba2::t_157c651f8b7b27 192
+  s_9d6eefdb530ba2::t_1794c8933ee0f4 187
+  s_9d6eefdb530ba2::t_c919ee8e4667bd 206
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "f60056a98d85927e775f748017d23b992810c467",
+  "prompts": {},
+  "sessions": {
+    "s_9d6eefdb530ba2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bacc6087-1dd3-48cc-a15f-2ab9e1f1c16f",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
