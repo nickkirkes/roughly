@@ -113,6 +113,123 @@ fi
 
 echo "ci-dogfood: smoke + plugin-load — both assertions passed"
 
+# ──────────────────────────────────────────────────────────────────────
+# Full scenario: /roughly:build --ci against fixture
+# ──────────────────────────────────────────────────────────────────────
+
+cd "$WORKTREE/tests/fixtures/hello-roughly"
+
+# 1.50 USD ≈ ~150K mixed Sonnet tokens at current pricing (3/M in + 15/M
+# out, ~80/20 mix). Recompute if pricing changes.
+SCENARIO_OUT="$(timeout 270 claude --bare --plugin-dir "$WORKTREE" \
+  --no-session-persistence --max-budget-usd 1.50 \
+  -p "/roughly:build --ci add a NAME constant to src/greeter.sh and update the echo to use it" 2>&1)" \
+  && SCENARIO_EXIT=0 || SCENARIO_EXIT=$?
+if [ "$SCENARIO_EXIT" = 124 ]; then
+  echo "ci-dogfood: FAIL — full-scenario step timed out (claude did not return within 270s)" >&2
+  printf '%s\n' "$SCENARIO_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+if [ "$SCENARIO_EXIT" != 0 ]; then
+  echo "ci-dogfood: FAIL — full-scenario step claude exited $SCENARIO_EXIT" >&2
+  printf '%s\n' "$SCENARIO_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Assertion 1: synthetic-PASS marker present (proves Stage 4 took the
+# --ci branch instead of attempting real review-plan dispatch; AC5).
+# Full-string match (-F) keeps this in lockstep with skills/build/SKILL.md
+# Stage 4's emit instruction — drift in either side fails CI loudly.
+if ! printf '%s\n' "$SCENARIO_OUT" | grep -qF '[--ci] plan review skipped — synthetic PASS'; then
+  echo "ci-dogfood: FAIL — synthetic-PASS marker missing (Stage 4 may have attempted real review-plan dispatch despite --ci)" >&2
+  printf '%s\n' "$SCENARIO_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Assertion 2: plan file exists (proves Stage 3 ran, plan was written).
+# Exit-capture idiom required: under set -euo pipefail with pipefail, a
+# failing `ls` (no matches, missing dir) propagates through the pipe and
+# would silently kill the script before the [-z "$PLAN_FILE"] guard runs.
+PLAN_FILE="$(ls "$WORKTREE/tests/fixtures/hello-roughly/docs/plans/"*-plan.md 2>/dev/null | head -1)" \
+  && PLAN_FILE_EXIT=0 || PLAN_FILE_EXIT=$?
+if [ "$PLAN_FILE_EXIT" != 0 ] || [ -z "$PLAN_FILE" ] || [ ! -f "$PLAN_FILE" ]; then
+  echo "ci-dogfood: FAIL — no plan file found in $WORKTREE/tests/fixtures/hello-roughly/docs/plans/" >&2
+  printf '%s\n' "$SCENARIO_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Assertion 3: plan has '## Tasks' section (structural; AC4 — survives
+# plan-format drift).
+if ! grep -q '^## Tasks' "$PLAN_FILE"; then
+  echo "ci-dogfood: FAIL — plan file at $PLAN_FILE has no '## Tasks' section" >&2
+  sed 's/^/    /' "$PLAN_FILE" >&2
+  exit 1
+fi
+
+# Assertion 4: plan has at least T1 (per S6 epic note, the ### T1 anchor
+# is stable across Plan-format-version evolution). Match `### T1` with no
+# required trailing char so minor heading variations (`### T1`, `### T1 -
+# title`, `### T1: title`) all pass — the assertion's purpose is to
+# confirm T1 exists, not to validate its title format.
+if ! grep -qE '^### T1' "$PLAN_FILE"; then
+  echo "ci-dogfood: FAIL — plan file at $PLAN_FILE has no T1 task" >&2
+  sed 's/^/    /' "$PLAN_FILE" >&2
+  exit 1
+fi
+
+# Assertion 5a: NAME= assignment present at line start (proves the constant
+# was added as a real assignment). Line-start anchor with optional indent
+# and optional `readonly`/`export` prefix — rejects comment lines like
+# `# NAME=foo`, `# Original: NAME=value` (don't match `^[[:space:]]*NAME=`
+# because of the leading `#`) and inline-comment lines like
+# `foo=bar # NAME=oops` (line starts with `foo=`, not NAME=). The
+# requirement is a real shell assignment, not a mention in prose.
+if ! grep -qE '^[[:space:]]*(readonly[[:space:]]+|export[[:space:]]+)?NAME=' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh"; then
+  echo "ci-dogfood: FAIL — src/greeter.sh in worktree shows no NAME= assignment at line start (implementation may not have run, or wrote only a comment)" >&2
+  sed 's/^/    /' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh" >&2
+  exit 1
+fi
+
+# Assertion 5b: an `echo` statement uses $NAME or ${NAME} (proves the
+# echo update happened in the right place — the prompt asked to "update
+# the echo to use it"). The line must start with `echo` (with optional
+# leading whitespace), then contain a NAME reference somewhere on the
+# same line. Without the `echo` anchor, `# Could use $NAME here` (a
+# comment) or `OTHER=$NAME` (a different statement) would silently pass
+# while the original `echo "hello"` line remained unchanged. Variable-
+# name boundary preserved from the prior fix: rejects $NAMESPACE,
+# ${NAME_VAR}, etc. Three accepted forms within an echo line:
+# (a) `${NAME}` — fully-braced; (b) `$NAME` followed by a non-identifier
+# char; (c) `$NAME` at end of line.
+if ! grep -qE '^[[:space:]]*echo[[:space:]].*(\$\{NAME\}|\$NAME([^A-Za-z0-9_]|$))' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh"; then
+  echo "ci-dogfood: FAIL — src/greeter.sh has NAME= but no echo line references \$NAME or \${NAME} (echo update missing or NAME used elsewhere)" >&2
+  sed 's/^/    /' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh" >&2
+  exit 1
+fi
+
+# Assertion 5c: the original `echo "hello"` statement was not preserved
+# (proves the line was actually replaced or extended, not supplemented
+# with a parallel statement or redirected). Whitespace between `echo`
+# and `"hello"` matches `[[:space:]]+` — covers a single space (the
+# fixture's original form), multiple spaces, and tabs (any form an LLM
+# might emit while otherwise preserving the line). The character class
+# [#;&|<>] covers every shell construct that terminates or redirects
+# the original `echo "hello"` while leaving its output behavior intact:
+# `;`, `&`, `&&`, `|`, `||`, `>`, `>>`, `<`, `<<`, `#` (trailing
+# comment), or end-of-line. Multi-char operators (`&&`, `||`, `>>`,
+# `<<`, `<<<`) all start with one of these chars, so single-char match
+# captures them. Valid extended echos do NOT match because `"`, `$`, or
+# bare-word args after `echo "hello"` are NOT in this class, so the
+# regex correctly accepts: `echo "hello" "$NAME"`, `echo "hello $NAME"`,
+# `echo "hello, $NAME"`, `echo "hello" $NAME`, `echo "hello" world`.
+if grep -qE '^[[:space:]]*echo[[:space:]]+"hello"[[:space:]]*($|[#;&|<>])' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh"; then
+  echo "ci-dogfood: FAIL — src/greeter.sh still contains the original \`echo \"hello\"\` statement unchanged (preserved via redirect, pipe, sequence, or as-is); the echo was added to, not updated" >&2
+  sed 's/^/    /' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh" >&2
+  exit 1
+fi
+
+echo "ci-dogfood: full-scenario — all 6 structural assertions passed"
+
 # Post-state check: confirm no source-tree pollution
 POST_STATE="$(git -C "$ROOT" status --porcelain)"
 if [ "$PRE_STATE" != "$POST_STATE" ]; then
