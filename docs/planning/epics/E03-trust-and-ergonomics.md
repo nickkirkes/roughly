@@ -583,38 +583,60 @@ Today's [skills/build/SKILL.md](../../skills/build/SKILL.md) ABORT HANDLING sect
 **Maps to roadmap item:** #10
 
 **Files touched:**
-- [skills/build/SKILL.md:172](../../skills/build/SKILL.md#L172) — Stage 5c questions cap
-- [skills/build/SKILL.md:176-181](../../skills/build/SKILL.md#L176-L181) — Stage 5c quality auto-fix cap
-- [skills/build/SKILL.md:199](../../skills/build/SKILL.md#L199) — Stage 6 review-fix cycles cap
-- [skills/fix/SKILL.md:181](../../skills/fix/SKILL.md#L181) — same questions cap
-- [skills/fix/SKILL.md:185-190](../../skills/fix/SKILL.md#L185-L190) — same auto-fix cap
-- [skills/fix/SKILL.md:204](../../skills/fix/SKILL.md#L204) — same review-fix cycles cap
+- [skills/build/SKILL.md:172](../../../skills/build/SKILL.md#L172) — Stage 5c questions cap
+- [skills/build/SKILL.md:176-181](../../../skills/build/SKILL.md#L176-L181) — Stage 5c quality auto-fix cap
+- [skills/build/SKILL.md:199](../../../skills/build/SKILL.md#L199) — Stage 6 review-fix cycles cap
+- [skills/fix/SKILL.md:181](../../../skills/fix/SKILL.md#L181) — same questions cap
+- [skills/fix/SKILL.md:185-190](../../../skills/fix/SKILL.md#L185-L190) — same auto-fix cap
+- [skills/fix/SKILL.md:204](../../../skills/fix/SKILL.md#L204) — same review-fix cycles cap
 
 **Context:**
 
-v0.1.2 capped four previously-unbounded loops (per [CHANGELOG.md:82](../../CHANGELOG.md#L82)). Caps are conservative — set to "max 2" across the board with hard escalation to human on hit. v0.1.5 audits each cap individually: cheap checks may raise the cap (e.g., type-check fixes are nearly free), expensive ones may convert hard escalation to a prompt ("Continue with another auto-fix attempt? (yes / escalate)").
+v0.1.2 capped four previously-unbounded loops (per [CHANGELOG.md](../../../CHANGELOG.md)). Caps are conservative — set to "max 2" across the board with hard escalation to human on hit. v0.1.5 audits each cap individually: cheap checks may raise the cap (e.g., type-check fixes are nearly free), expensive ones may convert hard escalation to a prompt ("Continue with another auto-fix attempt? (yes / escalate)").
 
 Each cap decision needs a before/after dogfood pass on a known case to verify behavior change is what was intended.
 
+**OQ3 ratified (2026-05-10) — five per-cap dispositions:**
+
+| # | Cap | Disposition | Rationale |
+|---|---|---|---|
+| 1 | Stage 5c questions | **keep at 2** | Questions interrupt fresh subagent — raising risks runaway clarification loops on under-specified plans. Better to surface plan ambiguity at S0/Stage 4 review |
+| 2 | Stage 5c auto-fix (type-check) | **raise to 4** | Type errors are nearly free to detect and re-fix; 2-cap is conservative |
+| 3 | Stage 5c auto-fix (lint/format) | **raise to 4** | Mechanical and safe |
+| 4 | Stage 5c auto-fix (test fixes) | **keep at 2** | Open-ended; runaway test-rewriting is a known failure mode |
+| 5 | Stage 6 review-fix cycles | **keep at 2** | Most expensive loop in the pipeline; raising amplifies cost on already-expensive work. Conversion-to-prompt deferred unless dogfood evidence shows cycles 2-3 land legitimate fixes |
+
+**Implementation note — auto-fix-cap detection granularity:**
+
+Caps #2/#3/#4 collectively split the *current* single Stage 5c auto-fix cap into 3 sub-caps. The implementation must detect *which* check failed (type-check vs lint/format vs test) and apply the appropriate cap. Three implementation paths, each preserving the spirit of the OQ3 decision:
+
+- **Path A — full 3-way split.** Track per-check-type retry count; apply 4/4/2 caps independently. Most faithful to the ratified defaults but adds detection logic and per-type retry tracking. Likely net-additive to skill bodies (build at 298/300, fix at 299/300 — fix has 1-line headroom; expect to invoke the [line-cap budget contract](#line-cap-budget-contract)'s prose-extraction off-ramp on Stage 5c).
+- **Path B — 2-way split (test vs non-test).** Group type-check + lint/format as "non-test" (cap 4), keep test fixes at cap 2. Single binary detection ("did the failed check involve test files?"). Smaller line-cap impact; loses the type-check / lint distinction (a distinction without much practical difference — both are mechanical).
+- **Path C — single cap raised to 4 with explicit test-fix conditional.** Raise the unified auto-fix cap to 4; add a one-line conditional "if Stage 5c was hit by changes to test files, escalate after attempt 2 instead of 4." Cheapest implementation; relies on the conditional to preserve the test-fix conservatism.
+
+**Recommendation: Path C** unless the dispatching agent finds the test-file detection ambiguous (e.g., source files importing test utilities). Path B is the fallback if Path C's conditional is too brittle. Path A only if Paths B/C prove unworkable. The dispatching agent should pick during plan-write and document the choice in the implementation plan.
+
 **Acceptance criteria:**
-- [ ] All four cap sites audited; for each, the story records: (a) keep at 2, (b) raise to N, or (c) convert hard escalation to prompt — with rationale recorded inline as a one-line comment in the SKILL.md or in a new short ADR (decision pending — see [open questions](#open-questions))
-- [ ] Stage 5c questions cap: decision recorded; if raised, cheap check (e.g., questions about clarification only — never about scope); if converted to prompt, prompt is one line and resolved in <100 tokens
-- [ ] Stage 5c quality auto-fix cap: decision recorded; cheap auto-fix candidates (type-check, lint formatter) may raise; expensive ones (test fixes, refactors) stay at 2 or convert to prompt
-- [ ] Stage 6 review-fix cycles cap: decision recorded; this is the most expensive loop — defaults to staying at 2 unless evidence supports raising
-- [ ] Each adjusted cap has a before/after dogfood pass on a known case: a build/fix run that previously hit the cap, re-run after the change, with documented behavior delta
-- [ ] CHANGELOG entry under "Changed" lists each cap and its v0.1.5 disposition
-- [ ] No skill body exceeds 300 lines
+- [ ] **Stage 5c questions cap:** kept at 2 in both build and fix; one-line rationale comment added inline citing OQ3 disposition #1.
+- [ ] **Stage 5c quality auto-fix cap:** implemented per chosen path (A/B/C); rationale comment cites OQ3 dispositions #2/#3/#4 and the path chosen. If Path A or B, Stage 5c body must distinguish failure types; if Path C, the test-fix conditional is one line.
+- [ ] **Stage 6 review-fix cycles cap:** kept at 2 in both build and fix; one-line rationale comment cites OQ3 disposition #5.
+- [ ] **Build/fix parity preserved.** Both skills' Stage 5c blocks remain byte-identical (or near-identical, accounting for build-vs-fix-specific prose); manual sync per ADR-003 reference-copy pattern.
+- [ ] **Each adjusted cap has a before/after dogfood case.** "Before" is whatever loop hit the cap previously (replay if needed; CI fixture from S11b-2 may help). "After" is the cap-change behavior. Documented in the implementation plan, not the skill body.
+- [ ] **CHANGELOG entry under "Changed"** lists each cap and its v0.1.5 disposition with the chosen implementation path.
+- [ ] **Line-cap headroom respected.** Build at 298/300 (2 lines headroom). Fix at 299/300 (1 line). If the auto-fix path implementation exceeds budget, prose-extraction off-ramp is invoked on Stage 5c first.
+- [ ] **No new ADR required** — OQ3 ratification rationale lives in this story body and the inline comments. If conversion-to-prompt for Stage 6 is later considered (post-v0.1.5 dogfood evidence), that warrants its own decision.
 
 **Verification:**
-- Dogfood replay of each cap-hit case (test fixtures from S11b-2 CI may help here)
-- `rg -n 'max 2|max-2' skills/build/SKILL.md skills/fix/SKILL.md` returns expected matches given the per-cap decisions
-- ADR review (if a new ADR is added)
+- Dogfood replay of each cap-hit case; document behavior delta in the implementation plan
+- `rg -n '\bmax 2\b|\bmax 4\b|max-2|max-4' skills/build/SKILL.md skills/fix/SKILL.md` returns matches consistent with the chosen path
+- CI scenario from S11b-2 still passes post-merge — happy-path doesn't hit any cap, so the changes should be invisible to the CI run unless the CI run regresses into a loop
 
-**Dependencies:** S11 (CI) — benefits from regression coverage so cap adjustments are validated, not just edited.
+**Dependencies:** S11 (CI online for regression coverage; happy-path validated). OQ3 defaults ratified 2026-05-10.
 
 **Out of scope:**
 - Adding new caps to currently-uncapped loops (none exist in v0.1.5)
 - Cap adjustments outside build/fix (review-epic, audit-epic, etc. — different concern)
+- Conversion of Stage 6 review-fix cycles cap to prompt — explicitly deferred pending v0.1.5 dogfood evidence; v0.1.6 candidate if cycles 2-3 prove to land legitimate fixes regularly
 
 ---
 
@@ -863,13 +885,13 @@ These are surfaced in story bodies but consolidated here for the implementer's c
 
 2. ~~**Maturity check replacement coverage (S3).**~~ **Resolved by S3 (2026-05-04):** acceptable coverage loss accepted. Doc-writer's post-write suggestions fire only when (a) the user confirms new pitfalls/conventions at wrap-up AND (b) the agent actually writes to `.roughly/known-pitfalls.md`. Manual edits are explicitly out of the new trigger surface. Two-part gate documented in [agents/doc-writer.md](../../../agents/doc-writer.md) and [README.md:221](../../../README.md#L221). Manual-edit detection remains a [v0.1.6 candidate](#v016-candidates) if real-world usage shows the gap matters.
 
-3. **Retry-loop per-cap decisions (S10).** Each of the four caps may stay, raise, or convert to prompt. **Proposed defaults (challenge these before S10 lands):**
-   - **Stage 5c questions cap:** keep at 2. Questions interrupt a fresh subagent — raising the cap risks runaway clarification loops on under-specified plans. Better to surface plan ambiguity at S0/Stage 4 review.
-   - **Stage 5c quality auto-fix cap (type-check):** raise to 4. Type errors are nearly free to detect and re-fix; a 2-cap is conservative.
-   - **Stage 5c quality auto-fix cap (lint/format):** raise to 4. Same reasoning — formatter changes are mechanical and safe.
-   - **Stage 5c quality auto-fix cap (test fixes):** keep at 2. Test fixes are open-ended; runaway test-rewriting is a known failure mode.
-   - **Stage 6 review-fix cycles cap:** keep at 2. Most expensive loop in the pipeline; raising it amplifies cost on already-expensive work. Consider converting hard escalation to a prompt only if dogfood evidence shows cycles 2-3 land legitimate fixes.
-   The implementer should prepare a per-cap rationale comment in the SKILL.md edits documenting which default was kept vs. challenged and why, with a before/after dogfood case backing each change.
+3. ~~**Retry-loop per-cap decisions (S10).**~~ **Resolved 2026-05-10 — defaults ratified as proposed.** Five per-cap dispositions:
+   - **Stage 5c questions cap:** keep at 2. Questions interrupt a fresh subagent — raising risks runaway clarification loops on under-specified plans. Better to surface plan ambiguity at S0/Stage 4 review.
+   - **Stage 5c quality auto-fix (type-check):** raise to 4. Type errors are nearly free to detect and re-fix; 2-cap is conservative.
+   - **Stage 5c quality auto-fix (lint/format):** raise to 4. Mechanical and safe.
+   - **Stage 5c quality auto-fix (test fixes):** keep at 2. Open-ended; runaway test-rewriting is a known failure mode.
+   - **Stage 6 review-fix cycles cap:** keep at 2. Most expensive loop in the pipeline; raising amplifies cost on already-expensive work. Conversion-to-prompt deferred unless dogfood evidence shows cycles 2-3 land legitimate fixes.
+   See [E03.S10](#e03s10-retry-loop-tuning) for full implementation guidance, including the auto-fix-cap detection-granularity decision (Path A 3-way / Path B 2-way / Path C binary) the dispatching agent should make during plan-write.
 
 4. ~~**roughly.dev source location (S12).**~~ **Resolved 2026-05-08 by S12.0 — option (c) defer.** Docs cluster (S12a, S12b) removed from v0.1.5 and tracked in [v0.1.6 candidates](#v016-candidates) for separate-repo handling. See [E03.S12.0](#e03s120-resolve-roughlydev-source-location) for the full rationale.
 
@@ -930,7 +952,7 @@ Order is by dependency, not roadmap item number.
 | 8 | **E03.S3** (retire test-verify-v1 / pitfalls-organized-v1) ✅ | Folds triggers into doc-writer; doesn't break anything. Merged 2026-05-04 ahead of original sequence position — landed before S11a/S11b-1/S6/S5/S4. Build/fix line counts now 288/291 (12 and 9 lines headroom). Stage 8 maturity-check loop reduced to 3 active checks. |
 | 9 | **E03.S2** (stop-hook-v1 templating) ✅ | After S3 to avoid double-touching maturity check section. Merged 2026-05-06 via PR #27 (`a3d7afc`, 24 commits). 4-phase transactional commit in setup Step 5d Branch 4; lighter install path in build/fix Stage 8. Build/fix line counts now 294/297; setup 287. DI-001 (Stage 6 review-depth observation) seeded in new deferred-investigations catalog. |
 | 10 | **E03.S9** (situation-specific abort prose) | Sweep across pipeline skills; lands late to avoid merge churn |
-| 11 | **E03.S10** (retry-loop tuning) | Late; benefits from CI regression coverage from S11 |
+| 11 | **E03.S10** (retry-loop tuning) | Late; benefits from CI regression coverage from S11. OQ3 ratified 2026-05-10 — five per-cap dispositions (3 keep at 2; 2 raise to 4); auto-fix-cap detection-granularity decision (Path A/B/C) deferred to dispatching agent's plan-write. Recommended Path C. |
 | 12 | **E03.S11b-2** (full dogfood scenario) ✅ | After pipeline-touching stories stabilize. Merged 2026-05-10 via PR #33 (`78c9ff2`, 7 commits — 1 feat + 1 docs + 5 review-fix iterations on assertion 5c). Closes CI cluster (3/3). `--ci` flag in build skill (298/300, +2 net after compression round); 5 structural assertions with synthetic-PASS marker as byte-identical contract. Build at 298/300, pitfalls 70/80. NOT dependent on S6 or S9 — confirmed post-merge. |
 | 13 | **E03.S8** (`/roughly:help` command) | Late; documents the final shape of the release |
 
