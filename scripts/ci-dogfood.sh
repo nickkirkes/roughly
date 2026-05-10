@@ -177,22 +177,30 @@ if ! grep -qE '^### T1' "$PLAN_FILE"; then
   exit 1
 fi
 
-# Assertion 5a: NAME= assignment present (proves the constant was added).
-# Anchored on `NAME=` (assignment form) so a comment-only modification
-# like `# add NAME constant here` does not false-positive — the
+# Assertion 5a: NAME= assignment present at line start (proves the constant
+# was added as a real assignment). Line-start anchor with optional indent
+# and optional `readonly`/`export` prefix — rejects comment lines like
+# `# NAME=foo`, `# Original: NAME=value` (don't match `^[[:space:]]*NAME=`
+# because of the leading `#`) and inline-comment lines like
+# `foo=bar # NAME=oops` (line starts with `foo=`, not NAME=). The
 # requirement is a real shell assignment, not a mention in prose.
-if ! grep -qE '(^|[[:space:]])NAME=' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh"; then
-  echo "ci-dogfood: FAIL — src/greeter.sh in worktree shows no NAME= assignment (implementation may not have run, or wrote only a comment)" >&2
+if ! grep -qE '^[[:space:]]*(readonly[[:space:]]+|export[[:space:]]+)?NAME=' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh"; then
+  echo "ci-dogfood: FAIL — src/greeter.sh in worktree shows no NAME= assignment at line start (implementation may not have run, or wrote only a comment)" >&2
   sed 's/^/    /' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh" >&2
   exit 1
 fi
 
-# Assertion 5b: NAME is referenced via $NAME or ${NAME} (proves the echo
-# update happened). Without this, an implementation that adds the constant
-# but leaves `echo "hello"` unchanged would silently pass — defeating the
-# scenario's check that both halves of the prompt's feature ran.
-if ! grep -qE '\$\{?NAME\}?' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh"; then
-  echo "ci-dogfood: FAIL — src/greeter.sh has NAME= but does not reference \$NAME or \${NAME} (echo update missing)" >&2
+# Assertion 5b: NAME is referenced via $NAME or ${NAME} with a strict
+# variable-name boundary (proves the echo update happened). The boundary
+# guard rejects $NAMESPACE / $NAME_VAR / ${NAME_X} / ${NAMESPACE}: bash
+# variable names use [A-Za-z0-9_], so `$NAME` followed by any of those
+# means the reference is to a different variable. Three accepted forms:
+# (a) `${NAME}` — fully-braced; (b) `$NAME` followed by a non-identifier
+# char (whitespace, punctuation, end of quoted string, etc.); (c) `$NAME`
+# at end of line. Without the boundary, `$NAMESPACE` would silently
+# false-positive an "echo update" that never touched the greeting.
+if ! grep -qE '\$\{NAME\}|\$NAME[^A-Za-z0-9_]|\$NAME$' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh"; then
+  echo "ci-dogfood: FAIL — src/greeter.sh has NAME= but does not reference \$NAME or \${NAME} as a standalone variable (echo update missing)" >&2
   sed 's/^/    /' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh" >&2
   exit 1
 fi
