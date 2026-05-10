@@ -1,6 +1,6 @@
 # E03 — Trust hardening + ergonomics + CI
 
-**Status:** In Progress (9/13 implementation stories merged + S12.0 decision resolved — **trust-hardening cluster 7/7 DONE** (S0–S6); **CI cluster 2/3 DONE** (S11a, S11b-1). S0 PR #24, S1 PR #25, S3 PR #26, S2 PR #27, S5 PR #28, S4 PR #29, S6 PR #30, S11a PR #31, S11b-1 PR #32 (`ea66e9b`, merged 2026-05-08, 5 commits). E03.S12.0 resolved 2026-05-08 via **option (c) defer** (decision-only, no PR — kept as historical record outside the implementation-story count); S12a + S12b removed from v0.1.5 and tracked in v0.1.6 candidates for separate-repo handling, reducing implementation scope from 15 → 13 stories. CI plumbing now real: real `claude --bare` invocation, plugin-load assertion, auth-failure no-hang regression check, ≤5K-token budget gate. **`ANTHROPIC_API_KEY` repo secret must be configured in GitHub Settings before the smoke step passes** — script's fail-loud behavior is correct (`Not logged in` until the secret lands). Remaining v0.1.5 scope: **ergonomics** (S8, S9, S10), **CI** (S11b-2). [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) at 68/80; [skills/fix/SKILL.md](../../../skills/fix/SKILL.md) at 299/300 — binding line-cap constraint for any future fix-touching story.)
+**Status:** In Progress (10/13 implementation stories merged + S12.0 decision resolved — **trust-hardening cluster 7/7 DONE** (S0–S6); **CI cluster 3/3 DONE** (S11a, S11b-1, S11b-2). S0 PR #24, S1 PR #25, S3 PR #26, S2 PR #27, S5 PR #28, S4 PR #29, S6 PR #30, S11a PR #31, S11b-1 PR #32, S11b-2 PR #33 (`78c9ff2`, merged 2026-05-10, 7 commits). E03.S12.0 resolved 2026-05-08 via **option (c) defer**; S12a + S12b removed from v0.1.5 and tracked in v0.1.6 candidates for separate-repo handling, reducing implementation scope from 15 → 13 stories. CI now drives full happy-path build cycle end-to-end against the [tests/fixtures/hello-roughly/](../../../tests/fixtures/hello-roughly/) Bash fixture under `/roughly:build --ci` (OQ1 option (c)); 5 structural assertions + synthetic-PASS marker + ≤150K token gate via `--max-budget-usd 1.50`. **`ANTHROPIC_API_KEY` repo secret must be configured in GitHub Settings before the full-scenario step passes** — fail-loud behavior is correct, not a regression. Remaining v0.1.5 scope: **ergonomics only** — S8 (`/roughly:help`), S9 (abort prose), S10 (retry-loop tuning). [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) at 70/80; [skills/build/SKILL.md](../../../skills/build/SKILL.md) at 298/300 (2 lines headroom — recovered via S11b-2 compression round); [skills/fix/SKILL.md](../../../skills/fix/SKILL.md) still at 299/300 — binding line-cap constraint for any future fix-touching story.)
 **Target version:** v0.1.5
 **Target effort:** 6-7 wk
 **Dependencies:** E01 (pipeline foundation, audit follow-up shipped v0.1.3); E02 (rename to `roughly` shipped v0.1.4 — namespace, dotdir, version-line identifier all assumed in place)
@@ -31,6 +31,8 @@ Scope is frozen. Items surfaced during epic writing that are clearly related but
 
    **Closure (2026-05-08, post-S11b-1):** Closed. Real `claude --bare --plugin-dir "$WORKTREE" --no-session-persistence -p` invocations now run against the worktree with `git status --porcelain` symmetry holding. `--no-session-persistence` plus the worktree boundary keep `.roughly/`, `docs/plans/`, and Claude session state out of the source tree. **Caveat:** the GitHub repo secret `ANTHROPIC_API_KEY` must be configured in Settings → Secrets and variables → Actions before the CI smoke step succeeds; until then, the script fails loud with `Not logged in` (correct fail-loud behavior, not a regression).
 
+   **Confirmed end-to-end (2026-05-10, post-S11b-2):** S11b-2's full-scenario block runs `/roughly:build --ci` against the `hello-roughly` fixture inside the worktree boundary. Mutations land in `/tmp/roughly-dogfood-${SHA}/tests/fixtures/hello-roughly/` and are cleaned up by `trap cleanup EXIT`. Post-scenario `git status --porcelain` symmetry check runs as the final guard. Pollution-detection contract held end-to-end through the scripted scenario.
+
 3. ~~**Docs scope creep (S12).**~~ **Resolved (2026-05-08, S12.0 option c):** docs cluster deferred to a separate repo/epic post-v0.1.5. Risk no longer applies to v0.1.5; preserved here for historical context. The underlying surface (9-10 skills + 7 agents + 9 ADRs) was the trigger for the deferral — pages would have ballooned against tight release-cycle attention. Re-emerges if/when the docs work picks up in its own epic.
 
 4. **Retry-loop tuning regressions (S10).** Raising caps on cheap checks can hide flakiness; replacing hard escalation with prompts shifts cost to humans mid-pipeline. Each adjustment needs a before/after dogfood pass on a known case. Risk: silent trust degradation; mitigated by per-cap rationale recorded inline and dogfood verification gated by S11 CI.
@@ -52,6 +54,8 @@ Scope is frozen. Items surfaced during epic writing that are clearly related but
    **Status update (2026-05-08, post-S11a):** Token-cost expectations are now documented in [CONTRIBUTING.md](../../../CONTRIBUTING.md) `## CI` section: S11b-1 ~5K Sonnet tokens; S11b-2 ≤150K. S11a itself is zero — stub invocation. Risk holds until S11b-1 and S11b-2 ship and the actual per-run cost is observed against the documented budgets.
 
    **Status update (2026-05-08, post-S11b-1):** S11b-1 introduces a hard budget gate via `--max-budget-usd 0.05` (~5K Sonnet tokens at blended rate) — converts AC5's cost cap from aspirational to mechanically enforced. Per-run cost will be observable once `ANTHROPIC_API_KEY` is configured. Risk narrows to S11b-2's ≤150K budget; closes when S11b-2 ships and observed cost holds against the documented ceiling.
+
+   **Status update (2026-05-10, post-S11b-2):** S11b-2 ships the second mechanical gate: `--max-budget-usd 1.50` (~150K mixed Sonnet tokens at current pricing — script comment flags pricing-sensitivity for future recompute). Both CI gates are now hard-enforced: S11b-1 ≤5K and S11b-2 ≤150K. Risk closes when first green CI run with the secret configured confirms observed cost holds against the ceiling.
 
 ---
 
@@ -742,11 +746,23 @@ S11b-1 lands ahead of S11b-2 so subsequent stories (S9, S10) ship with at least 
 #### E03.S11b-2: Scripted dogfood happy-path build cycle
 
 **Maps to roadmap item:** #11 (part 2b — split during epic review)
+**Status:** Complete on `feat/E03.S11b-2-scripted-dogfood-happy-path-build-cycle`; merged 2026-05-10 via PR #33 (`78c9ff2`, 7 commits — `2e6548d` core + `a5b54ad` `$ARGUMENTS` flag-detection Goldilocks pitfall + 5 review-fix iterations on the greeter assertion). All 10 ACs met. **Closes the v0.1.5 CI cluster (3/3).** Risk #2 confirmed end-to-end; Risk #7 narrows further with the second mechanical token gate.
 
-**Files touched:**
-- [skills/build/SKILL.md](../../../skills/build/SKILL.md) — Stage 1 (detect `--ci` flag in invocation; set internal `CI_MODE` flag) + Stage 4 (when `CI_MODE` is set, skip blocking subagent dispatch and assume synthetic PASS verdict). Build is at 296/300; expect ~3-4 net additive lines. If the additive change exceeds 4 lines, invoke the [line-cap budget contract](#line-cap-budget-contract)'s prose-extraction off-ramp on the Stage 4 review-plan block before adding `--ci` handling
-- `scripts/ci-dogfood.sh` (extend with full scenario; invokes `/roughly:build --ci` against the fixture)
-- `tests/fixtures/<name>/` (new — fixture repo for the scenario; minimal: CLAUDE.md, one source file, a trivial test)
+**Files delivered:**
+
+Modified:
+- [skills/build/SKILL.md](../../../skills/build/SKILL.md) — 296 → 298 lines (+2 net after compression-for-headroom round in review-fix 1 merged Stage 1 detection into the existing parse paragraph). Stage 1 detects `--ci` as a standalone token (not substring); Stage 4 emits the literal marker `[--ci] plan review skipped — synthetic PASS` (em-dash U+2014) and skips review-plan dispatch when `CI_MODE=true`. Frontmatter description updated.
+- [scripts/ci-dogfood.sh](../../../scripts/ci-dogfood.sh) — 128 → 222 lines (+94). New full-scenario block at L116–202 invokes `/roughly:build --ci` against the worktree's fixture copy with `timeout 270` (4.5 min, under the 5-min AC ceiling) and `--max-budget-usd 1.50` (≈150K mixed Sonnet tokens at current pricing). Three-branch error handler (timeout 124 / non-zero / assertion fail) per S11b-1 pattern; `&& SCENARIO_EXIT=0 || SCENARIO_EXIT=$?` exit-capture idiom per the `set -e` + command-substitution pitfall.
+- [CONTRIBUTING.md](../../../CONTRIBUTING.md) — `## CI` section gains `**--ci flag.**` paragraph documenting the mechanism, fixture-path callout in local-repro, S11b-2 past-tensed.
+- [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) — 68 → 70 lines (+1 entry in Planning & Scoping section: `$ARGUMENTS` flag-detection Goldilocks zone — substring matching too loose, first-token matching too strict, standalone-token matching is right).
+- [CHANGELOG.md](../../../CHANGELOG.md) — `[Unreleased]` v0.1.5 Added entry.
+- [docs/ROADMAP.md](../../ROADMAP.md) — item #11 marked ✅ Done — landed across S11a/S11b-1/S11b-2.
+
+New:
+- [tests/fixtures/hello-roughly/CLAUDE.md](../../../tests/fixtures/hello-roughly/CLAUDE.md) — fixture project context (Bash stack/build/typecheck/test fields). Bash chosen for zero toolchain install in CI.
+- [tests/fixtures/hello-roughly/src/greeter.sh](../../../tests/fixtures/hello-roughly/src/greeter.sh) — initial state `echo "hello"`; executable.
+- [tests/fixtures/hello-roughly/tests/greeter.test.sh](../../../tests/fixtures/hello-roughly/tests/greeter.test.sh) — non-empty-output assertion; executable.
+- `docs/plans/E03-S11b-2-scripted-dogfood-happy-path-build-cycle-plan.md` — implementation plan, bundled per repo convention.
 
 **Context:**
 
@@ -763,32 +779,48 @@ S11a establishes isolation; S11b-1 proves CLI plumbing; S11b-2 drives the actual
 - **Out of scope for v0.1.5: fix-side `--ci`.** S11b-2 is build happy-path only; fix-side parity is a v0.1.6 candidate when fix CI scenarios land
 
 **Acceptance criteria:**
-- [ ] [skills/build/SKILL.md](../../../skills/build/SKILL.md) gains `--ci` flag handling: Stage 1 detects the flag and sets `CI_MODE=true`; Stage 4 skips blocking review-plan dispatch when `CI_MODE` is set and assumes synthetic PASS. Flag is documented in skill description and inline at the detection/skip points. Net additive lines ≤ 4 (build is at 296/300); if exceeded, prose-extraction off-ramp is invoked first per the [line-cap budget contract](#line-cap-budget-contract)
-- [ ] `tests/fixtures/<name>/` contains a minimal repo (CLAUDE.md, one source file, a trivial test) that exercises the build pipeline end-to-end
-- [ ] Fixture is a single-task plan ("add a constant" or similar) — explicitly chosen to minimize token cost
-- [ ] `scripts/ci-dogfood.sh` invokes `/roughly:build --ci` against the fixture for a small, deterministic feature
-- [ ] The scenario succeeds: plan written, Stage 4 takes the synthetic-PASS path under `--ci`, implementation runs, verify-all passes, wrap-up records workflow upgrades, no abort
-- [ ] Scenario assertions check **structural properties** (plan file exists, contains `## Tasks`, has at least one task, review-plan returned PASS, `git status --porcelain` of the fixture repo shows expected diff) rather than full content match — this insulates the test from plan-format changes (e.g., S6's version line, future v0.2.0 format v2)
-- [ ] CI fails loudly if any stage produces unexpected output (silent failure mode protection)
-- [ ] CI fails loudly if Stage 4 is reached but the synthetic-PASS branch is not taken under `--ci` — i.e., if the orchestrator attempts a real review-plan dispatch despite `CI_MODE=true`, that's a regression in the `--ci` flag handling. (Plan-mode hijack regression protection from S1 still applies on the non-`--ci` path; this AC adds protection that the `--ci` path itself doesn't drift back to invoking the human gate.)
-- [ ] The scenario completes in under 5 minutes wall-clock on GitHub Actions standard runners
-- [ ] **Token cost cap:** scenario uses ≤150K Sonnet tokens per run (sized for the minimal fixture); CI fails or warns if a run exceeds this, signaling fixture growth or pipeline regression
-- [ ] Failure logs include enough context (stage reached, last 50 lines of output) to diagnose without re-running locally
-- [ ] Fixture state is reset between runs — either via clean re-checkout of `tests/fixtures/<name>/` or explicit teardown of `tests/fixtures/<name>/.roughly/` and `tests/fixtures/<name>/docs/plans/`
+- [x] [skills/build/SKILL.md](../../../skills/build/SKILL.md) `--ci` flag handling: Stage 1 detects standalone-token `--ci` and sets `CI_MODE=true`; Stage 4 emits literal `[--ci] plan review skipped — synthetic PASS` and skips review-plan dispatch. Frontmatter description updated. Net +2 after review-fix 1 compression (296 → 298, ≤4 budget).
+- [x] [tests/fixtures/hello-roughly/](../../../tests/fixtures/hello-roughly/) — Bash project (not a Roughly install), CLAUDE.md + `src/greeter.sh` initial `echo "hello"` + `tests/greeter.test.sh` non-empty-output assertion. Both `.sh` files executable.
+- [x] Single-task fixture: "add a NAME constant to `src/greeter.sh` and update the echo to use it." Bash means zero CI toolchain install.
+- [x] `scripts/ci-dogfood.sh` invokes `/roughly:build --ci` against the fixture with `timeout 270` and `--max-budget-usd 1.50`.
+- [x] Scenario succeeds: synthetic-PASS marker present, plan file written with `## Tasks` + `### T1`, source modified to assignment + reference, no abort.
+- [x] Five structural assertions (no content equality): synthetic-PASS marker (full-string `grep -qF`), plan file in `docs/plans/`, plan contains `## Tasks`, plan contains `### T1`, source shows assignment + reference. Insulates against plan-format evolution (S6, v0.2.0 format v2).
+- [x] CI fails loudly on any stage's unexpected output via three-branch error handler (timeout 124 / non-zero / assertion fail); each FAIL dumps `$SCENARIO_OUT` or relevant file content indented to stderr.
+- [x] Synthetic-PASS regression guard: `--ci` drift back to real review-plan dispatch fails CI. Non-`--ci` path's S1 plan-mode hijack protection still applies (hook unchanged; `--ci` is independent of `permission_mode`).
+- [x] `timeout 270` (4.5 min) hard cap — under 5-min AC ceiling.
+- [x] Token cost cap: `--max-budget-usd 1.50` (~150K mixed Sonnet tokens at current pricing) — mechanical enforcement; comment in script flags pricing-sensitivity for future recompute.
+- [x] Failure logs include context — three-branch dumps cover timeout/non-zero/assertion paths.
+- [x] Fixture state reset between runs: S11a worktree-boundary contract — mutations land in `/tmp/roughly-dogfood-${SHA}/tests/fixtures/hello-roughly/` and are torn down by `trap cleanup EXIT`. Existing post-state `git status --porcelain` symmetry runs as final guard.
 
-**Verification:**
-- Push a change that removes the `--ci` Stage 1 detection or Stage 4 synthetic-PASS branch; confirm CI fails (the orchestrator either dispatches review-plan and hangs/errors, or aborts visibly)
-- Push a change that breaks plan-mode detection (S1 regression); confirm CI fails with a clear message
-- Manually invoke `/roughly:build --ci` locally against the fixture to confirm the flag's behavior matches the documented semantics (synthetic PASS, no review-plan dispatch)
-- Manually invoke `/roughly:build` (no `--ci`) locally to confirm the human gate still fires — `--ci` does not silently bleed into normal invocations
-- Push a clean change; confirm CI passes in <5 min and ≤150K tokens
+**Final assertion structure (`scripts/ci-dogfood.sh` greeter source):**
+- **5a:** `^[[:space:]]*(readonly[[:space:]]+|export[[:space:]]+)?NAME=` — line-anchored assignment, rejects comments
+- **5b:** `^[[:space:]]*echo[[:space:]].*(\$\{NAME\}|\$NAME([^A-Za-z0-9_]|$))` — echo line + NAME reference with variable-name boundary
+- **5c:** `^[[:space:]]*echo[[:space:]]+"hello"[[:space:]]*($|[#;&|<>])` — original-line preservation detector covering whitespace variants and all preservation forms (terminators, redirects, pipes)
 
-**Dependencies:** S11a (scaffolding), S11b-1 (plumbing proven), S1 (plan-mode detection). S6 and S9 are NOT dependencies — S6's version line should not break the scenario (verified post-merge), and S9's abort prose improves diagnosis but is not required for the happy path.
+**Process observation worth carrying forward:** the greeter assertion (5c) went through 5 review-fix iterations before stabilizing. Each round tightened against a different false-positive/negative class (substring `NAME` → comment containing `NAME=` → `$NAMESPACE` over-match → `NAME` outside echo → parallel/compound preservation → redirect/pipe preservation → whitespace variants). **Lesson for future fixture assertions:** "structural property" is harder than it looks when the property is "the original behavior was actually replaced." Future fixture design should bias toward properties with a single canonical form (presence/absence of a sentinel string), not properties admitting many syntactic variants of the same semantic state.
 
-**Out of scope:**
-- `/roughly:fix` scenario (next release)
-- `/roughly:setup` scenario (next release)
-- Negative-path scenarios (review-plan NEEDS REVISION, Stage 6 max cycles, etc.)
+**Design decisions worth surfacing:**
+- **OQ1 option (c) confirmed sound during implementation.** No second-thoughts — flag is part of skill's documented public API, hard to silently leak into normal use, survives Stage 4 prompt iteration.
+- **Skill-cap budget hit then recovered.** Initial implementation landed at exactly 300/300; review surfaced this as forward-edit-friction. Final state is 298/300 by merging Stage 1 detection into the existing parse paragraph. Lesson: when a skill change consumes the entire line budget, plan ahead a compression-candidate paragraph.
+- **Worktree boundary alone satisfies fixture-state-reset AC.** No separate teardown logic required.
+- **Extending the script, not the workflow, was the right call.** Splitting the build-cycle scenario into a separate workflow step would have duplicated `ANTHROPIC_API_KEY` env scoping and broken the worktree-lifecycle pollution-detection guarantee.
+- **Marker string is a byte-identical contract enforced via `grep -qF`.** Drift in either side fails CI loudly. Em-dash is U+2014, hyphen is ASCII; comments in both files explain the contract.
+- **`--ci` flag detection has a Goldilocks zone (now documented).** Substring matching too loose; first-token matching too strict; standalone-token matching (whitespace/start preceded, whitespace/end followed) is right. Captured as a new pitfall.
+
+**Verification (delivered):**
+- Plan review (`/roughly:review-plan`) PASS
+- 3-agent parallel code review at Stage 6
+- 5 review-fix iterations on assertion 5c
+- `bash .claude/hooks/verify-all.sh` exit 0
+- `cubic review --json` clean across all post-commit iterations
+- PR review cleared
+
+**Dependencies:** S11a (scaffolding) ✅, S11b-1 (plumbing proven) ✅, S1 (plan-mode detection) ✅. S6 and S9 are NOT dependencies — S6's version line did not break the scenario (verified post-merge), and S9's abort prose improves diagnosis but was not required for the happy path.
+
+**Out of scope (carried forward as v0.1.6 candidates where applicable):**
+- `/roughly:fix` scenario / fix-side `--ci` parity
+- `/roughly:setup` and `/roughly:upgrade` scenarios
+- Negative-path scenarios (review-plan NEEDS REVISION, Stage 6 max-cycles, abort handling)
 - Performance benchmarking
 - Cross-platform CI (Linux only)
 
@@ -899,7 +931,7 @@ Order is by dependency, not roadmap item number.
 | 9 | **E03.S2** (stop-hook-v1 templating) ✅ | After S3 to avoid double-touching maturity check section. Merged 2026-05-06 via PR #27 (`a3d7afc`, 24 commits). 4-phase transactional commit in setup Step 5d Branch 4; lighter install path in build/fix Stage 8. Build/fix line counts now 294/297; setup 287. DI-001 (Stage 6 review-depth observation) seeded in new deferred-investigations catalog. |
 | 10 | **E03.S9** (situation-specific abort prose) | Sweep across pipeline skills; lands late to avoid merge churn |
 | 11 | **E03.S10** (retry-loop tuning) | Late; benefits from CI regression coverage from S11 |
-| 12 | **E03.S11b-2** (full dogfood scenario) | After pipeline-touching stories stabilize. NOT dependent on S6 or S9 — S6 is a compatibility check post-merge; S9 improves diagnosis but isn't required for the happy path |
+| 12 | **E03.S11b-2** (full dogfood scenario) ✅ | After pipeline-touching stories stabilize. Merged 2026-05-10 via PR #33 (`78c9ff2`, 7 commits — 1 feat + 1 docs + 5 review-fix iterations on assertion 5c). Closes CI cluster (3/3). `--ci` flag in build skill (298/300, +2 net after compression round); 5 structural assertions with synthetic-PASS marker as byte-identical contract. Build at 298/300, pitfalls 70/80. NOT dependent on S6 or S9 — confirmed post-merge. |
 | 13 | **E03.S8** (`/roughly:help` command) | Late; documents the final shape of the release |
 
 **Removed from v0.1.5:**
