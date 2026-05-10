@@ -1,0 +1,20 @@
+scripts/ci-dogfood.sh
+  s_eb2c77e4ac5322::t_3057feb75d32c0 210
+  s_eb2c77e4ac5322::t_b60073a0149261 211-223
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "3c281dc232b350c3edd3bc508652c1f06736e1e7",
+  "prompts": {},
+  "sessions": {
+    "s_eb2c77e4ac5322": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f2a1101b-2f80-4d91-93ee-f926b597dc9a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
