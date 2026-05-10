@@ -207,19 +207,20 @@ if ! grep -qE '^[[:space:]]*echo[[:space:]].*(\$\{NAME\}|\$NAME([^A-Za-z0-9_]|$)
   exit 1
 fi
 
-# Assertion 5c: the original `echo "hello"` substring is gone (proves
-# the original line was actually replaced, not just supplemented). The
-# fixture's initial state has the literal `echo "hello"` line. Without
-# this check, an LLM that leaves the original line untouched and adds a
-# parallel `echo "$NAME"` would pass 5b (some echo line has $NAME) yet
-# fail the prompt's "update the echo to use it" intent. Fixed-string
-# match (-F) on `echo "hello"` (with closing quote) — does NOT
-# false-positive on the desired `echo "hello $NAME"` because there's a
-# space (not `"`) immediately after `hello` in that case. Catches both
-# whole-line preservation and compound-statement preservation
-# (e.g., `echo "hello"; echo "$NAME"`).
-if grep -qF 'echo "hello"' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh"; then
-  echo "ci-dogfood: FAIL — src/greeter.sh still contains the original \`echo \"hello\"\` substring; the echo was added to, not updated" >&2
+# Assertion 5c: the original `echo "hello"` statement was not preserved
+# (proves the line was actually replaced or extended, not supplemented
+# with a parallel statement or redirected). The character class
+# [#;&|<>] covers every shell construct that terminates or redirects
+# the original `echo "hello"` while leaving its output behavior intact:
+# `;`, `&`, `&&`, `|`, `||`, `>`, `>>`, `<`, `<<`, `#` (trailing
+# comment), or end-of-line. Multi-char operators (`&&`, `||`, `>>`,
+# `<<`, `<<<`) all start with one of these chars, so single-char match
+# captures them. Valid extended echos do NOT match because `"`, `$`, or
+# bare-word args after `echo "hello"` are NOT in this class, so the
+# regex correctly accepts: `echo "hello" "$NAME"`, `echo "hello $NAME"`,
+# `echo "hello, $NAME"`, `echo "hello" $NAME`, `echo "hello" world`.
+if grep -qE '^[[:space:]]*echo "hello"[[:space:]]*($|[#;&|<>])' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh"; then
+  echo "ci-dogfood: FAIL — src/greeter.sh still contains the original \`echo \"hello\"\` statement unchanged (preserved via redirect, pipe, sequence, or as-is); the echo was added to, not updated" >&2
   sed 's/^/    /' "$WORKTREE/tests/fixtures/hello-roughly/src/greeter.sh" >&2
   exit 1
 fi
