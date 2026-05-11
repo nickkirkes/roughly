@@ -1,6 +1,6 @@
 # E03 — Trust hardening + ergonomics + CI
 
-**Status:** In Progress (10/13 implementation stories merged + S12.0 decision resolved — **trust-hardening cluster 7/7 DONE** (S0–S6); **CI cluster 3/3 DONE** (S11a, S11b-1, S11b-2). S0 PR #24, S1 PR #25, S3 PR #26, S2 PR #27, S5 PR #28, S4 PR #29, S6 PR #30, S11a PR #31, S11b-1 PR #32, S11b-2 PR #33 (`78c9ff2`, merged 2026-05-10, 7 commits). E03.S12.0 resolved 2026-05-08 via **option (c) defer**; S12a + S12b removed from v0.1.5 and tracked in v0.1.6 candidates for separate-repo handling, reducing implementation scope from 15 → 13 stories. CI now drives full happy-path build cycle end-to-end against the [tests/fixtures/hello-roughly/](../../../tests/fixtures/hello-roughly/) Bash fixture under `/roughly:build --ci` (OQ1 option (c)); 5 structural assertions + synthetic-PASS marker + ≤150K token gate via `--max-budget-usd 1.50`. **`ANTHROPIC_API_KEY` repo secret must be configured in GitHub Settings before the full-scenario step passes** — fail-loud behavior is correct, not a regression. Remaining v0.1.5 scope: **ergonomics only** — S8 (`/roughly:help`), S9 (abort prose), S10 (retry-loop tuning). [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) at 70/80; [skills/build/SKILL.md](../../../skills/build/SKILL.md) at 298/300 (2 lines headroom — recovered via S11b-2 compression round); [skills/fix/SKILL.md](../../../skills/fix/SKILL.md) still at 299/300 — binding line-cap constraint for any future fix-touching story.)
+**Status:** In Progress (11/13 implementation stories merged + S12.0 decision resolved — **trust-hardening cluster 7/7 DONE** (S0–S6); **CI cluster 3/3 DONE** (S11a, S11b-1, S11b-2); **ergonomics cluster 1/3** (S10 ✅; S8 + S9 remain). S0 PR #24, S1 PR #25, S3 PR #26, S2 PR #27, S5 PR #28, S4 PR #29, S6 PR #30, S11a PR #31, S11b-1 PR #32, S11b-2 PR #33, S10 PR #34 (`5bf8f36`, merged 2026-05-11, 3 commits). E03.S12.0 resolved 2026-05-08 via **option (c) defer**. OQ1 resolved 2026-05-08 (`--ci` flag). OQ3 ratified 2026-05-10 and shipped via S10 with Path C (single auto-fix cap raised to 4 with command-output-based test conditional). Build/fix line counts unchanged at 298/299 — S10 used inline-parenthetical OQ3 annotations to stay within fix's 1-line headroom; no prose-extraction off-ramp invoked. Remaining v0.1.5 scope: **S8** (`/roughly:help`), **S9** (abort prose). [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) at 72/80 (8 lines headroom); [skills/build/SKILL.md](../../../skills/build/SKILL.md) at 298/300; [skills/fix/SKILL.md](../../../skills/fix/SKILL.md) still at 299/300 — binding line-cap constraint for any future fix-touching story.)
 **Target version:** v0.1.5
 **Target effort:** 6-7 wk
 **Dependencies:** E01 (pipeline foundation, audit follow-up shipped v0.1.3); E02 (rename to `roughly` shipped v0.1.4 — namespace, dotdir, version-line identifier all assumed in place)
@@ -36,6 +36,8 @@ Scope is frozen. Items surfaced during epic writing that are clearly related but
 3. ~~**Docs scope creep (S12).**~~ **Resolved (2026-05-08, S12.0 option c):** docs cluster deferred to a separate repo/epic post-v0.1.5. Risk no longer applies to v0.1.5; preserved here for historical context. The underlying surface (9-10 skills + 7 agents + 9 ADRs) was the trigger for the deferral — pages would have ballooned against tight release-cycle attention. Re-emerges if/when the docs work picks up in its own epic.
 
 4. **Retry-loop tuning regressions (S10).** Raising caps on cheap checks can hide flakiness; replacing hard escalation with prompts shifts cost to humans mid-pipeline. Each adjustment needs a before/after dogfood pass on a known case. Risk: silent trust degradation; mitigated by per-cap rationale recorded inline and dogfood verification gated by S11 CI.
+
+   **Closure (2026-05-11, post-S10):** Closed. Path C (single auto-fix cap raised to 4 with command-output-based test conditional) shipped via PR #34. Conservative dispositions preserved on the 3 most failure-prone loops (Stage 5c questions, test-fix branch, Stage 6 review-fix). Two cheap mechanical loops (type-check, lint/format) raised to 4. Inline OQ3 annotations document each cap's disposition. S11b-2 happy-path CI passes post-merge — Path C is invisible to the happy-path scenario unless something regresses into a loop (implicit dogfood validation). Stage 6 conversion-to-prompt explicitly deferred pending dogfood evidence of cycles 2-3 landing legitimate fixes; tracked as v0.1.6 candidate.
 
 5. **Stop-hook-v1 templating completion (S2).** This repo's [.claude/hooks/verify-all.sh](.claude/hooks/verify-all.sh) is a dogfood instance with project-specific drift checks (line caps for `agents/`, `.ruckus/` legacy detection, etc.) — it is not a plugin-shipped template. The maturity check must template a generic Stop hook into the user's `.claude/`, handling the case where the user already has a Stop hook configured (merge vs prompt vs decline). Risk: under-spec'd templating ships a hook that conflicts with an existing user hook; mitigated by explicit conflict-handling AC in S2.
 
@@ -581,8 +583,20 @@ Today's [skills/build/SKILL.md](../../skills/build/SKILL.md) ABORT HANDLING sect
 #### E03.S10: Retry-loop tuning
 
 **Maps to roadmap item:** #10
+**Status:** Complete on `feat/E03.S10-retry-loop-tuning`; merged 2026-05-11 via PR #34 (`5bf8f36`, 3 commits — `f60056a` core implementation + `3c46687` LLM-conditional-grounding pitfall + `0fb6da5` Stage 2 quality-check scope broadening for test-fix branch reachability). All 7 ACs met. **Path C chosen** (single auto-fix cap raised to 4 with command-output-based test conditional). Build/fix line counts unchanged at 298/299 — inline-parenthetical OQ3 annotations stayed within fix's 1-line headroom; no prose-extraction off-ramp invoked.
 
-**Files touched:**
+**Files delivered:**
+
+Modified:
+- [skills/build/SKILL.md](../../../skills/build/SKILL.md) — 298 → 298 (+0). Three caps tuned with inline OQ3 rationale annotations: questions cap (L176) kept at 2 (#1); auto-fix cap (L180) raised to 4 with test-fix conditional (#2/#3/#4 via Path C); review-fix cycles (L203) kept at 2 (#5). Stage 2 prose broadened in `0fb6da5` to acknowledge configured test commands as part of project quality check — required to make the test-fix cap-2 branch structurally reachable.
+- [skills/fix/SKILL.md](../../../skills/fix/SKILL.md) — 299 → 299 (+0). Parallel changes to build: questions cap (L183), auto-fix cap (L187) with test-fix conditional, review-fix cycles (L206). Parity preserved (only pre-existing build/fix divergence is in TodoWrite — intentional, pre-S10, out of scope).
+- [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) — 70 → 72 (+2). New pitfall (commit `3c46687`): LLM-interpreted conditionals must reference observable signals, not abstract categories. Complementary to the existing "explicit failure-handling clauses" pitfall — grounding + failsafe pair now both documented. 8 lines headroom remaining.
+- [CHANGELOG.md](../../../CHANGELOG.md) — `[Unreleased]` v0.1.5 entry under `### Changed` documenting cap dispositions.
+
+New:
+- `docs/plans/E03-S10-retry-loop-tuning-plan.md` — implementation plan with synthetic before/after table per AC (no real cap-hit history exists; all caps were pre-emptive from v0.1.2).
+
+**Files touched (spec reference):**
 - [skills/build/SKILL.md:172](../../../skills/build/SKILL.md#L172) — Stage 5c questions cap
 - [skills/build/SKILL.md:176-181](../../../skills/build/SKILL.md#L176-L181) — Stage 5c quality auto-fix cap
 - [skills/build/SKILL.md:199](../../../skills/build/SKILL.md#L199) — Stage 6 review-fix cycles cap
@@ -616,26 +630,32 @@ Caps #2/#3/#4 collectively split the *current* single Stage 5c auto-fix cap into
 
 **Recommendation: Path C** unless the dispatching agent finds the test-file detection ambiguous (e.g., source files importing test utilities). Path B is the fallback if Path C's conditional is too brittle. Path A only if Paths B/C prove unworkable. The dispatching agent should pick during plan-write and document the choice in the implementation plan.
 
-**Acceptance criteria:**
-- [ ] **Stage 5c questions cap:** kept at 2 in both build and fix; one-line rationale comment added inline citing OQ3 disposition #1.
-- [ ] **Stage 5c quality auto-fix cap:** implemented per chosen path (A/B/C); rationale comment cites OQ3 dispositions #2/#3/#4 and the path chosen. If Path A or B, Stage 5c body must distinguish failure types; if Path C, the test-fix conditional is one line.
-- [ ] **Stage 6 review-fix cycles cap:** kept at 2 in both build and fix; one-line rationale comment cites OQ3 disposition #5.
-- [ ] **Build/fix parity preserved.** Both skills' Stage 5c blocks remain byte-identical (or near-identical, accounting for build-vs-fix-specific prose); manual sync per ADR-003 reference-copy pattern.
-- [ ] **Each adjusted cap has a before/after dogfood case.** "Before" is whatever loop hit the cap previously (replay if needed; CI fixture from S11b-2 may help). "After" is the cap-change behavior. Documented in the implementation plan, not the skill body.
-- [ ] **CHANGELOG entry under "Changed"** lists each cap and its v0.1.5 disposition with the chosen implementation path.
-- [ ] **Line-cap headroom respected.** Build at 298/300 (2 lines headroom). Fix at 299/300 (1 line). If the auto-fix path implementation exceeds budget, prose-extraction off-ramp is invoked on Stage 5c first.
-- [ ] **No new ADR required** — OQ3 ratification rationale lives in this story body and the inline comments. If conversion-to-prompt for Stage 6 is later considered (post-v0.1.5 dogfood evidence), that warrants its own decision.
+**Path C reframing during implementation (2026-05-11):** Plan-write found the epic's "if Stage 5c was hit by changes to test files" formulation brittle — no test-file detection mechanism exists in the skill, and source/test boundary is project-specific. Path C was reframed to use **observable signals**: "if the failure output indicates a test failure — assertion errors or test-runner output." This is command-output-based, not file-path-based, and project-agnostic. Captured as a new planning pitfall (LLM-interpreted conditionals must reference observable signals, not abstract categories). The 3-agent Stage 6 review independently flagged the original framing's lack of grounding signals (convergent W1 finding from code-reviewer + silent-failure-hunter); the reframe addressed both.
 
-**Verification:**
-- Dogfood replay of each cap-hit case; document behavior delta in the implementation plan
-- `rg -n '\bmax 2\b|\bmax 4\b|max-2|max-4' skills/build/SKILL.md skills/fix/SKILL.md` returns matches consistent with the chosen path
-- CI scenario from S11b-2 still passes post-merge — happy-path doesn't hit any cap, so the changes should be invisible to the CI run unless the CI run regresses into a loop
+**Stage 2 quality-check scope broadening (2026-05-11):** Cubic review of the core implementation surfaced a structural issue: Stage 2 said "Run the project's type check / lint command" but the Stage 5c conditional branched on test-failure output — making the test-fix cap-2 path structurally unreachable for projects whose verify-all stage runs tests at Stage 7 (not Stage 5c). Reworded Stage 2 in `0fb6da5` to acknowledge configured test commands as part of the project's quality check. Net +0 lines. Behavior-preserving for the common case (where Stage 7 still runs tests) and a correctness fix for projects that include tests in their per-task Stage 5c quality check.
+
+**Acceptance criteria:**
+- [x] **Stage 5c questions cap:** kept at 2 in both build (L176) and fix (L183); inline-parenthetical rationale cites OQ3 disposition #1.
+- [x] **Stage 5c quality auto-fix cap:** Path C — single cap raised from 2 to 4 with command-output-based test conditional (assertion errors / test-runner output → escalate after attempt 2). Inline rationale cites OQ3 dispositions #2/#3/#4 and the Path C choice.
+- [x] **Stage 6 review-fix cycles cap:** kept at 2 in both build (L203) and fix (L206); inline rationale cites OQ3 disposition #5; conversion-to-prompt explicitly deferred pending dogfood evidence.
+- [x] **Build/fix parity preserved.** Parity diff shows only pre-existing build/fix divergence in TodoWrite (intentional, pre-S10, out of scope).
+- [x] **Each adjusted cap has a before/after dogfood case.** Synthetic before/after table documented in the implementation plan (no real cap-hit history exists; all caps pre-emptive from v0.1.2).
+- [x] **CHANGELOG entry under "Changed"** lists each cap with disposition + Path C choice.
+- [x] **Line-cap headroom respected.** Build/fix unchanged at 298/299. Inline-parenthetical OQ3 annotations stayed within fix's 1-line headroom; no prose-extraction off-ramp invoked.
+- [x] **No new ADR required** — OQ3 rationale lives in the epic story body + inline annotations. Stage 6 conversion-to-prompt explicitly deferred as v0.1.6 candidate.
+
+**Verification (delivered):**
+- Plan review (`/roughly:review-plan`) PASS
+- 3-agent parallel code review at Stage 6: round 1 surfaced convergent W1 (LLM conditional grounding) + W2 (grammar nit) from code-reviewer + silent-failure-hunter; static-analysis PASS. Round 2 (after fixes): all three CLEAN.
+- `cubic review --json` clean on each post-commit iteration. Post-`0fb6da5` Stage-2-reword fix: clean.
+- S11b-2 CI scenario passes post-merge — happy-path doesn't hit any cap, so Path C is invisible unless a regression drives a loop (implicit dogfood validation).
 
 **Dependencies:** S11 (CI online for regression coverage; happy-path validated). OQ3 defaults ratified 2026-05-10.
 
-**Out of scope:**
+**Out of scope (carried forward as v0.1.6 candidates where applicable):**
 - Adding new caps to currently-uncapped loops (none exist in v0.1.5)
-- Cap adjustments outside build/fix (review-epic, audit-epic, etc. — different concern)
+- Cap adjustments outside build/fix (review-epic, audit-epic, etc.)
+- Stage 6 review-fix cycles conversion-to-prompt — explicitly deferred pending v0.1.5 dogfood evidence; v0.1.6 candidate if cycles 2-3 prove to land legitimate fixes regularly
 - Conversion of Stage 6 review-fix cycles cap to prompt — explicitly deferred pending v0.1.5 dogfood evidence; v0.1.6 candidate if cycles 2-3 prove to land legitimate fixes regularly
 
 ---
@@ -891,7 +911,7 @@ These are surfaced in story bodies but consolidated here for the implementer's c
    - **Stage 5c quality auto-fix (lint/format):** raise to 4. Mechanical and safe.
    - **Stage 5c quality auto-fix (test fixes):** keep at 2. Open-ended; runaway test-rewriting is a known failure mode.
    - **Stage 6 review-fix cycles cap:** keep at 2. Most expensive loop in the pipeline; raising amplifies cost on already-expensive work. Conversion-to-prompt deferred unless dogfood evidence shows cycles 2-3 land legitimate fixes.
-   See [E03.S10](#e03s10-retry-loop-tuning) for full implementation guidance, including the auto-fix-cap detection-granularity decision (Path A 3-way / Path B 2-way / Path C binary) the dispatching agent should make during plan-write.
+   **Shipped 2026-05-11 via S10 PR #34 — Path C chosen.** The Path C test conditional was reframed during implementation from file-path-based ("if Stage 5c was hit by changes to test files") to command-output-based ("if the failure output indicates a test failure — assertion errors or test-runner output") — observable signals rather than abstract categories. Reframing captured as a new known-pitfalls.md entry. See [E03.S10](#e03s10-retry-loop-tuning) for full implementation details.
 
 4. ~~**roughly.dev source location (S12).**~~ **Resolved 2026-05-08 by S12.0 — option (c) defer.** Docs cluster (S12a, S12b) removed from v0.1.5 and tracked in [v0.1.6 candidates](#v016-candidates) for separate-repo handling. See [E03.S12.0](#e03s120-resolve-roughlydev-source-location) for the full rationale.
 
@@ -911,6 +931,7 @@ Items surfaced during epic writing that are clearly related to v0.1.5 work but e
 - **Docs cluster (former S12a, S12b) — separate repo/epic.** Originally scoped as four roughly.dev pages in v0.1.5 (landing, setup walkthrough, pipeline overview, commands reference). Deferred 2026-05-08 via S12.0 option (c). Will land in a separate repo/epic post-v0.1.5; no v0.1.5 release-cycle dependency. Acceptance criteria from the original S12a/S12b stories (page outlines, line-budget targets, no-marketing-voice tone gates, anti-drift verification against SKILL.md sources) remain useful starting context for the future work. Path-to-v1.0 criterion #5 — "roughly.dev complete enough that a stranger gets the pipeline without reading SKILL.md" — is the long-term home for this work.
 - **"Skill flags as public API; env vars are debug-only" principle (S11b-2 OQ1 deferral).** Surfaced during the OQ1 decision (option (c) `--ci` flag chosen over option (b) env var on DX grounds). The principle deserves either a small ADR ("user-facing skill behavior changes are flags, not environment variables") or a `CONTRIBUTING.md` note. Establishes the precedent for v0.2.0's complexity flag (`Task N (Complexity: simple|standard|complex)`) and any future skill-side flags. Not blocking S11b-2 — the principle is implicit in the option (c) choice — but worth codifying.
 - **Fix-side `--ci` flag for `/roughly:fix` CI scenarios (S11b-2 deferral).** S11b-2 ships `--ci` for `/roughly:build` only; fix-side parity comes when fix CI scenarios land. The implementation pattern (Stage 1 flag detection + Stage 4 synthetic-PASS branch) is copy-paste from build's, but should not happen until there's a reason for it.
+- **Stage 6 review-fix cycles cap conversion-to-prompt (S10 deferral).** OQ3 disposition #5 kept the cap at 2 with hard escalation; conversion to a prompt ("Continue with another review-fix cycle? yes / escalate") was explicitly deferred pending v0.1.5 dogfood evidence. Promote to v0.1.6 if cycles 2-3 prove to land legitimate fixes regularly — i.e., if dogfood shows escalations that would have succeeded with one more attempt. Inline annotation in [skills/build/SKILL.md:203](../../../skills/build/SKILL.md#L203) + [skills/fix/SKILL.md:206](../../../skills/fix/SKILL.md#L206) cites this deferral.
 - **Explicit `ANTHROPIC_API_KEY` empty-guard before invoking `claude` (S11b-1 deferral).** Silent-failure-hunter's I2 finding from S11b-1 review: a 1-line defensive check before the `claude` invocation would produce a clearer "secret not configured" diagnostic than relying on `claude --bare`'s `Not logged in` output. Real CI hit this exact case post-merge. Not blocking — current fail-loud behavior is correct — but worth tightening if anyone touches `scripts/ci-dogfood.sh` for another reason.
 - **Build-cycle negative-path CI scenarios (former S11b-1 out-of-scope).** Driving NEEDS REVISION recovery, Stage 6 max-cycles, and abort-handling paths in CI. Today's S11b-2 happy-path is the foundation; these are extensions when the happy-path is stable.
 - **In-session maturity offers at Stage 1 (former S7).** Originally scoped for v0.1.5 to evaluate `investigator-v1` and `stop-hook-v1` triggers up-front, before the user has invested effort in the build/fix run. Moved to v0.1.6 because: (a) line-cap budget on build/fix is tight, (b) the "users are tired by Stage 8" premise is unmeasured, (c) Stage-1 acceptance changes the semantics of `.roughly/workflow-upgrades` (records can persist for runs that subsequently abort). Revisit with v0.1.5 dogfood data on Stage 8 acceptance/decline rates.
@@ -952,7 +973,7 @@ Order is by dependency, not roadmap item number.
 | 8 | **E03.S3** (retire test-verify-v1 / pitfalls-organized-v1) ✅ | Folds triggers into doc-writer; doesn't break anything. Merged 2026-05-04 ahead of original sequence position — landed before S11a/S11b-1/S6/S5/S4. Build/fix line counts now 288/291 (12 and 9 lines headroom). Stage 8 maturity-check loop reduced to 3 active checks. |
 | 9 | **E03.S2** (stop-hook-v1 templating) ✅ | After S3 to avoid double-touching maturity check section. Merged 2026-05-06 via PR #27 (`a3d7afc`, 24 commits). 4-phase transactional commit in setup Step 5d Branch 4; lighter install path in build/fix Stage 8. Build/fix line counts now 294/297; setup 287. DI-001 (Stage 6 review-depth observation) seeded in new deferred-investigations catalog. |
 | 10 | **E03.S9** (situation-specific abort prose) | Sweep across pipeline skills; lands late to avoid merge churn |
-| 11 | **E03.S10** (retry-loop tuning) | Late; benefits from CI regression coverage from S11. OQ3 ratified 2026-05-10 — five per-cap dispositions (3 keep at 2; 2 raise to 4); auto-fix-cap detection-granularity decision (Path A/B/C) deferred to dispatching agent's plan-write. Recommended Path C. |
+| 11 | **E03.S10** (retry-loop tuning) ✅ | Late; CI regression coverage from S11 active at merge. OQ3 ratified 2026-05-10; shipped 2026-05-11 via PR #34 (`5bf8f36`, 3 commits) with **Path C** chosen (single auto-fix cap raised to 4 with command-output-based test conditional). Build/fix unchanged at 298/299 (inline-parenthetical OQ3 annotations stayed within budget; no extraction needed). Path C test conditional reframed from file-path-based to command-output-based during plan-write. Stage 2 prose broadened in `0fb6da5` to make the test-fix branch structurally reachable. |
 | 12 | **E03.S11b-2** (full dogfood scenario) ✅ | After pipeline-touching stories stabilize. Merged 2026-05-10 via PR #33 (`78c9ff2`, 7 commits — 1 feat + 1 docs + 5 review-fix iterations on assertion 5c). Closes CI cluster (3/3). `--ci` flag in build skill (298/300, +2 net after compression round); 5 structural assertions with synthetic-PASS marker as byte-identical contract. Build at 298/300, pitfalls 70/80. NOT dependent on S6 or S9 — confirmed post-merge. |
 | 13 | **E03.S8** (`/roughly:help` command) | Late; documents the final shape of the release |
 

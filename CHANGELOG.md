@@ -44,6 +44,8 @@
   - *Build & Deploy* — Markdown-list-nested heredocs in copy-paste-ready docs are indentation-fragile and silently break (S1, commit `2c1436b`; recommends `printf '%s\n' ...` over `cat <<EOF` inside numbered lists).
   - *Build & Deploy* — `set -euo pipefail` combined with unguarded parser tools silently opens safety-gate hooks (S1, commit `2c1436b`; drop `set -e`, keep `set -uo pipefail`, audit every parser-tool call for fail-closed alternatives).
 
+- **One pitfall captured in [.roughly/known-pitfalls.md](.roughly/known-pitfalls.md) during E03.S10 wrap-up (commit `3c46687`):** LLM-interpreted conditionals must reference observable signals, not abstract categories. Complementary to the existing "explicit failure-handling clauses" pitfall — grounding + failsafe pair now both documented. Surfaced when S10's auto-fix-cap test-fix conditional was initially framed as "if Stage 5c was hit by changes to test files" (no test-file detection mechanism existed); reframed to "if the failure output indicates a test failure — assertion errors or test-runner output" (observable signals, project-agnostic).
+
 ### Changed
 
 - **Plan-mode hijack pitfall recategorized.** [.roughly/known-pitfalls.md](.roughly/known-pitfalls.md) Domain-Specific entry rewritten from "open silent failure" to "blocked by S1 enforcement (ADR-009)" with recovery instructions and a caveat for users whose `.claude/settings.json` already has a `UserPromptSubmit` entry (setup will not overwrite — verify manually that plan-mode protection is in place).
