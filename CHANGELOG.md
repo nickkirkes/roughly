@@ -47,6 +47,7 @@
 ### Changed
 
 - **Plan-mode hijack pitfall recategorized.** [.roughly/known-pitfalls.md](.roughly/known-pitfalls.md) Domain-Specific entry rewritten from "open silent failure" to "blocked by S1 enforcement (ADR-009)" with recovery instructions and a caveat for users whose `.claude/settings.json` already has a `UserPromptSubmit` entry (setup will not overwrite — verify manually that plan-mode protection is in place).
+- **Retry-loop caps tuned (OQ3 ratified 2026-05-10).** [skills/build/SKILL.md](skills/build/SKILL.md) and [skills/fix/SKILL.md](skills/fix/SKILL.md) Stage 5c/Stage 6 cap dispositions: questions cap **kept at 2** (OQ3 #1), auto-fix cap **raised from 2 to 4** for type-check and lint/format with **kept at 2** for test-command failures (OQ3 #2/#3/#4 via Path C — single unified cap with command-output-based test conditional), Stage 6 review-fix cycles **kept at 2** (OQ3 #5). Build/fix parity preserved. Inline OQ3 rationale annotations added per cap; no new ADR (rationale lives in the epic story body).
 
 ### Fixed
 

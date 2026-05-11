@@ -180,16 +180,16 @@ Run the spec compliance checklist:
 - Did the subagent modify only the files listed in the task?
 - Did the verification command pass?
 - Does the implementation match the task description?
-- If the subagent returned questions: answer them, re-dispatch (max 2; then escalate to human).
+- If the subagent returned questions: answer them, re-dispatch (max 2; then escalate to human — OQ3 #1: questions interrupt fresh subagents, raising the risk of runaway clarification loops).
 
 **Stage 2 — Quick quality check (orchestrator performs inline):**
-- Run the project's type check / lint command
-- If it fails on files this task owns: attempt auto-fix (max 2 attempts); if still failing, escalate to human.
+- Run the project's type check, lint, and (where configured as part of the quality check) test commands
+- If it fails on files this task owns: attempt auto-fix (max 4 attempts; if the failure output indicates a test failure — assertion errors or test-runner output — escalate after attempt 2 instead, per OQ3 #2/#3/#4 Path C); if still failing, escalate to human. If unclear which check produced the failure, default to cap 2 (conservative).
 - If it fails on files outside this task's scope or on environmental issues (missing dependency, config error): escalate to human immediately.
 
 **If both stages pass:** mark task complete, proceed to next task.
 **If spec compliance fails:** re-dispatch with clarified instructions OR escalate to human.
-**If quality check auto-fix fails after 2 attempts:** escalate to human.
+**If quality check auto-fix fails after the applicable cap (4 for type-check/lint, 2 for test):** escalate to human.
 
 ### 5d. Completion
 
@@ -203,7 +203,7 @@ Compact context before review. Preserve: issue summary, task ID list, list of al
 
 **MANDATORY — this stage cannot be skipped.**
 
-Invoke `/roughly:review` with a description of the fix. Fix critical findings and re-run (max 2 review-fix cycles; if still failing, present findings to human).
+Invoke `/roughly:review` with a description of the fix. Fix critical findings and re-run (max 2 review-fix cycles; if still failing, present findings to human — OQ3 #5: most expensive loop in the pipeline, conversion-to-prompt deferred pending v0.1.5 dogfood evidence).
 
 **Gate:** "Review complete. Proceed to verification? (yes / list warnings to address [then re-review once] / abort)"
 
