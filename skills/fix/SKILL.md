@@ -183,7 +183,7 @@ Run the spec compliance checklist:
 - If the subagent returned questions: answer them, re-dispatch (max 2; then escalate to human — OQ3 #1: questions interrupt fresh subagents, raising the risk of runaway clarification loops).
 
 **Stage 2 — Quick quality check (orchestrator performs inline):**
-- Run the project's type check / lint command
+- Run the project's type check, lint, and (where configured as part of the quality check) test commands
 - If it fails on files this task owns: attempt auto-fix (max 4 attempts; if the failure output indicates a test failure — assertion errors or test-runner output — escalate after attempt 2 instead, per OQ3 #2/#3/#4 Path C); if still failing, escalate to human. If unclear which check produced the failure, default to cap 2 (conservative).
 - If it fails on files outside this task's scope or on environmental issues (missing dependency, config error): escalate to human immediately.
 
