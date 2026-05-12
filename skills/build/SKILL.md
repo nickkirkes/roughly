@@ -173,15 +173,15 @@ Run the spec compliance checklist:
 - Did the subagent modify only the files listed in the task?
 - Did the verification command pass?
 - Does the implementation match the task description?
-- If the subagent returned questions: answer them, re-dispatch (max 2; then escalate: emit `Stage 5c [task ID] cannot proceed: 2 question loops exhausted. Recovery: revise task instructions or hand off to human.` — OQ3 #1: questions interrupt fresh subagents, raising the risk of runaway clarification loops).
+- If the subagent returned questions: answer them, re-dispatch (max 2; then escalate: emit `Stage 5c [task ID] cannot proceed: 2 question loops exhausted. Files: [task file list]. Recovery: revise task instructions or hand off to human.` — OQ3 #1: questions interrupt fresh subagents, raising the risk of runaway clarification loops).
 
 **Stage 2 — Quick quality check (orchestrator performs inline):**
 - Run the project's type check, lint, and (where configured as part of the quality check) test commands
 - If it fails on files this task owns: attempt auto-fix (max 4 attempts; if the failure output indicates a test failure — assertion errors or test-runner output — escalate after attempt 2 instead, per OQ3 #2/#3/#4 Path C); if still failing, escalate: emit `Stage 5c [task ID] cannot proceed: auto-fix cap reached on [check]. Files: [task file list]. Recovery: human inspect and fix.` If unclear which check produced the failure, default to cap 2 (conservative).
-- If it fails on files outside this task's scope or on environmental issues (missing dependency, config error): escalate immediately: emit `Stage 5c [task ID] cannot proceed: failure outside task scope or environmental issue ([detail]). Recovery: human triage.`.
+- If it fails on files outside this task's scope or on environmental issues (missing dependency, config error): escalate immediately: emit `Stage 5c [task ID] cannot proceed: failure outside task scope or environmental issue ([detail]). Files: [task file list]. Recovery: human triage.`.
 
 **If both stages pass:** mark task complete in TodoWrite, proceed to next task.
-**If spec compliance fails:** re-dispatch with clarified instructions OR escalate: emit `Stage 5c [task ID] cannot proceed: spec compliance failure. Recovery: revise instructions or hand off to human.`.
+**If spec compliance fails:** re-dispatch with clarified instructions OR escalate: emit `Stage 5c [task ID] cannot proceed: spec compliance failure. Files: [task file list]. Recovery: revise instructions or hand off to human.`.
 **If quality check auto-fix fails after the applicable cap (4 for type-check/lint, 2 for test):** escalate: emit `Stage 5c [task ID] cannot proceed: auto-fix cap reached on [check]. Files: [task file list]. Recovery: human inspect and fix.`.
 
 ### 5d. Completion
