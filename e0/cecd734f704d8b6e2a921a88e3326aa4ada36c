@@ -1,0 +1,49 @@
+skills/review-plan/SKILL.md
+  s_60bdd7188e2e8c::t_615cebac5776ba 21
+skills/build/SKILL.md
+  s_60bdd7188e2e8c::t_48c3a47084c3b2 191
+  s_60bdd7188e2e8c::t_de25dd1006463b 37
+  s_60bdd7188e2e8c::t_4fd78d60e9a2b0 176
+  s_60bdd7188e2e8c::t_dbbd4d3c35e967 181
+  s_60bdd7188e2e8c::t_2201709bd4a491 184
+  s_60bdd7188e2e8c::t_178ef43d798982 180
+  s_60bdd7188e2e8c::t_40dba9ab85eb73 110
+  s_60bdd7188e2e8c::t_949ba3125a9258 185
+  s_60bdd7188e2e8c::t_a3525307389637 203
+  s_60bdd7188e2e8c::t_7c542bc11393eb 205
+  s_60bdd7188e2e8c::t_5e4c17caf6f511 106
+  s_60bdd7188e2e8c::t_b8d2426260c2cf 217
+  s_60bdd7188e2e8c::t_72a05960c225e0 27
+skills/fix/SKILL.md
+  s_60bdd7188e2e8c::t_b37cc14ebbb07d 188
+  s_60bdd7188e2e8c::t_da74ead9bcd982 187
+  s_60bdd7188e2e8c::t_8c02544992884d 183
+  s_60bdd7188e2e8c::t_236466dbec5bf4 208
+  s_60bdd7188e2e8c::t_e10e39c549ae04 192
+  s_60bdd7188e2e8c::t_5efac71af1dbde 117
+  s_60bdd7188e2e8c::t_0d75bb943b94bd 196
+  s_60bdd7188e2e8c::t_28f2092f540ca1 191
+  s_60bdd7188e2e8c::t_44ef22f20ac36b 34
+  s_60bdd7188e2e8c::t_6bb654b5a9bfdd 113
+  s_60bdd7188e2e8c::t_bd968283720fb7 206
+  s_60bdd7188e2e8c::t_d866596b2d02a0 220
+  s_60bdd7188e2e8c::t_88e4fdd2bffd13 52
+docs/plans/E03-S9-abort-prose-plan.md
+  s_60bdd7188e2e8c::t_e70d7212b87dcc 1-226
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "e0cecd734f704d8b6e2a921a88e3326aa4ada36c",
+  "prompts": {},
+  "sessions": {
+    "s_60bdd7188e2e8c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f39b0541-8ead-496a-b942-9f9e77fb4566",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
