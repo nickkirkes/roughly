@@ -1,0 +1,20 @@
+docs/plans/E03-S9-abort-prose-plan.md
+  s_60bdd7188e2e8c::t_73c98db873a9b7 132
+  s_60bdd7188e2e8c::t_4697a2898d42a0 94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "d9b624ecc46f445cfbaaa51cbc4bdb1604c8d52e",
+  "prompts": {},
+  "sessions": {
+    "s_60bdd7188e2e8c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f39b0541-8ead-496a-b942-9f9e77fb4566",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
