@@ -1,0 +1,25 @@
+skills/fix/SKILL.md
+  s_60bdd7188e2e8c::t_2671fd829387cf 188
+  s_60bdd7188e2e8c::t_193f6fefc01eb2 191
+  s_60bdd7188e2e8c::t_884cd2f9d33dc7 183
+skills/build/SKILL.md
+  s_60bdd7188e2e8c::t_9de260f8a1a5c8 184
+  s_60bdd7188e2e8c::t_c878558a88c89e 181
+  s_60bdd7188e2e8c::t_937e0b6623f92f 176
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "fe2a6ad288ae807f22728553152a5d694f6c188e",
+  "prompts": {},
+  "sessions": {
+    "s_60bdd7188e2e8c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f39b0541-8ead-496a-b942-9f9e77fb4566",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
