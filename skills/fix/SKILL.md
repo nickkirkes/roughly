@@ -31,7 +31,7 @@ If it references a file, read it. If an issue ID is provided, extract that speci
 
 Display: issue summary, reproduction steps (if available), affected area.
 
-Ask: **"Is this the correct issue? (yes / adjust / abort)"**
+Ask: **"Is this the correct issue? (yes / adjust / abort)"** On abort: emit `Stage 1 intake aborted: [reason]. No files written. Recovery: re-run /roughly:fix with adjusted issue.`
 
 ---
 
@@ -49,7 +49,7 @@ If the investigator is not enabled, perform investigation inline:
 
 When investigation completes, display the report: root cause hypothesis, affected files, proposed fix approach.
 
-**Gate:** "Investigation complete. Root cause: [summary]. Proceed to planning? (yes / investigate further / abort)"
+**Gate:** "Investigation complete. Root cause: [summary]. Proceed to planning? (yes / investigate further / abort)" On abort: emit `Stage 2 investigation aborted: [reason]. Root cause: [summary]. No files written. Recovery: re-run /roughly:fix.`
 
 ---
 
@@ -110,11 +110,11 @@ Do NOT present the plan to the human yet — proceed directly to Stage 4.
 
 Dispatch `/roughly:review-plan` as a blocking subagent call. Use model `sonnet`. Pass the plan file path from Stage 3 as the input.
 
-**If NEEDS REVISION:** apply the suggested edits to the plan file, then re-dispatch the review-plan subagent against the updated plan. Repeat until PASS or until 2 total NEEDS REVISION verdicts — at that point, present findings to the human and let them decide.
+**If NEEDS REVISION:** apply the suggested edits to the plan file, then re-dispatch the review-plan subagent against the updated plan. Repeat until PASS or until 2 total NEEDS REVISION verdicts — then escalate: emit `Stage 4 plan-review cannot proceed: 2 NEEDS REVISION verdicts. Plan at [path] needs human revision. Recovery: revise plan or override.` and present findings to the human.
 
 **After review completes:** NOW present the plan and review results to the human. Display the plan summary, task count, root cause, and the review verdict (PASS or outstanding concerns).
 
-**Gate (only after PASS or explicit override):** "Fix plan drafted with [N] tasks and verified against the codebase. [Review summary]. Ready to implement? (yes / revise plan / abort)"
+**Gate (only after PASS or explicit override):** "Fix plan drafted with [N] tasks and verified against the codebase. [Review summary]. Ready to implement? (yes / revise plan / abort)" On abort: emit `Stage 4 plan-review aborted: [reason]. Plan written at [path], not consumed. Recovery: revise plan and re-run /roughly:fix, or delete plan per ABORT HANDLING.`
 
 **Override protocol:** If the human wants to proceed without PASS, they must explicitly say "override." Ambiguous responses ("skip it," "good enough," "it's fine") are NOT overrides — ask for clarification. When override is confirmed, display: "Proceeding without plan review PASS. The plan has not been verified against the codebase."
 
@@ -180,20 +180,20 @@ Run the spec compliance checklist:
 - Did the subagent modify only the files listed in the task?
 - Did the verification command pass?
 - Does the implementation match the task description?
-- If the subagent returned questions: answer them, re-dispatch (max 2; then escalate to human — OQ3 #1: questions interrupt fresh subagents, raising the risk of runaway clarification loops).
+- If the subagent returned questions: answer them, re-dispatch (max 2; then escalate: emit `Stage 5c [task ID] cannot proceed: 2 question loops exhausted. Recovery: revise task instructions or hand off to human.` — OQ3 #1: questions interrupt fresh subagents, raising the risk of runaway clarification loops).
 
 **Stage 2 — Quick quality check (orchestrator performs inline):**
 - Run the project's type check, lint, and (where configured as part of the quality check) test commands
-- If it fails on files this task owns: attempt auto-fix (max 4 attempts; if the failure output indicates a test failure — assertion errors or test-runner output — escalate after attempt 2 instead, per OQ3 #2/#3/#4 Path C); if still failing, escalate to human. If unclear which check produced the failure, default to cap 2 (conservative).
-- If it fails on files outside this task's scope or on environmental issues (missing dependency, config error): escalate to human immediately.
+- If it fails on files this task owns: attempt auto-fix (max 4 attempts; if the failure output indicates a test failure — assertion errors or test-runner output — escalate after attempt 2 instead, per OQ3 #2/#3/#4 Path C); if still failing, escalate: emit `Stage 5c [task ID] cannot proceed: auto-fix cap reached on [check]. Files: [task file list]. Recovery: human inspect and fix.` If unclear which check produced the failure, default to cap 2 (conservative).
+- If it fails on files outside this task's scope or on environmental issues (missing dependency, config error): escalate immediately: emit `Stage 5c [task ID] cannot proceed: failure outside task scope or environmental issue ([detail]). Recovery: human triage.`.
 
 **If both stages pass:** mark task complete, proceed to next task.
-**If spec compliance fails:** re-dispatch with clarified instructions OR escalate to human.
-**If quality check auto-fix fails after the applicable cap (4 for type-check/lint, 2 for test):** escalate to human.
+**If spec compliance fails:** re-dispatch with clarified instructions OR escalate: emit `Stage 5c [task ID] cannot proceed: spec compliance failure. Recovery: revise instructions or hand off to human.`.
+**If quality check auto-fix fails after the applicable cap (4 for type-check/lint, 2 for test):** escalate: emit `Stage 5c [task ID] cannot proceed: auto-fix cap reached on [check]. Files: [task file list]. Recovery: human inspect and fix.`.
 
 ### 5d. Completion
 
-**Gate:** "Fix implemented. [N] tasks executed, all passing. Summary: [task list with status]. Proceed to review? (yes / adjust / abort)"
+**Gate:** "Fix implemented. [N] tasks executed, all passing. Summary: [task list with status]. Proceed to review? (yes / adjust / abort)" On abort: emit `Stage 5 implementation aborted: [reason]. Files staged/unstaged per ABORT HANDLING. Recovery: choose rollback option per ABORT HANDLING.`
 
 Compact context before review. Preserve: issue summary, task ID list, list of all files changed, task completion count, any verification warnings or deviations.
 
@@ -203,9 +203,9 @@ Compact context before review. Preserve: issue summary, task ID list, list of al
 
 **MANDATORY — this stage cannot be skipped.**
 
-Invoke `/roughly:review` with a description of the fix. Fix critical findings and re-run (max 2 review-fix cycles; if still failing, present findings to human — OQ3 #5: most expensive loop in the pipeline, conversion-to-prompt deferred pending v0.1.5 dogfood evidence).
+Invoke `/roughly:review` with a description of the fix. Fix critical findings and re-run (max 2 review-fix cycles; if still failing, escalate: emit `Stage 6 review cannot proceed: 2 review-fix cycles exhausted. Findings: [list]. Files: [dirty list]. Recovery: human inspect and fix.` — OQ3 #5: most expensive loop in the pipeline, conversion-to-prompt deferred pending v0.1.5 dogfood evidence).
 
-**Gate:** "Review complete. Proceed to verification? (yes / list warnings to address [then re-review once] / abort)"
+**Gate:** "Review complete. Proceed to verification? (yes / list warnings to address [then re-review once] / abort)" On abort: emit `Stage 6 review aborted: [reason]. Files modified, not committed. Recovery: choose rollback option per ABORT HANDLING.`
 
 Compact context before verification. Preserve: issue summary, files changed, review verdict, any deferred warnings.
 
@@ -217,7 +217,7 @@ Compact context before verification. Preserve: issue summary, files changed, rev
 
 Invoke `/roughly:verify-all`. Fix failures and re-run until clean.
 
-**Gate:** "Verification passed. Ready to commit? (yes / additional checks / abort)"
+**Gate:** "Verification passed. Ready to commit? (yes / additional checks / abort)" On abort: emit `Stage 7 verify aborted: [reason]. Files modified, not committed. Recovery: choose rollback option per ABORT HANDLING.`
 
 Compact context before wrap-up. Preserve: issue summary with root cause, files changed, task completion count, verification verdict.
 
