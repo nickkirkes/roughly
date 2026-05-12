@@ -91,7 +91,7 @@ Greppability:
 - OQ3 inline annotations (#1, #2/#3/#4, #5) are preserved verbatim per the established S10 pattern.
 - The catch-all auto-fix line (build L185 `**If quality check auto-fix fails after the applicable cap...** escalate to human.`) is **not** rewritten because L180 already prescribes the escalation message and L185 is a duplicate decision flag, not a new emit site. Confirm during edit; if L185 also reads as a discrete emit site, apply the same substitution there.
 
-**Verify:** `wc -l skills/build/SKILL.md` returns 298 (unchanged). `rg -n 'cannot proceed' skills/build/SKILL.md` returns at least 12 matches (6 from T1 + 6 from T2). `rg -n 'aborted\b' skills/build/SKILL.md | rg -v 'Stage'` returns zero matches.
+**Verify:** `wc -l skills/build/SKILL.md` returns 298 (unchanged). `rg -n 'cannot proceed' skills/build/SKILL.md` returns 6 matches at T2 completion (T2 only — T1 emits use `aborted` phrasing, not `cannot proceed`); the count rises to 7 after Stage 6 cycle-2 review-fix aligns L185's catch-all summary with the bullets above. The unified AC#2 regex `rg -n 'Stage .* (aborted|stopped|cannot proceed)' skills/build/SKILL.md` returns 12 matches at T2 completion (6 from T1 + 6 from T2), 13 after cycle-2. `rg -n 'aborted\b' skills/build/SKILL.md | rg -v 'Stage'` returns zero matches.
 
 **UI:** no
 
@@ -129,7 +129,7 @@ Greppability:
 - Confirm during edit that lines L183, L187, L188, L191 all have their build-equivalent wording — discovery confirmed identical phrasing for the escalation phrase itself.
 - Preserve OQ3 inline annotations.
 
-**Verify:** `wc -l skills/fix/SKILL.md` returns 299 (unchanged). `rg -n 'cannot proceed' skills/fix/SKILL.md` returns at least 12 matches. `rg -n 'aborted\b' skills/fix/SKILL.md | rg -v 'Stage'` returns zero matches.
+**Verify:** `wc -l skills/fix/SKILL.md` returns 299 (unchanged). `rg -n 'cannot proceed' skills/fix/SKILL.md` returns 6 matches at T4 completion (T4 only — T3 emits use `aborted` phrasing, not `cannot proceed`); the count rises to 7 after Stage 6 cycle-2 review-fix aligns L192's catch-all summary with the bullets above. The unified AC#2 regex `rg -n 'Stage .* (aborted|stopped|cannot proceed)' skills/fix/SKILL.md` returns 12 matches at T4 completion (6 from T3 + 6 from T4), 13 after cycle-2. `rg -n 'aborted\b' skills/fix/SKILL.md | rg -v 'Stage'` returns zero matches.
 
 **UI:** no
 
