@@ -24,7 +24,7 @@ Feature to build: $ARGUMENTS
 
 Parse `$ARGUMENTS`. If it references a file (epic, story, spec), read it. If it contains `--ci` as a standalone token (preceded by whitespace or string start, followed by whitespace or string end — not as a substring of `--ci-cd` or similar), set `CI_MODE=true` (CI-only; skips Stage 4's blocking review-plan dispatch). Display a summary of what's being built.
 
-Ask: **"Is this the correct scope? (yes / adjust / abort)"**
+Ask: **"Is this the correct scope? (yes / adjust / abort)"** On abort: emit `Stage 1 intake aborted: [reason]. No files written. Recovery: re-run /roughly:build with adjusted scope.`
 
 ---
 
@@ -34,7 +34,7 @@ Dispatch the `discovery` agent with the feature description and any referenced a
 
 When it returns, display the discovery report.
 
-**Gate:** "Discovery complete. Proceed to planning? (yes / investigate further / abort)"
+**Gate:** "Discovery complete. Proceed to planning? (yes / investigate further / abort)" On abort: emit `Stage 2 discovery aborted: [reason]. No files written. Recovery: re-run /roughly:build.`
 
 ---
 
@@ -103,11 +103,11 @@ Dispatch `/roughly:review-plan` as a blocking subagent call. Use model `sonnet`.
 
 The subagent verifies completeness, assumptions, and overengineering against the actual codebase. It returns a structured PASS / NEEDS REVISION verdict.
 
-**If NEEDS REVISION:** apply the suggested edits to the plan file, then re-dispatch the review-plan subagent against the updated plan. Repeat until PASS or until 2 total NEEDS REVISION verdicts — at that point, present findings to the human and let them decide.
+**If NEEDS REVISION:** apply the suggested edits to the plan file, then re-dispatch the review-plan subagent against the updated plan. Repeat until PASS or until 2 total NEEDS REVISION verdicts — then escalate: emit `Stage 4 plan-review cannot proceed: 2 NEEDS REVISION verdicts. Plan at [path] needs human revision. Recovery: revise plan or override.` and present findings to the human.
 
 **After review completes:** NOW present the plan and review results to the human. Display the plan summary, task count, and the review verdict (PASS or outstanding concerns).
 
-**Gate (only after PASS or explicit override):** "Plan drafted with [N] tasks and verified against the codebase. [Review summary]. Ready to implement? (yes / revise plan / abort)"
+**Gate (only after PASS or explicit override):** "Plan drafted with [N] tasks and verified against the codebase. [Review summary]. Ready to implement? (yes / revise plan / abort)" On abort: emit `Stage 4 plan-review aborted: [reason]. Plan written at [path], not consumed. Recovery: revise plan and re-run /roughly:build, or delete plan per ABORT HANDLING.`
 
 **Override protocol:** If the human wants to proceed without PASS, they must explicitly say "override." Ambiguous responses ("skip it," "good enough," "it's fine") are NOT overrides — ask for clarification. When override is confirmed, display: "Proceeding without plan review PASS. The plan has not been verified against the codebase."
 
@@ -173,22 +173,22 @@ Run the spec compliance checklist:
 - Did the subagent modify only the files listed in the task?
 - Did the verification command pass?
 - Does the implementation match the task description?
-- If the subagent returned questions: answer them, re-dispatch (max 2; then escalate to human — OQ3 #1: questions interrupt fresh subagents, raising the risk of runaway clarification loops).
+- If the subagent returned questions: answer them, re-dispatch (max 2; then escalate: emit `Stage 5c [task ID] cannot proceed: 2 question loops exhausted. Files: [task file list]. Recovery: revise task instructions or hand off to human.` — OQ3 #1: questions interrupt fresh subagents, raising the risk of runaway clarification loops).
 
 **Stage 2 — Quick quality check (orchestrator performs inline):**
 - Run the project's type check, lint, and (where configured as part of the quality check) test commands
-- If it fails on files this task owns: attempt auto-fix (max 4 attempts; if the failure output indicates a test failure — assertion errors or test-runner output — escalate after attempt 2 instead, per OQ3 #2/#3/#4 Path C); if still failing, escalate to human. If unclear which check produced the failure, default to cap 2 (conservative).
-- If it fails on files outside this task's scope or on environmental issues (missing dependency, config error): escalate to human immediately.
+- If it fails on files this task owns: attempt auto-fix (max 4 attempts; if the failure output indicates a test failure — assertion errors or test-runner output — escalate after attempt 2 instead, per OQ3 #2/#3/#4 Path C); if still failing, escalate: emit `Stage 5c [task ID] cannot proceed: auto-fix cap reached on [check]. Files: [task file list]. Recovery: human inspect and fix.` If unclear which check produced the failure, default to cap 2 (conservative).
+- If it fails on files outside this task's scope or on environmental issues (missing dependency, config error): escalate immediately: emit `Stage 5c [task ID] cannot proceed: failure outside task scope or environmental issue ([detail]). Files: [task file list]. Recovery: human triage.`.
 
 **If both stages pass:** mark task complete in TodoWrite, proceed to next task.
-**If spec compliance fails:** re-dispatch with clarified instructions OR escalate to human.
-**If quality check auto-fix fails after the applicable cap (4 for type-check/lint, 2 for test):** escalate to human.
+**If spec compliance fails:** re-dispatch with clarified instructions OR escalate: emit `Stage 5c [task ID] cannot proceed: spec compliance failure. Files: [task file list]. Recovery: revise instructions or hand off to human.`.
+**If quality check auto-fix fails after the applicable cap (4 for type-check/lint, 2 for test):** escalate: emit `Stage 5c [task ID] cannot proceed: auto-fix cap reached on [check]. Files: [task file list]. Recovery: human inspect and fix.`.
 
 ### 5d. Completion
 
 After all tasks are complete:
 
-**Gate:** "Implementation complete. [N] tasks executed, all passing. Summary: [task list with status]. Proceed to review? (yes / adjust / abort)"
+**Gate:** "Implementation complete. [N] tasks executed, all passing. Summary: [task list with status]. Proceed to review? (yes / adjust / abort)" On abort: emit `Stage 5 implementation aborted: [reason]. Files staged/unstaged per ABORT HANDLING. Recovery: choose rollback option per ABORT HANDLING.`
 
 Compact context before review. Preserve: feature summary, task ID list, list of all files changed, task completion count, any verification warnings or deviations.
 
@@ -200,9 +200,9 @@ Compact context before review. Preserve: feature summary, task ID list, list of 
 
 Invoke `/roughly:review` (or the project's review command) with a description of what was built. This dispatches code-reviewer, static-analysis, and silent-failure-hunter in parallel.
 
-Fix critical findings and re-run review (max 2 review-fix cycles; if still failing, present findings to human — OQ3 #5: most expensive loop in the pipeline, conversion-to-prompt deferred pending v0.1.5 dogfood evidence).
+Fix critical findings and re-run review (max 2 review-fix cycles; if still failing, escalate: emit `Stage 6 review cannot proceed: 2 review-fix cycles exhausted. Findings: [list]. Files: [dirty list]. Recovery: human inspect and fix.` — OQ3 #5: most expensive loop in the pipeline, conversion-to-prompt deferred pending v0.1.5 dogfood evidence).
 
-**Gate:** "Review complete. Proceed to verification? (yes / list warnings to address [then re-review once] / abort)"
+**Gate:** "Review complete. Proceed to verification? (yes / list warnings to address [then re-review once] / abort)" On abort: emit `Stage 6 review aborted: [reason]. Files modified, not committed. Recovery: choose rollback option per ABORT HANDLING.`
 
 Compact context before verification. Preserve: feature summary, files changed, review verdict, any deferred warnings.
 
@@ -214,7 +214,7 @@ Compact context before verification. Preserve: feature summary, files changed, r
 
 Invoke `/roughly:verify-all` (or the project's verify-all command). Fix failures and re-run until clean.
 
-**Gate:** "Verification passed. Ready to commit? (yes / additional checks / abort)"
+**Gate:** "Verification passed. Ready to commit? (yes / additional checks / abort)" On abort: emit `Stage 7 verify aborted: [reason]. Files modified, not committed. Recovery: choose rollback option per ABORT HANDLING.`
 
 Compact context before wrap-up. Preserve: feature summary, files changed, task completion count, verification verdict.
 

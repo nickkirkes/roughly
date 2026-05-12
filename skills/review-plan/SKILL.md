@@ -18,7 +18,7 @@ You receive:
 - A path to the plan file
 - The project's CLAUDE.md and .roughly/known-pitfalls.md
 
-Read all three before starting verification. If CLAUDE.md is missing, return NEEDS REVISION with verdict: "CLAUDE.md not found — run /roughly:setup first." If .roughly/known-pitfalls.md is missing, note the gap in your report but proceed — it is informational, not blocking.
+Read all three before starting verification. If CLAUDE.md is missing, return NEEDS REVISION with verdict: "Stage 4 review-plan cannot proceed: CLAUDE.md not found. Recovery: run /roughly:setup first." If .roughly/known-pitfalls.md is missing, note the gap in your report but proceed — it is informational, not blocking.
 
 ## Verification Process
 
