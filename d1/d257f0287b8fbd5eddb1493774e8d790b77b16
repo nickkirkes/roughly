@@ -1,0 +1,31 @@
+CLAUDE.md
+  s_e2d8757e9bd939::t_efeacc51e2ecba 11
+README.md
+  s_e2d8757e9bd939::t_c9a491a923051e 133
+  s_e2d8757e9bd939::t_245263cc11c607 118
+docs/plans/E03-S8-help-command-plan.md
+  s_e2d8757e9bd939::t_74ffa4463722a5 1-248
+skills/help/SKILL.md
+  s_e2d8757e9bd939::t_23a0e16244dd5e 43-71,76-82,84-102,104-114
+  s_e2d8757e9bd939::t_3480fe4c1e89ae 1-17,19-42
+  s_e2d8757e9bd939::t_c7f12fbd353ff3 72-75
+  s_e2d8757e9bd939::t_cf25d855578ec7 103
+  s_e2d8757e9bd939::t_25f61fdb1db35c 83
+  s_e2d8757e9bd939::t_5df803871930e2 18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "d1d257f0287b8fbd5eddb1493774e8d790b77b16",
+  "prompts": {},
+  "sessions": {
+    "s_e2d8757e9bd939": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "452c127a-cd7e-4108-8452-6c7af77e0b6b",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
