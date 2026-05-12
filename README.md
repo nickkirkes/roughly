@@ -115,6 +115,7 @@ You can abort at any gate, but you can't skip one. Gates are the mechanism that 
 | Checking if the build is clean | `/roughly:verify-all` | Type check + test + build loop |
 | Setting up Roughly for the first time | `/roughly:setup` | Run once per project |
 | Updating Roughly after a plugin update | `/roughly:upgrade` | Diffs and applies template changes |
+| Getting an overview of commands and pipeline state | `/roughly:help` | Lists commands by cluster, maturity-check state, and any in-progress plan |
 
 ## Skills Reference
 
@@ -129,6 +130,7 @@ You can abort at any gate, but you can't skip one. Gates are the mechanism that 
 | `review-plan` | Plan verification subagent (3-iteration max) | Auto-dispatched by build/fix; also usable standalone |
 | `setup` | Project bootstrap with maturity detection | First time using Roughly in a project |
 | `upgrade` | Update installed files from latest templates | After plugin updates, or to refresh CLAUDE.md |
+| `help` | In-CLI command and pipeline overview | Any time — lists commands by cluster, maturity-check status, and current plan state |
 
 > **review vs review-plan:** `review-plan` verifies the implementation plan against the codebase *before* implementation starts (dispatched as a blocking subagent by build/fix Stage 4). `review` evaluates the implemented code *after* implementation completes (Stage 6 in build/fix pipelines, or standalone).
 
