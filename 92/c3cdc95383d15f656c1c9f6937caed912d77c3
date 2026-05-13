@@ -1,0 +1,20 @@
+skills/help/SKILL.md
+  s_e2d8757e9bd939::t_9056df535b21bb 98,103-108
+  s_e2d8757e9bd939::t_bf64e989816fb7 111,115-116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "92c3cdc95383d15f656c1c9f6937caed912d77c3",
+  "prompts": {},
+  "sessions": {
+    "s_e2d8757e9bd939": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "452c127a-cd7e-4108-8452-6c7af77e0b6b",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
