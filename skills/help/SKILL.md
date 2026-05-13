@@ -100,10 +100,17 @@ This is a heuristic, not a guarantee — paused features on other branches won't
 
 End Step 3 with no prompt. (If the user is mid-pipeline, they can switch back to the feature branch and re-run `/roughly:help`.)
 
-**Feature/fix branch with zero plan files matching the branch:** No in-progress plan was confidently identified. Emit:
-> "<N> plan files in docs/plans/. Current branch (<branch>) does not match any plan filename — no in-progress pipeline confidently detected. Most recent plan: `<filename>` (modified <timestamp from ls -lt, verbatim>)."
+**Feature/fix branch with zero plan files matching the branch:** the branch-association heuristic missed. The user may be mid-pipeline on a branch whose name does not encode the plan filename, so the candidates must still be surfaced. Emit:
+> "<N> plan files in docs/plans/. None match current branch <branch> via filename association (the branch may not encode the story ID). If you have an in-progress pipeline on this branch, it is most likely one of the following — verify against the timestamp and filename:"
 
-End Step 3 with no prompt. (If the user is mid-pipeline on a non-conventional branch, they already know the plan filename and don't need help to surface it.)
+Then list up to the 3 most-recent plans from the `ls -lt` output:
+> - `<filename>` (modified <timestamp from ls -lt, verbatim>)
+> - ...
+
+If `N > 3`, append (with `M = N - 3`):
+> "(<M> older plans not listed.)"
+
+End Step 3 with no prompt — this is an informational surface so the user can recognize their plan visually. (To resume a pipeline, the user runs `/roughly:build` or `/roughly:fix` with the relevant feature/bug spec; help does not gate further work.)
 
 **Feature/fix branch with exactly one plan file matching:** emit:
 > "In-progress plan for current branch <branch>:
