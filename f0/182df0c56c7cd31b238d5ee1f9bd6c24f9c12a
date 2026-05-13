@@ -1,0 +1,26 @@
+.claude-plugin/plugin.json
+  s_7bdcdc0a2d4468::t_302b55014bdd23 4
+CHANGELOG.md
+  s_7bdcdc0a2d4468::t_242dd44ac256b4 3
+docs/ROADMAP.md
+  s_7bdcdc0a2d4468::t_80dd2255204fb1 57-58
+  s_7bdcdc0a2d4468::t_68ca3a714c0f0d 3
+  s_7bdcdc0a2d4468::t_dde9a3980c6d9f 61
+  s_7bdcdc0a2d4468::t_e607b5bc95a9ef 65,67-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "f0182df0c56c7cd31b238d5ee1f9bd6c24f9c12a",
+  "prompts": {},
+  "sessions": {
+    "s_7bdcdc0a2d4468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "136846fa-01aa-4afe-ae23-c2889ca8819c",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
