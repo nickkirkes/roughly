@@ -168,7 +168,7 @@ S1 must first verify, in priority order, the empirical gaps surfaced by S0 (see 
 - [x] When `/roughly:build` is invoked while Claude Code's plan mode is active, Stage 1 does not begin until plan mode is exited — verified empirically.
 - [x] When `/roughly:fix` is invoked while Claude Code's plan mode is active, Stage 1 does not begin until plan mode is exited — verified by parity (L11 sync; identical regex `^/roughly:(build|fix)`); not separately runtime-tested.
 - [x] On detection, the hook aborts with one-line redirect (`decision: "block"` JSON with `Shift+Tab` recovery instruction). `ExitPlanMode` invocation deferred per fallback AC; remaining empirical gaps (interactive semantics, ignored-vs-exit) listed in [ADR-009 §Open Items](../../adrs/ADR-009-plan-mode-detection.md).
-- [x] Detection contract documented in [skills/build/SKILL.md:11](../../../skills/build/SKILL.md#L11) and synced verbatim to [skills/fix/SKILL.md:11](../../../skills/fix/SKILL.md#L11) — substitution-only; line counts preserved at 296 and 299.
+- [x] Detection contract documented in [skills/build/SKILL.md:11](../../../skills/build/SKILL.md#L11) and synced verbatim to [skills/fix/SKILL.md:11](../../../skills/fix/SKILL.md#L11) — substitution-only; line counts preserved at 296 and 299 at S1 merge (current state: build 298, fix 299 after cumulative additions from S6 + S11b-2; both under 300 hard cap).
 - [x] **Hook registration scope decision:** per-skill scoping done in-script via `prompt`-field regex matching, since Claude Code's hook `matcher` field is tool-name only and does not support slash-command matching. Recorded in [ADR-009 §"Hook Registration Scope"](../../adrs/ADR-009-plan-mode-detection.md). Resolves [open question 5](#open-questions).
 - [x] **ADR-009 (`docs/adrs/ADR-009-plan-mode-detection.md`)** authored with Context, Decision, Step 1 Empirical Verification Result, Spike-Doc Correction, Distinction from ADR-001, Hook Registration Scope, Hook Posture (fail-closed), Open Items. Status: Accepted.
 - [x] [docs/adrs/README.md](../../../docs/adrs/README.md) updated with "Current ADRs" list; [CLAUDE.md](../../../CLAUDE.md) ADR count updated to "ADR-001 through ADR-009"; ADR-009 row added to Key Design Decisions table.
@@ -257,7 +257,7 @@ The Stop hook fires after **every** Claude turn — re-running test/build/full-v
 - [x] Template is project-agnostic — placeholders used where setup must inject project specifics; bash-3+ compatible.
 - [x] Template reports drift via `systemMessage` JSON when checks fail; silent on success; always exits 0 (informational/non-blocking contract).
 - [x] [skills/setup/SKILL.md](../../../skills/setup/SKILL.md) Step 5d updated with Branch 4 (4-phase transactional commit) — Stop hook entry is added to `.claude/settings.json` without modifying existing `hooks.PostToolUse` entries.
-- [x] [skills/setup/SKILL.md](../../../skills/setup/SKILL.md) Step 6 gains `stop-hook-v1` offer in the initial setup flow, gated on the same condition as build/fix.
+- [x] [skills/setup/SKILL.md](../../../skills/setup/SKILL.md) Step 6 gains `stop-hook-v1` offer in the initial setup flow, gated on the same condition as build/fix — with the intentional exception that the "verify-all has 2+ meaningful checks" gate is omitted at Step 6, because setup runs before verify-all is populated and the 2+ checks guard is inapplicable at install time.
 - [x] On accept, template copied to `.claude/hooks/verify-all-stop-hook.sh` and `Stop` entry added to `.claude/settings.json` via stage-then-promote with snapshot rollback.
 - [x] Conflict prompt: keep / replace / merge / decline — no silent overwrite. **Merge** uses Claude Code's native hook-array support (no wrapper scripts).
 - [x] `stop-hook-v1-added YYYY-MM-DD` recorded for install/replace/merge; `stop-hook-v1-declined` for active rejection (Step B decline, Step 6 never); no record for passive preservation (re-offered).
@@ -320,7 +320,7 @@ Retiring them from the maturity-check loop simplifies wrap-up, removes nag patte
 - [x] [agents/doc-writer.md](../../../agents/doc-writer.md) gains a verify-all test integration suggestion (covered by step 5 above)
 - [x] [docs/adrs/ADR-005-versioned-maturity-checks.md](../../adrs/ADR-005-versioned-maturity-checks.md) v0.1.5 retirement footnote + Consequences/Negative bullet — retirement is now a documented fourth disposition in ADR-005, alongside add/decline/version-bump.
 - [x] Existing `*-declined` entries in `.roughly/workflow-upgrades` are NOT auto-cleaned (verified inert by silent-failure-hunter at Stage 6)
-- [x] No skill body exceeds 300 lines — build 288, fix 291; ample headroom for downstream stories
+- [x] No skill body exceeds 300 lines — build 288, fix 291 at S3 merge (current state: build 298, fix 299 after S2 + S6 + S11b-2; both under 300 hard cap)
 
 **Verification (delivered):**
 - Stage 4 plan review: PASS (1 iteration)
