@@ -93,47 +93,54 @@ Run `git rev-parse --abbrev-ref HEAD 2>/dev/null` to detect the current branch. 
 
 This is a heuristic, not a guarantee — paused features on other branches won't be flagged as in-progress here, but their existence is surfaced in the count line so the user can find them.
 
-**Zero plan files in docs/plans/:** emit `"No plan files in docs/plans/."` and end Step 3.
+### Case dispatch
 
-**Branch is a main-line branch** (`main`, `master`, `trunk`, `develop`): no in-progress pipeline is likely on a main-line branch. Emit:
+The remaining logic is a mutually-exclusive case partition. Determine which case applies by evaluating the conditions in order top-to-bottom; execute ONLY the first matching case's emit logic, then end Step 3. Cases are NOT cumulative — do NOT execute logic from later cases after an earlier one has already matched.
+
+Let `N` = total plan files in `docs/plans/` (from the `ls -lt` output).
+Let `match_count` = number of plan files whose normalized filename associates with the normalized branch name (per the heuristic above). `match_count` is undefined for main-line branches and `unknown` (the branch-association check is skipped — those cases route on branch type alone).
+
+**Case A — `N == 0`:** emit `"No plan files in docs/plans/."` and end Step 3.
+
+**Case B — branch is a main-line branch** (`main`, `master`, `trunk`, `develop`): no in-progress pipeline is likely on a main-line branch. Emit:
 > "<N> plan files in docs/plans/. Current branch is <branch> — no in-progress pipeline detected. Most recent plan: `<filename>` (modified <timestamp from ls -lt, verbatim>)."
 
-End Step 3 with no prompt. (If the user is mid-pipeline, they can switch back to the feature branch and re-run `/roughly:help`.)
+End Step 3. No prompt. (If the user is mid-pipeline, they can switch back to the feature branch and re-run `/roughly:help`.)
 
-**Branch is `unknown` (git detection failed) OR a feature/fix branch with zero plan files matching the branch:** branch information is unavailable or the branch-association heuristic missed. In either case, the in-progress plan cannot be confidently identified by branch alone, so the candidates must be surfaced. Emit:
+**Case C — branch is `unknown` (git detection failed) OR `match_count == 0` on a feature/fix branch:** branch information is unavailable or the branch-association heuristic missed. In either case the in-progress plan cannot be confidently identified by branch alone, so candidates are surfaced.
 
-If branch is `unknown`:
+If branch is `unknown`, emit:
 > "<N> plan files in docs/plans/. Current branch could not be detected (git unavailable, detached HEAD, or non-standard workspace) — cannot use branch association to identify the in-progress plan. If you have an in-progress pipeline, it is most likely one of the following — verify against the timestamp and filename:"
 
-Otherwise (feature/fix branch with no association match):
+Otherwise (feature/fix branch with `match_count == 0`), emit:
 > "<N> plan files in docs/plans/. None match current branch <branch> via filename association (the branch may not encode the story ID). If you have an in-progress pipeline on this branch, it is most likely one of the following — verify against the timestamp and filename:"
 
-Then list up to the 10 most-recent plans from the `ls -lt` output (a generous cap chosen so that even paused or slow-moving pipelines remain visible — the in-progress plan rarely sits beyond the 10 most-recently-modified across normal team workflows):
+Then list up to the 10 most-recent plans from the `ls -lt` output (a generous cap chosen so that even paused or slow-moving pipelines remain visible):
 > - `<filename>` (modified <timestamp from ls -lt, verbatim>)
 > - ...
 
 If `N > 10`, append (with `M = N - 10`):
 > "(<M> older plans not listed — run `ls -lt docs/plans/` if your active plan is older than what's shown above.)"
 
-End Step 3 with no prompt — this is an informational surface so the user can recognize their plan visually. (To resume a pipeline, the user runs `/roughly:build` or `/roughly:fix` with the relevant feature/bug spec; help does not gate further work.)
+End Step 3. No prompt — this is an informational surface so the user can recognize their plan visually. (To resume a pipeline, the user runs `/roughly:build` or `/roughly:fix` with the relevant feature/bug spec; help does not gate further work.)
 
-**Feature/fix branch with exactly one plan file matching:** emit:
+**Case D — feature/fix branch with `match_count == 1`:** emit:
 > "In-progress plan for current branch <branch>:
 > - `<filename>` (modified <timestamp from ls -lt, verbatim>)"
 
-If `N > 1` (other plan files exist beyond the matched one), append:
-> "(<M> other plans in docs/plans/ are unrelated to this branch.)" — where `M = N - 1`.
+If `N > 1` (other plan files exist beyond the matched one), append (with `M = N - 1`):
+> "(<M> other plans in docs/plans/ are unrelated to this branch.)"
 
-End Step 3 with no prompt — single match is unambiguous.
+End Step 3. No prompt — single match is unambiguous.
 
-**Feature/fix branch with multiple plan files matching:** This is the case where the spec requires asking. Emit:
+**Case E — feature/fix branch with `match_count >= 2`:** This is the only case where the spec requires asking. Emit:
 > "Multiple plan files match the current branch <branch>. Which is your current in-progress plan?"
 
 Then list every matching file, sorted newest first by mtime:
 > - `<filename>` (modified <timestamp from ls -lt, verbatim>)
 > - ...
 
-If unmatched plan files also exist, append (with `M` = unmatched count):
+If `N > match_count` (unmatched plan files also exist), append (with `M = N - match_count`):
 > "(<M> other plans in docs/plans/ are unrelated to this branch.)"
 
 Then ask: **"Which plan is current? (paste filename, or 'none' if no pipeline is in progress)"**

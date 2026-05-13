@@ -4,6 +4,8 @@
 **Story:** [docs/planning/epics/E03-trust-and-ergonomics.md:507-543](../planning/epics/E03-trust-and-ergonomics.md#L507)
 **Type:** New skill (10th) + two table-row edits in existing docs
 
+**Status:** ✅ Implementation complete on 2026-05-12 (commit `d1d257f` shipped all four tasks; commits `21519e8`, `1d6b242`, `d04d453`, `fea12fb`, `92c3cdc`, `9dee87c` refined Step 3 of `skills/help/SKILL.md` based on cubic post-merge feedback). This file is a **historical record** of the planned approach — tasks T1–T4 below are NOT instructions to re-execute. Re-running them against the current repo would either duplicate rows (T3 would add `/roughly:help` rows that already exist in `README.md`) or fail (T4 expects `(9 skills)` in `CLAUDE.md`, but it already shows `(10 skills)`). The descriptions are preserved for traceability of intent.
+
 ## File Table
 
 | File | Action | Task(s) |
