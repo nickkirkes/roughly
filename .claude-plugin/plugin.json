@@ -1,5 +1,5 @@
 {
   "name": "roughly",
   "description": "Gated development pipelines with subagent-per-task execution. Discover → Plan → Verify → Implement → Review → Ship. By Nick Kirkes.",
-  "version": "0.1.4"
+  "version": "0.1.5"
 }

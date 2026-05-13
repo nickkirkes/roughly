@@ -1,6 +1,6 @@
 # Roughly Roadmap
 
-**Current:** v0.1.4 · **Updated:** 2026-05-01
+**Current:** v0.1.5 · **Updated:** 2026-05-13
 
 ## Thesis
 
@@ -54,18 +54,18 @@ PM handoff: detail level sufficient for an epic-writing agent to expand into sto
 **Effort:** 6-7 wk · **Scope:** FROZEN. New items → v0.1.6.
 
 ### Trust hardening
-1. **Plan-mode auto-detect/exit at Stage 1 of build/fix.** Without this, ADR-001 is unenforced.
-2. **Finish stop-hook-v1 maturity check** integration into `/roughly:upgrade`.
+1. **Plan-mode auto-detect/exit at Stage 1 of build/fix.** Without this, ADR-001 is unenforced. ✅ Done — landed in E03.S1.
+2. **Finish stop-hook-v1 maturity check** integration into `/roughly:upgrade`. ✅ Done — landed in E03.S2.
 3. **Retire test-verify-v1 and pitfalls-organized-v1.** ✅ Done — triggers folded into doc-writer's known-pitfalls write path (E03.S3).
 4. **Pre-flight migration check in remaining 2 skills** (currently 6/9, upgrade excluded by design). ✅ Done — landed in E03.S4.
-5. **Document Edit `replace_all` dual-semantic-token failure** in CONTRIBUTING.md. Prose-only.
+5. **Document Edit `replace_all` dual-semantic-token failure** in CONTRIBUTING.md. Prose-only. ✅ Done — landed in E03.S5.
 6. **Plan-format version field.** Added now, read in v0.2.0. ✅ Done — landed in E03.S6.
 
 ### Ergonomics
-7. **In-session maturity offers at Stage 1**, not just Stage 8 wrap-up.
+7. **In-session maturity offers at Stage 1**, not just Stage 8 wrap-up. ↪ Deferred to v0.1.6 (see E03 epic v0.1.6 candidates).
 8. **`/roughly:help` command.** 10th command. Structured overview of commands and pipeline state. ✅ Done — landed in E03.S8.
-9. **Situation-specific abort prose** at every pipeline failure point.
-10. **Retry-loop tuning.** Audit caps at Stages 5c (quality), 5c (questions), 6 (review-fix). Raise on cheap checks or replace hard escalation with prompt.
+9. **Situation-specific abort prose** at every pipeline failure point. ✅ Done — landed in E03.S9.
+10. **Retry-loop tuning.** Audit caps at Stages 5c (quality), 5c (questions), 6 (review-fix). Raise on cheap checks or replace hard escalation with prompt. ✅ Done — landed in E03.S10.
 
 ### CI
 11. **Plugin self-test CI.** GitHub Actions running dogfood through scripted build/fix on push. Happy path minimum. **Architecturally novel** — plugin tests itself against the repo containing the plugin. Probably needs its own story. ✅ **Done — landed across E03.S11a (scaffolding), S11b-1 (CLI plumbing smoke test), and S11b-2 (happy-path build cycle).**

@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased] — v0.1.5
+## [0.1.5] — 2026-05-13
 
 > Trust hardening + ergonomics + CI. Scope per [docs/planning/epics/E03-trust-and-ergonomics.md](docs/planning/epics/E03-trust-and-ergonomics.md).
 
