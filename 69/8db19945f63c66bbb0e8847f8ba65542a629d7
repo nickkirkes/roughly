@@ -1,0 +1,21 @@
+skills/help/SKILL.md
+  s_e2d8757e9bd939::t_2efa61a279d680 96,98-105,108,110,112,115,118,125,127,131-132,134,136,143
+docs/plans/E03-S8-help-command-plan.md
+  s_e2d8757e9bd939::t_545e623b9682ec 7-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "698db19945f63c66bbb0e8847f8ba65542a629d7",
+  "prompts": {},
+  "sessions": {
+    "s_e2d8757e9bd939": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "452c127a-cd7e-4108-8452-6c7af77e0b6b",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
