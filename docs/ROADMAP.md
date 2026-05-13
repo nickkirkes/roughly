@@ -63,7 +63,7 @@ PM handoff: detail level sufficient for an epic-writing agent to expand into sto
 
 ### Ergonomics
 7. **In-session maturity offers at Stage 1**, not just Stage 8 wrap-up.
-8. **`/roughly:help` command.** 10th command. Structured overview of commands and pipeline state.
+8. **`/roughly:help` command.** 10th command. Structured overview of commands and pipeline state. ✅ Done — landed in E03.S8.
 9. **Situation-specific abort prose** at every pipeline failure point.
 10. **Retry-loop tuning.** Audit caps at Stages 5c (quality), 5c (questions), 6 (review-fix). Raise on cheap checks or replace hard escalation with prompt.
 

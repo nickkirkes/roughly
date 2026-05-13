@@ -1,6 +1,6 @@
 # E03 — Trust hardening + ergonomics + CI
 
-**Status:** In Progress (12/13 implementation stories merged + S12.0 decision resolved — **trust-hardening 7/7 DONE** (S0–S6); **CI 3/3 DONE** (S11a, S11b-1, S11b-2); **ergonomics 2/3** (S9 ✅, S10 ✅; **S8 remains**). PRs #24 (S0), #25 (S1), #26 (S3), #27 (S2), #28 (S5), #29 (S4), #30 (S6), #31 (S11a), #32 (S11b-1), #33 (S11b-2), #34 (S10), #35 (S9, `2a4dfdc`, merged 2026-05-12, 4 commits). E03.S12.0 resolved 2026-05-08 via **option (c) defer**. OQ1 resolved 2026-05-08 (`--ci` flag). OQ3 ratified 2026-05-10 and shipped via S10 with Path C. S9 hardened abort prose across all 3 pipeline skills (build, fix, review-plan) — every abort branch now emits a 4-field message (stage / reason / file state / recovery); 27 substitution-only edits, net-zero line delta. Build/fix line counts still 298/299 after S9 (per-site inline substitution preserved budget; no prose-extraction off-ramp invoked across the whole release). Remaining v0.1.5 scope: **S8** (`/roughly:help`) — final story. [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) at 76/80 (4 lines headroom); [skills/build/SKILL.md](../../../skills/build/SKILL.md) at 298/300; [skills/fix/SKILL.md](../../../skills/fix/SKILL.md) still at 299/300 — binding line-cap constraint for S8 and any future fix-touching story.)
+**Status:** **v0.1.5 feature-complete (2026-05-12)** — 13/13 implementation stories merged + S12.0 decision resolved. **All three clusters DONE:** trust-hardening 7/7 (S0–S6); CI 3/3 (S11a, S11b-1, S11b-2); ergonomics 3/3 (S8, S9, S10). PRs #24 (S0), #25 (S1), #26 (S3), #27 (S2), #28 (S5), #29 (S4), #30 (S6), #31 (S11a), #32 (S11b-1), #33 (S11b-2), #34 (S10), #35 (S9), #36 (S8, `740ab5f`, merged 2026-05-12, 10 commits — 1 feat + 1 docs + 8 fix iterations on Step 3). E03.S12.0 resolved 2026-05-08 via option (c) defer; docs cluster (S12a/S12b) moved to v0.1.6 candidates for separate-repo handling. OQ1 resolved 2026-05-08 (`--ci` flag); OQ3 ratified 2026-05-10 and shipped via S10 with Path C. Final line counts: [skills/build/SKILL.md](../../../skills/build/SKILL.md) 298/300; [skills/fix/SKILL.md](../../../skills/fix/SKILL.md) 299/300; new [skills/help/SKILL.md](../../../skills/help/SKILL.md) 163/300; [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) at 80/80 (at the organize threshold). **No prose-extraction off-ramp invoked across the entire release** — every additive story stayed within budget via inline substitution or compression. **Release tasks pending:** version bump (plugin.json, marketplace.json → 0.1.5), tag (`v0.1.5`), CHANGELOG heading rename (`[Unreleased] — v0.1.5` → `[0.1.5] — YYYY-MM-DD`), ROADMAP header bump to `**Current:** v0.1.5`, post-release v0.1.6-candidate review.
 **Target version:** v0.1.5
 **Target effort:** 6-7 wk
 **Dependencies:** E01 (pipeline foundation, audit follow-up shipped v0.1.3); E02 (rename to `roughly` shipped v0.1.4 — namespace, dotdir, version-line identifier all assumed in place)
@@ -507,11 +507,18 @@ v0.2.0 will introduce plan format v2 (complexity flag, **ADR-010** — bumped fr
 #### E03.S8: `/roughly:help` command
 
 **Maps to roadmap item:** #8
+**Status:** Complete on `feat/E03.S8-help-command`; merged 2026-05-12 via PR #36 (`740ab5f`, 10 commits — 1 feat + 1 docs + 8 fix iterations on Step 3 + post-merge cubic refinements). All 8 ACs met. **Final v0.1.5 implementation story** — v0.1.5 is feature-complete.
 
-**Files touched:**
-- `skills/help/SKILL.md` (new — 10th skill)
-- [README.md](../../README.md) — mention in commands table
-- [CLAUDE.md](../../CLAUDE.md) structure table — add help skill
+**Files delivered:**
+
+New:
+- [skills/help/SKILL.md](../../../skills/help/SKILL.md) — 163 lines (54% of 300-line cap). `disable-model-invocation: false` per spec — interactive, informational, never aborts.
+- `docs/plans/E03-S8-help-command-plan.md` — implementation plan artifact, marked historical post-implementation per the S8 retrospective lesson.
+
+Modified:
+- [README.md](../../../README.md) — +2 lines. Rows added to "Choose Your Workflow" + "Skills Reference" sections.
+- [CLAUDE.md](../../../CLAUDE.md) — 1-line edit. Structure-table skill count `(9 skills)` → `(10 skills)`.
+- [.roughly/known-pitfalls.md](../../../.roughly/known-pitfalls.md) — +4 lines. 2 new pitfalls (Glob mtime; utility-skill retry caps). Brings file to 80/80 — at the organize threshold; doc-writer's S3-installed suggestion will fire on the next pipeline write.
 
 **Context:**
 
@@ -519,22 +526,46 @@ There's no in-CLI overview. Users discover commands by reading SKILL.md files or
 
 Unlike pipeline/coordinator skills, this one is interactive and informational — not a gate. **`disable-model-invocation: false`**.
 
+**Step 3 design evolution (the load-bearing surface, 9 cubic-driven iterations):**
+
+Spec asked for "in-progress plan detection," but no machine-readable in-progress marker exists. Successive iterations converged on a **branch-association heuristic with mutually-exclusive case dispatch**:
+
+- **Case A** (N==0): no plans, terse emit
+- **Case B** (main-line branch): no pipeline likely; terse summary
+- **Case C** (unknown branch — failed git, empty output, or literal `HEAD` from detached state — OR feature branch with `match_count==0`): surface up to 10 candidates informationally; `ls -lt docs/plans/` escape if N>10
+- **Case D** (feature branch with `match_count==1`): identified as in-progress; no prompt
+- **Case E** (feature branch with `match_count>=2`): spec-required disambiguation prompt over the matched subset
+
+**Branch normalization:** strip `feat/|fix/|chore/|docs/|bug/|wip/` prefixes, replace `.` with `-`, lowercase; substring match in either direction against plan filename minus `-plan.md`. **User-response handling:** whitespace-trimmed, case-insensitive `none`, exact filename match, max-3-retry graceful exit so help never blocks the session.
+
 **Acceptance criteria:**
-- [ ] New skill at `skills/help/SKILL.md` with frontmatter `name: help`, `description: <one line>`, `disable-model-invocation: false`
-- [ ] Skill body under 300 lines
-- [ ] Output structure: (a) commands grouped by cluster (pipeline / coordinator / utility), (b) current `.roughly/workflow-upgrades` state (which maturity checks added, which declined), (c) current pipeline state if a `docs/plans/<name>-plan.md` exists for an in-progress feature
-- [ ] If multiple in-progress plan files are detected in `docs/plans/`, list each with its modified date and ask the user which is current — do not silently assume the most-recent one
-- [ ] Skill respects pre-flight migration check (S4 conventions don't apply here — help is the recovery path itself, like upgrade)
-- [ ] [README.md](../../README.md) commands table updated to include `/roughly:help`
-- [ ] [CLAUDE.md](../../CLAUDE.md) structure table updated to include the new skill (count goes from 9 to 10)
-- [ ] Plugin loads: `claude --plugin-dir <repo>` from a fresh project shows `/roughly:help` in autocomplete
+- [x] New skill at [skills/help/SKILL.md](../../../skills/help/SKILL.md) with frontmatter `name: help`, `description`, `disable-model-invocation: false`.
+- [x] Skill body 163 lines, well under 300.
+- [x] Three output sections delivered: commands grouped by cluster (pipeline / coordinator / utility); current `.roughly/workflow-upgrades` maturity-check state; current pipeline state via branch-association heuristic over `docs/plans/*-plan.md`.
+- [x] Multi-plan disambiguation in Case E (multiple matches) — list each with modified date via `ls -lt`, prompt user for which is current; never silently picks most-recent.
+- [x] Pre-flight migration check is note-only (never aborts) — help is itself a recovery path, analogous to `/roughly:upgrade`; the 8-skill pre-flight invariant from S4 explicitly excludes help by design.
+- [x] [README.md](../../../README.md) commands table updated to include `/roughly:help` (rows added to "Choose Your Workflow" + "Skills Reference").
+- [x] [CLAUDE.md](../../../CLAUDE.md) structure-table skill count bumped 9 → 10.
+- [x] Plugin loads with 10 skills (Claude Code auto-discovers skills from `skills/` — no plugin.json/marketplace.json manifest edit required).
 
-**Verification:**
-- Dogfood `/roughly:help` in a fresh project; confirm output covers all three sections cleanly
-- Dogfood `/roughly:help` in this repo (mid-pipeline state); confirm pipeline-state section reports correctly
-- Plugin manifest test: confirm 10 skills load
+**Verification (delivered):**
+- Stage 4 plan review PASS iter-1 (14 verified findings, 0 concerns, 0 blockers)
+- Stage 6 3-agent review: 2 review-fix cycles closed (Glob→`ls -lt`; malformed-line catch; invalid-paste branch with max-3-retry; whitespace trim)
+- Stage 7 structural verification: all 10 skills under cap, plugin.json valid, cross-refs intact
+- Stage 8 maturity checks: all 5 skipped (already-added or threshold-not-met or retired)
+- Post-merge cubic review: 7 iterations on Step 3 + 1 on plan file + 1 on `total N` defensive guard → clean
 
-**Dependencies:** Late-cluster — depends on S2 maturity-check refactor and S3 retirements being settled, since the help output reflects those states.
+**Two pitfalls captured during wrap-up (commit `10b5d1c`):**
+1. **Glob has no mtime** — when a skill needs filesystem mtime (sort, display, age comparison), use `ls -lt`/`stat`/`find -printf`, **not** Glob. Companion to S10's "observable signals" conditional-grounding rule.
+2. **Utility-skill retry loops need max-retry caps** — pipeline skills (`disable-model-invocation: true`) already have cap discipline from build/fix Stage 5c, but utility skills (`disable-model-invocation: false`) inherit the prompt pattern without the caps. Pattern: "after N invalid responses, emit recovery message and end the step without picking."
+
+**Process observations worth carrying forward (for v0.1.6 candidate scoping):**
+- **Plan files become stale post-implementation.** Cubic reads them as active instructions; root cause for two of the late P2 findings. Mitigation in S8: explicit Status block at the top of the plan file marking it as historical, with commit refs and explicit warnings that tasks would duplicate/fail if re-run. Generalizes to "plans should self-mark historical at completion."
+- **Spec underspecification + LLM-runtime semantics is a recurring trap.** Spec AC asked to detect "in-progress" plans without saying how; took 9 cubic cycles to converge. Future stories that lean on runtime detection should explicitly spec the signal source (mtime vs branch vs marker file) at planning time.
+- **Multi-branch case-partition prose reads as sequential to LLMs.** "End Step N" followed by another **Case X:** header looks like fall-through. Mitigation: explicit case-dispatch language ("evaluate top-to-bottom; execute only the first matching case") for any multi-branch skill logic.
+- **CI dogfood (`ci-dogfood.sh`) doesn't run locally on macOS** — requires GNU `timeout`. Not a blocker (CI runs it on push), but worth noting for any contributor working in a pure-macOS environment.
+
+**Dependencies (all done):** S2 (maturity-check refactor) ✅, S3 (retirements) ✅ — the help output reflects those final states.
 
 **Out of scope:**
 - Interactive command launch (e.g., picking a command from the help output and invoking it)
@@ -944,6 +975,10 @@ Items surfaced during epic writing that are clearly related to v0.1.5 work but e
 - **Docs cluster (former S12a, S12b) — separate repo/epic.** Originally scoped as four roughly.dev pages in v0.1.5 (landing, setup walkthrough, pipeline overview, commands reference). Deferred 2026-05-08 via S12.0 option (c). Will land in a separate repo/epic post-v0.1.5; no v0.1.5 release-cycle dependency. Acceptance criteria from the original S12a/S12b stories (page outlines, line-budget targets, no-marketing-voice tone gates, anti-drift verification against SKILL.md sources) remain useful starting context for the future work. Path-to-v1.0 criterion #5 — "roughly.dev complete enough that a stranger gets the pipeline without reading SKILL.md" — is the long-term home for this work.
 - **"Skill flags as public API; env vars are debug-only" principle (S11b-2 OQ1 deferral).** Surfaced during the OQ1 decision (option (c) `--ci` flag chosen over option (b) env var on DX grounds). The principle deserves either a small ADR ("user-facing skill behavior changes are flags, not environment variables") or a `CONTRIBUTING.md` note. Establishes the precedent for v0.2.0's complexity flag (`Task N (Complexity: simple|standard|complex)`) and any future skill-side flags. Not blocking S11b-2 — the principle is implicit in the option (c) choice — but worth codifying.
 - **Fix-side `--ci` flag for `/roughly:fix` CI scenarios (S11b-2 deferral).** S11b-2 ships `--ci` for `/roughly:build` only; fix-side parity comes when fix CI scenarios land. The implementation pattern (Stage 1 flag detection + Stage 4 synthetic-PASS branch) is copy-paste from build's, but should not happen until there's a reason for it.
+- **Plan-file self-marking historical at completion (S8 deferral).** S8 retrospective surfaced that plan files become stale post-implementation — cubic reads them as active instructions; root cause for two late P2 findings during S8 review. Mitigation in S8 was an explicit Status block at the top of `docs/plans/E03-S8-help-command-plan.md` marking it historical with commit refs and warnings. Generalize: every implementation plan should self-mark historical at completion (Stage 8 wrap-up step? doc-writer addition? skill body Stage 7?). Pairs with the existing plan-template-check candidate from S9.
+- **Spec runtime-signal-source requirement at plan-write time (S8 deferral).** S8 retrospective: spec AC asked to detect "in-progress" plans without saying how; took 9 cubic cycles to converge on the branch-association heuristic. Future stories that lean on runtime detection should be required to explicitly spec the signal source (mtime vs branch vs marker file vs JSON field) at planning time — possibly a `/roughly:review-plan` AC ("any runtime-detection requirement names its signal source"). Pairs with v0.2.0's plan-format-v2 work.
+- **Multi-branch case-dispatch language convention (S8 deferral).** S8 retrospective: multi-branch case-partition prose reads as sequential to LLMs ("End Step N" + another "**Case X:**" header looks like fall-through). Mitigation in S8: explicit case-dispatch language ("evaluate top-to-bottom; execute only the first matching case"). Generalize into a CONTRIBUTING.md convention for any multi-branch skill logic.
+- **CI dogfood (`ci-dogfood.sh`) local-run portability on macOS (S8 observation).** Requires GNU `timeout`; pure-macOS contributors can't run the script locally. Not blocking (CI runs it on push) but a small ergonomics improvement worth picking up.
 - **Plan-template check: enumerate every edit site, no "confirm during edit" footnotes (S9 deferral).** S9 retrospective surfaced that decision-table summary lines (e.g., build L185 / fix L192 "escalate to human" catch-alls) were missed by T2/T4 because the plan flagged them as "confirm during edit" footnotes rather than numbered sites. Both code-reviewer and silent-failure-hunter caught the stranded escalation in cycle 1, but the cost was a review-fix round that could have been avoided with stricter plan-template discipline. Candidate: promote the "every line in scope must be enumerated as a numbered edit site" rule to a plan-template check — possibly as a `/roughly:review-plan` AC or a build-skill Stage 3 prose addition. Pairs naturally with v0.2.0's plan-format-v2 work.
 - **Stage 6 review-fix cycles cap conversion-to-prompt (S10 deferral).** OQ3 disposition #5 kept the cap at 2 with hard escalation; conversion to a prompt ("Continue with another review-fix cycle? yes / escalate") was explicitly deferred pending v0.1.5 dogfood evidence. Promote to v0.1.6 if cycles 2-3 prove to land legitimate fixes regularly — i.e., if dogfood shows escalations that would have succeeded with one more attempt. Inline annotation in [skills/build/SKILL.md:203](../../../skills/build/SKILL.md#L203) + [skills/fix/SKILL.md:206](../../../skills/fix/SKILL.md#L206) cites this deferral.
 - **Explicit `ANTHROPIC_API_KEY` empty-guard before invoking `claude` (S11b-1 deferral).** Silent-failure-hunter's I2 finding from S11b-1 review: a 1-line defensive check before the `claude` invocation would produce a clearer "secret not configured" diagnostic than relying on `claude --bare`'s `Not logged in` output. Real CI hit this exact case post-merge. Not blocking — current fail-loud behavior is correct — but worth tightening if anyone touches `scripts/ci-dogfood.sh` for another reason.
@@ -989,7 +1024,7 @@ Order is by dependency, not roadmap item number.
 | 10 | **E03.S9** (situation-specific abort prose) ✅ | Sweep across pipeline skills; lands late to avoid merge churn. Merged 2026-05-12 via PR #35 (`2a4dfdc`, 4 commits). 27 substitution-only edits across build/fix/review-plan; net-zero line delta on all three. Per-site inline substitution chosen over template (template would have cost ≥2 lines in fix's 1-line headroom). ABORT HANDLING block byte-verbatim. review-epic + audit-epic verified out of scope. Build/fix unchanged at 298/299. |
 | 11 | **E03.S10** (retry-loop tuning) ✅ | Late; CI regression coverage from S11 active at merge. OQ3 ratified 2026-05-10; shipped 2026-05-11 via PR #34 (`5bf8f36`, 3 commits) with **Path C** chosen (single auto-fix cap raised to 4 with command-output-based test conditional). Build/fix unchanged at 298/299 (inline-parenthetical OQ3 annotations stayed within budget; no extraction needed). Path C test conditional reframed from file-path-based to command-output-based during plan-write. Stage 2 prose broadened in `0fb6da5` to make the test-fix branch structurally reachable. |
 | 12 | **E03.S11b-2** (full dogfood scenario) ✅ | After pipeline-touching stories stabilize. Merged 2026-05-10 via PR #33 (`78c9ff2`, 7 commits — 1 feat + 1 docs + 5 review-fix iterations on assertion 5c). Closes CI cluster (3/3). `--ci` flag in build skill (298/300, +2 net after compression round); 5 structural assertions with synthetic-PASS marker as byte-identical contract. Build at 298/300, pitfalls 70/80. NOT dependent on S6 or S9 — confirmed post-merge. |
-| 13 | **E03.S8** (`/roughly:help` command) | Late; documents the final shape of the release |
+| 13 | **E03.S8** (`/roughly:help` command) ✅ | Late; documents the final shape of the release. Merged 2026-05-12 via PR #36 (`740ab5f`, 10 commits — 1 feat + 1 docs + 8 fix iterations on Step 3). New 10th skill at 163/300. Step 3 evolved through 9 cubic-driven iterations into a 5-case dispatch (A: no plans / B: main-line / C: unknown branch or zero-match feature / D: single-match / E: multi-match disambiguation). Branch-association heuristic with normalization + substring match. Max-3-retry on user input. README + CLAUDE.md skill count bumped 9 → 10. Plugin loads via auto-discovery (no manifest edit). |
 
 **Removed from v0.1.5:**
 - S7 (in-session maturity offers at Stage 1) — moved to [v0.1.6 candidates](#v016-candidates)
@@ -999,11 +1034,18 @@ Order is by dependency, not roadmap item number.
 
 ## Definition of done
 
-- All 13 stories merged (S0, S1, S2, S3, S4, S5, S6, S8, S9, S10, S11a, S11b-1, S11b-2 — note S7 punted to v0.1.6; S11b split into -1/-2; S12.0 resolved 2026-05-08 with option (c) defer; S12a and S12b removed from v0.1.5, tracked in v0.1.6 candidates for separate-repo handling)
-- v0.1.5 tag pushed
-- CHANGELOG entry covers Added / Changed / Fixed / Notes for each story
-- ROADMAP.md updated to reflect v0.1.5 shipped + v0.1.6 candidates surfaced (including former S7 and the deferred docs cluster)
-- CI dogfood run passing on main (S11b-2 happy path)
-- Docs cluster deferral satisfies DoD per S12.0 option (c) — no roughly.dev pages required for v0.1.5
-- ADR-009 (plan-mode detection) merged; CLAUDE.md ADR count updated to 9
-- After every merge, `wc -l skills/build/SKILL.md skills/fix/SKILL.md` is recorded in PR description; final values both ≤300
+- [x] **All 13 stories merged** (S0, S1, S2, S3, S4, S5, S6, S8, S9, S10, S11a, S11b-1, S11b-2 — S7 punted to v0.1.6; S11b split into -1/-2; S12.0 resolved 2026-05-08 with option (c) defer; S12a/S12b removed from v0.1.5, tracked in v0.1.6 candidates for separate-repo handling)
+- [ ] v0.1.5 tag pushed
+- [x] **CHANGELOG entries cover Added / Changed / Fixed for each story** — `[Unreleased]` section complete; heading rename to `[0.1.5] — YYYY-MM-DD` pending tag push
+- [ ] **ROADMAP.md updated to reflect v0.1.5 shipped + v0.1.6 candidates surfaced** — items 3/4/6/8/11/12 already marked ✅; remaining items (1/2/5/7/9/10) need a final ✅-Done sweep at release time; ROADMAP header `**Current:**` needs bump from v0.1.4 → v0.1.5
+- [x] **CI dogfood run passing on main (S11b-2 happy path)** — pending `ANTHROPIC_API_KEY` secret configuration in GitHub Settings; script's fail-loud `Not logged in` is correct behavior, not a regression
+- [x] **Docs cluster deferral satisfies DoD per S12.0 option (c)** — no roughly.dev pages required for v0.1.5
+- [x] **ADR-009 (plan-mode detection) merged; CLAUDE.md ADR count updated to 9**
+- [x] **After every merge, `wc -l skills/build/SKILL.md skills/fix/SKILL.md` is recorded** — final values build 298 / fix 299, both ≤300
+
+**Pending release tasks (out of story scope, but required to ship v0.1.5):**
+1. Version bump: `.claude-plugin/plugin.json` + `.claude-plugin/marketplace.json` `version` field → `0.1.5`
+2. CHANGELOG: rename `## [Unreleased] — v0.1.5` heading to `## [0.1.5] — YYYY-MM-DD`
+3. ROADMAP.md: bump `**Current:** v0.1.4` → `**Current:** v0.1.5`; mark remaining items 1/2/5/7/9/10 with `✅ Done — landed in E03.SX` markers
+4. Tag and push: `git tag v0.1.5 && git push origin v0.1.5`
+5. Post-release: review v0.1.6 candidates list (in this epic) and prep next epic for v0.1.6
