@@ -8,7 +8,7 @@ This is a plugin, not a standalone app. It runs inside Claude Code sessions in t
 
 | Path | Contents |
 |------|----------|
-| `skills/<name>/SKILL.md` | Skill definitions (9 skills) |
+| `skills/<name>/SKILL.md` | Skill definitions (10 skills) |
 | `agents/<name>.md` | Agent definitions (7 agents) |
 | `agents/agent-preamble.md` | Canonical sync reference for project context loading (see note below) |
 | `skills/setup/templates/` | Templates populated by `/roughly:setup` |
