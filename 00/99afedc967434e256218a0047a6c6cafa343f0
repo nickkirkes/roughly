@@ -1,0 +1,28 @@
+docs/planning/epics/E03-trust-and-ergonomics-audit.md
+  s_ebecdf0c2a5919::t_65c1eeced84079 1-166
+docs/plans/fix-E03-audit-doc-hygiene-plan.md
+  s_ebecdf0c2a5919::t_7fe6ee75e293eb 32
+  s_ebecdf0c2a5919::t_ebbd8e1921df9c 52
+  s_ebecdf0c2a5919::t_d9dac4d8c626c4 72,74
+  s_ebecdf0c2a5919::t_296089a72113fe 1-31,33-51,53-71,73,75-84
+docs/planning/epics/E03-trust-and-ergonomics.md
+  s_ebecdf0c2a5919::t_e6b29be9c3bb9e 323
+  s_ebecdf0c2a5919::t_5c02a4343afce3 260
+  s_ebecdf0c2a5919::t_4bbedebdc67730 171
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "0099afedc967434e256218a0047a6c6cafa343f0",
+  "prompts": {},
+  "sessions": {
+    "s_ebecdf0c2a5919": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "92667c59-92f9-417f-b8a1-4269a127fdb6",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
