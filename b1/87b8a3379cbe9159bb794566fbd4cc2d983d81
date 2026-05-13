@@ -1,0 +1,19 @@
+docs/planning/prompts/roughly-pm-agent-v0.1.6.md
+  s_7bdcdc0a2d4468::t_7bb89f6efcc014 1-100
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "b187b8a3379cbe9159bb794566fbd4cc2d983d81",
+  "prompts": {},
+  "sessions": {
+    "s_7bdcdc0a2d4468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "136846fa-01aa-4afe-ae23-c2889ca8819c",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
