@@ -95,20 +95,25 @@ This is a heuristic, not a guarantee — paused features on other branches won't
 
 **Zero plan files in docs/plans/:** emit `"No plan files in docs/plans/."` and end Step 3.
 
-**Branch is a main-line branch** (`main`, `master`, `trunk`, `develop`) **or `unknown`:** no in-progress pipeline is likely on this branch. Emit:
+**Branch is a main-line branch** (`main`, `master`, `trunk`, `develop`): no in-progress pipeline is likely on a main-line branch. Emit:
 > "<N> plan files in docs/plans/. Current branch is <branch> — no in-progress pipeline detected. Most recent plan: `<filename>` (modified <timestamp from ls -lt, verbatim>)."
 
 End Step 3 with no prompt. (If the user is mid-pipeline, they can switch back to the feature branch and re-run `/roughly:help`.)
 
-**Feature/fix branch with zero plan files matching the branch:** the branch-association heuristic missed. The user may be mid-pipeline on a branch whose name does not encode the plan filename, so the candidates must still be surfaced. Emit:
+**Branch is `unknown` (git detection failed) OR a feature/fix branch with zero plan files matching the branch:** branch information is unavailable or the branch-association heuristic missed. In either case, the in-progress plan cannot be confidently identified by branch alone, so the candidates must be surfaced. Emit:
+
+If branch is `unknown`:
+> "<N> plan files in docs/plans/. Current branch could not be detected (git unavailable, detached HEAD, or non-standard workspace) — cannot use branch association to identify the in-progress plan. If you have an in-progress pipeline, it is most likely one of the following — verify against the timestamp and filename:"
+
+Otherwise (feature/fix branch with no association match):
 > "<N> plan files in docs/plans/. None match current branch <branch> via filename association (the branch may not encode the story ID). If you have an in-progress pipeline on this branch, it is most likely one of the following — verify against the timestamp and filename:"
 
-Then list up to the 3 most-recent plans from the `ls -lt` output:
+Then list up to the 10 most-recent plans from the `ls -lt` output (a generous cap chosen so that even paused or slow-moving pipelines remain visible — the in-progress plan rarely sits beyond the 10 most-recently-modified across normal team workflows):
 > - `<filename>` (modified <timestamp from ls -lt, verbatim>)
 > - ...
 
-If `N > 3`, append (with `M = N - 3`):
-> "(<M> older plans not listed.)"
+If `N > 10`, append (with `M = N - 10`):
+> "(<M> older plans not listed — run `ls -lt docs/plans/` if your active plan is older than what's shown above.)"
 
 End Step 3 with no prompt — this is an informational surface so the user can recognize their plan visually. (To resume a pipeline, the user runs `/roughly:build` or `/roughly:fix` with the relevant feature/bug spec; help does not gate further work.)
 
