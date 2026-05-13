@@ -1,0 +1,27 @@
+CHANGELOG.md
+  s_7bdcdc0a2d4468::t_5d3c063045e6c1 47-50
+docs/ROADMAP.md
+  s_7bdcdc0a2d4468::t_dd250384982e7b 66
+docs/planning/epics/E03-trust-and-ergonomics.md
+  s_7bdcdc0a2d4468::t_52a9e2fcf030ff 510,512-521,529-540,542-549,551-566,568
+  s_7bdcdc0a2d4468::t_6918b2fa529fb3 3
+  s_7bdcdc0a2d4468::t_d4e31d7e0d92e7 978-981
+  s_7bdcdc0a2d4468::t_329cd6b70098bc 1027
+  s_7bdcdc0a2d4468::t_5e9c50041f8c83 1037-1051
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "babb7c508e78c69399ba5ea15fa42217960b961c",
+  "prompts": {},
+  "sessions": {
+    "s_7bdcdc0a2d4468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "136846fa-01aa-4afe-ae23-c2889ca8819c",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
