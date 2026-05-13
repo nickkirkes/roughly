@@ -80,20 +80,20 @@ If no check entries are present beyond the version line, emit:
 
 ## STEP 3: IN-PROGRESS PLAN STATE
 
-Run `ls -lt docs/plans/*-plan.md 2>/dev/null` to list plan files sorted by modification time, newest first. Parse each line's mtime and filename from the output. If the command output is empty (zero matches) or returns a non-zero exit, treat as zero matches.
+Run `ls -lt docs/plans/*-plan.md 2>/dev/null` to list plan files sorted by modification time, newest first. Each line of `ls -lt` output contains a timestamp followed by the filename. The timestamp format depends on the system and the file's age — BSD/macOS `ls` emits `Mon DD HH:MM` for files less than ~6 months old (e.g., `May 12 14:33`) and `Mon DD YYYY` for older files (e.g., `Jan 4 2025`); GNU `ls` is similar by default. Use the timestamp string verbatim from the `ls -lt` output — do NOT reformat to a fixed shape (no canonical `YYYY-MM-DD HH:MM` pattern is portably available without `stat`-flag juggling, and reformatting risks the wrong year for old files). If the command output is empty (zero matches) or returns a non-zero exit, treat as zero matches.
 
 **Zero matches:** emit `"No in-progress plans found in docs/plans/."` and skip the rest of Step 3.
 
 **Exactly one match:** emit:
 > "One plan found in docs/plans/:
-> - `<filename>` (modified YYYY-MM-DD HH:MM)"
+> - `<filename>` (modified <timestamp from ls -lt, verbatim>)"
 
 **Multiple matches:** emit:
 > "Multiple plan files exist in docs/plans/. The presence of a plan file does not necessarily mean a pipeline is mid-flight — old plans may persist after their feature shipped. Which is your current in-progress plan?"
 
 Then list every file with its modification date:
-> - `<filename>` (modified YYYY-MM-DD HH:MM)
-> - `<filename>` (modified YYYY-MM-DD HH:MM)
+> - `<filename>` (modified <timestamp from ls -lt, verbatim>)
+> - `<filename>` (modified <timestamp from ls -lt, verbatim>)
 > - ...
 
 Then ask: **"Which plan is current? (paste filename, or 'none' if no pipeline is in progress)"**
