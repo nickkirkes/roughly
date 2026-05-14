@@ -3,14 +3,13 @@
 # Fires after every Claude turn. Non-blocking — informational only.
 # Outputs JSON with systemMessage when drift is detected; silent otherwise.
 
-set -e
 shopt -s nullglob  # globs that match nothing expand to empty, not literal pattern
 
-ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 if [ -z "$ROOT" ] || [ ! -f "$ROOT/.claude-plugin/plugin.json" ]; then
   exit 0  # not in the roughly repo — silent no-op
 fi
-cd "$ROOT"
+cd "$ROOT" 2>/dev/null || exit 0  # exit-0 contract: silent no-op on cd failure (see template L16–25)
 
 issues=""
 
