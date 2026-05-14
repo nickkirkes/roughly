@@ -1,0 +1,35 @@
+docs/planning/epics/E04-path-consolidation-and-process-codification.md
+  s_3d69e65ccd5a90::t_5888598e4e55e3 413
+  s_3d69e65ccd5a90::t_73dfe91cc12791 41
+  s_3d69e65ccd5a90::t_217913398517d3 411
+  s_3d69e65ccd5a90::t_6627596ee69011 31-33
+  s_3d69e65ccd5a90::t_3ec594f24456b5 82
+  s_3d69e65ccd5a90::t_971a502f0e61bd 241
+  s_3d69e65ccd5a90::t_a3b138d31ab8fa 92
+  s_3d69e65ccd5a90::t_80f47649fa3286 578
+  s_3d69e65ccd5a90::t_bc58efff3dea88 566
+  s_3d69e65ccd5a90::t_9953dd3ce97de2 165
+  s_3d69e65ccd5a90::t_645dfbbeeffe28 25
+  s_3d69e65ccd5a90::t_802281b1799851 88
+  s_3d69e65ccd5a90::t_41a81448f6a335 261
+  s_3d69e65ccd5a90::t_c5f1dd4d24a4a4 363
+  s_3d69e65ccd5a90::t_be58554b3e2163 23
+  s_3d69e65ccd5a90::t_d4ebfeb2487fde 93
+  s_3d69e65ccd5a90::t_11dbe3c5ab0d33 359
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "eca55353b7d808ce7b494c1c44587e24d4d68497",
+  "prompts": {},
+  "sessions": {
+    "s_3d69e65ccd5a90": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77a2206c-5606-4881-bcd5-93a39a9d3e48",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
