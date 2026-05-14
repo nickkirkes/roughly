@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased] — v0.1.6
+
+> Path consolidation + process codification. Scope per [docs/planning/epics/E04-path-consolidation-and-process-codification.md](docs/planning/epics/E04-path-consolidation-and-process-codification.md).
+
+### Fixed
+
+- **E04.S4 — Dogfood `.claude/hooks/verify-all.sh` cleanup.** Backports E03.S2's template-fix pattern to the dogfood Stop hook. Three coordinated changes at the top of [.claude/hooks/verify-all.sh](.claude/hooks/verify-all.sh) (was 58 lines pre-S4; 57 post-S4): (1) drop `set -e` from L6 — under `set -e`, `git rev-parse --show-toplevel` exiting non-zero outside a git repo killed the script before the `if [ -z "$ROOT" ]` no-op guard could run, breaking the exit-0 informational/non-blocking contract; (2) add `|| true` to the `git rev-parse` command substitution at L8 — defensive fail-soft even without `set -e`; (3) add `cd "$ROOT" 2>/dev/null || exit 0  # exit-0 contract: silent no-op on cd failure (see template L16–25)` guard at L12 — without `set -e`, an unguarded `cd` failure would silently continue script execution rather than emit an exit-0 no-op. The third change matches the template's coordinated changes that the original AC enumeration missed; classified as backport-completeness rather than scope creep (the template's own comment block names `cd` failure as the exact class `set -e` removal makes you responsible for guarding). Merged 2026-05-14 via PR #39 (`3017861`, 5 commits — `9e665f2` initial fix + `614fe6a` cd guard backport + 3 follow-ups including `3e0a88d` final annotation). Hook is still informational-only / exits 0 unconditionally / silent no-op outside the plugin repo.
+
+### Changed
+
+- **`.roughly/known-pitfalls.md` reorganized** during E04.S4 wrap-up. Doc-writer's post-write organize-suggestion fired (file at 82 lines, ≥80 threshold per E03.S3's retired-but-folded-in `pitfalls-organized-v1` trigger). 29 entries reorganized into 6 sections preserving content verbatim: Domain-Specific, Data & State, Build & Deploy, Skill & Agent Authoring (new), Documentation Hygiene (new), Planning & Scoping. Empty "Integration" and "Testing" stub sections removed. Final line count: 80 lines.
+
+- **One pitfall captured in [.roughly/known-pitfalls.md](.roughly/known-pitfalls.md) during E04.S4 wrap-up** (commit `614fe6a` discovery, recorded post-merge): **backport-from-template stories hide completeness gaps when the plan enumerates per-edit changes instead of diffing the final result against the reference.** The S4 plan enumerated 2 edits; the template at `skills/setup/templates/verify-all-stop-hook.sh.template` had 3 coordinated changes; the third (`cd "$ROOT" 2>/dev/null || exit 0`) was missed at plan-write, plan-review (cycle 2 PASS), Stage 6 (all 3 reviewers — silent-failure-hunter flagged but classified negligible), and Stage 7 verify-all — surfaced only by post-commit `cubic review`. Two commits were needed: `9e665f2` (the enumerated two edits) and `614fe6a` (the missed third edit). **Pattern:** any backport-from-reference story must add an explicit Stage 7 verification step that diffs the result against the reference at the "does the result match the reference" level — per-edit checks are insufficient. Directly applicable to E04.S5 (Stop hook drift coverage expansion — another backport-shaped story).
+
 ## [0.1.5] — 2026-05-13
 
 > Trust hardening + ergonomics + CI. Scope per [docs/planning/epics/E03-trust-and-ergonomics.md](docs/planning/epics/E03-trust-and-ergonomics.md).
