@@ -1,7 +1,7 @@
 # E04: Path consolidation + process codification
 
-**Date:** 2026-05-14 (PM phase)
-**Status:** Drafted — implementation pending. PM round resolved 9 open questions through iterative review (S7 deferral, ADR-011 vs CONTRIBUTING-only, DI-001 disposition, negative-path CI deferral, S3 separation, "6 vs 7 pipeline skills" count, signal-source/policy-parameter distinction, ADR-011 forward-reference shape, Cluster B vs Cluster D placement of `.roughly/known-pitfalls.md` organize-suggestion). One proposed addition (Risk 6 codification-overshoot) was drafted then retracted on PM-author review — risk register holds at 5.
+**Date:** 2026-05-14 (PM + review-epic + remediation)
+**Status:** **Cleared for implementation (2026-05-14).** PM round resolved 9 open questions through iterative review (S7 deferral, ADR-011 vs CONTRIBUTING-only, DI-001 disposition, negative-path CI deferral, S3 separation, "6 vs 7 pipeline skills" count, signal-source/policy-parameter distinction, ADR-011 forward-reference shape, Cluster B vs Cluster D placement of `.roughly/known-pitfalls.md` organize-suggestion). One PM-phase proposed addition (Risk 6 codification-overshoot) was drafted then retracted on PM-author review. `/roughly:review-epic` dispatched 2026-05-14 returned **Needs Revision** with 10 prioritized findings (2 blockers, 7 revisions, 5 polish items, 3 question items) — all addressed in commit `eca5535`. Risk register at 6 post-remediation (Risk 6 cubic-gate format rejection added during remediation per P2 — distinct from the retracted PM-phase Risk 6). First story per sequencing: **E04.S4** (dogfood `verify-all.sh` cleanup); critical path is S4 → S1 → S2 → S5 → S3.
 **Target version:** v0.1.6
 **Target effort:** 5–6 weeks part-time (medium release; 9 stories across 5 clusters; no new skills, no new agents, no new hooks)
 **Dependencies on prior epics:**
