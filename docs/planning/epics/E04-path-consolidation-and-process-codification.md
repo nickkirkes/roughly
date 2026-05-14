@@ -591,3 +591,4 @@ Order is by dependency, not roadmap or cluster number. Stories #1–4 are mutual
 - [ ] **v0.1.7 candidates list reviewed** and prep next epic PM prompt
 - [ ] **Plugin version bump**: `.claude-plugin/plugin.json` + `.claude-plugin/marketplace.json` `version` field → `0.1.6`
 - [ ] **CHANGELOG heading rename**: `## [Unreleased] — v0.1.6` → `## [0.1.6] — YYYY-MM-DD` at tag time
+- [ ] **Audit `.roughly/workflow-upgrades` for retired-check markers before tag.** S4 wrap-up wrote `pitfalls-organized-v1-added 2026-05-14` to this repo's dogfood workflow-upgrades file even though E03.S3 retired that check. Marker left in place for v0.1.6 (defaulted 2026-05-14 — defect surface for the v0.1.7 install-marker schema candidate). At v0.1.6 tag time: decide remove vs keep based on whether the v0.1.7 schema fix has shipped (if shipped: marker can be re-categorized; if not: remove the dogfood marker to keep the retirement clean).
