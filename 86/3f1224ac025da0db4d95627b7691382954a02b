@@ -1,0 +1,21 @@
+.roughly/known-pitfalls.md
+  s_1d4c7c24093e39::t_4eae6406159ab3 26,28,30,46,48,50,52,54,56-64,68,70,72-76
+.roughly/workflow-upgrades
+  s_1d4c7c24093e39::t_ece432b30d63be 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "863f1224ac025da0db4d95627b7691382954a02b",
+  "prompts": {},
+  "sessions": {
+    "s_1d4c7c24093e39": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "81e6b7a0-f650-4a9d-9d16-0561cf378be3",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
