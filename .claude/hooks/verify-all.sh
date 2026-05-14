@@ -9,7 +9,7 @@ ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 if [ -z "$ROOT" ] || [ ! -f "$ROOT/.claude-plugin/plugin.json" ]; then
   exit 0  # not in the roughly repo — silent no-op
 fi
-cd "$ROOT"
+cd "$ROOT" 2>/dev/null || exit 0
 
 issues=""
 
