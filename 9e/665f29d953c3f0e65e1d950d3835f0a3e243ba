@@ -1,0 +1,25 @@
+docs/plans/E04-S4-dogfood-verify-all-cleanup-plan.md
+  s_1d4c7c24093e39::t_fddd6dcaae11e6 1-28,33-43,45-91,93-100
+  s_1d4c7c24093e39::t_75f9674f13748f 32
+  s_1d4c7c24093e39::t_67d0486c18b635 29-31
+  s_1d4c7c24093e39::t_65e7357ea0887f 92
+  s_1d4c7c24093e39::t_bf92dfa741b517 44
+.claude/hooks/verify-all.sh
+  s_1d4c7c24093e39::t_0ee4535bd1fa23 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "9e665f29d953c3f0e65e1d950d3835f0a3e243ba",
+  "prompts": {},
+  "sessions": {
+    "s_1d4c7c24093e39": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "81e6b7a0-f650-4a9d-9d16-0561cf378be3",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
