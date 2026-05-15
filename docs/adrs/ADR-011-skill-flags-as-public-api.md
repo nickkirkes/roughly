@@ -14,6 +14,8 @@ The primary motivation for rejecting env vars was a silent-leak failure mode: a 
 
 ## Decision
 
+A change is **user-facing** if it alters observable skill behavior for any operator running the pipeline — regardless of how the change is framed or who the intended audience is. Observable means visible in pipeline outputs, gate decisions, dispatched-model selection, or any other surface the operator can detect without inspecting shell state or CI configuration.
+
 User-facing skill behavior changes are expressed as flags in `$ARGUMENTS`, not environment variables. Flags are part of the skill's public API: they appear in invocation history, are self-documenting when read in CI scripts or rerun logs, and are structurally harder to silently leak across contexts.
 
 ## Consequences
@@ -27,7 +29,10 @@ User-facing skill behavior changes are expressed as flags in `$ARGUMENTS`, not e
 ### Negative
 
 - Flag proliferation risk on long-lived skills with many behavioral variants.
-- Env-var-acceptable carve-out: environment variables remain appropriate for debug-only, contributor-facing configuration that carries no user-facing skill behavior change. As a hypothetical example of a case v0.2.0 might land: a Haiku-routing budget threshold (`ROUGHLY_HAIKU_BUDGET_USD`) for cost-sensitive teams would be env-var appropriate — it tunes an internal routing heuristic without changing the observable skill contract. By contrast, an env var that suppresses a pipeline gate (e.g., `ROUGHLY_SKIP_REVIEW=1`) would NOT qualify even if framed as "debug-only," because it changes observable skill behavior for the human operator running the pipeline — that belongs in a flag. This example is hypothetical at ADR-write time — no real v0.2.0 env-var case has surfaced. If one does, ADR-011 may need amendment or carve-out extension.
+- Env-var-acceptable carve-out: environment variables remain appropriate for debug-only, contributor-facing configuration that carries no user-facing skill behavior change. The test is whether an operator who doesn't inspect shell state or CI configuration can still predict all observable pipeline outputs from the invocation command alone — if yes, the change is internal and env-var-eligible; if no, it's user-facing and belongs in a flag.
+- Positive example (hypothetical, no real v0.2.0 case has surfaced): a Haiku-routing budget threshold (`ROUGHLY_HAIKU_BUDGET_USD`) for cost-sensitive teams would be env-var appropriate — it tunes an internal routing heuristic without changing the observable skill contract.
+- Counterexample: an env var that suppresses a pipeline gate (e.g., `ROUGHLY_SKIP_REVIEW=1`) would NOT qualify even if framed as "debug-only," because it changes observable skill behavior for the human operator running the pipeline — that belongs in a flag.
+- If a real v0.2.0 env-var case surfaces that the carve-out criterion cannot resolve, ADR-011 may need amendment or carve-out extension at v0.2.0 ADR-write time.
 
 ### Neutral
 
@@ -35,7 +40,7 @@ User-facing skill behavior changes are expressed as flags in `$ARGUMENTS`, not e
 
 ## Forward References
 
-The first downstream consumer is v0.2.0's complexity flag (`Task N (Complexity: simple|standard|complex)`), which will control model-routing behavior via a plan-format field parsed at orchestrator dispatch time. The ADR covering plan-format-v2 (currently slotted as ADR-010) should treat ADR-011 as foundational: v0.2.0's user-facing surface inherits ADR-011's principle that behavioral modifiers belong in the explicit invocation surface, not in ambient environment state. ADR-011 does not specify ADR-010's internal structure, citation form, or content placement — only the relationship by role.
+The first downstream consumer is v0.2.0's complexity flag, which adjusts pipeline behavior based on declared task complexity. The ADR covering plan-format-v2 (currently slotted as ADR-010) should treat ADR-011 as foundational: v0.2.0's user-facing surface inherits ADR-011's principle that behavioral modifiers belong in the explicit invocation surface, not in ambient environment state. ADR-011 does not specify ADR-010's internal structure, citation form, syntax, or content placement — ADR-010 covers the mechanism; ADR-011 establishes only the principle that this modifier belongs in the explicit invocation surface rather than in ambient environment state.
 
 ## Alternatives Considered
 
