@@ -1,0 +1,20 @@
+tests/fixtures/review-plan/README.md
+  s_bed819a9966243::t_cd166b13a024b5 21-23,25,27-45
+  s_bed819a9966243::t_2ac724056bb24c 15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "9d61030ad295470fea855792e09be3417190fb25",
+  "prompts": {},
+  "sessions": {
+    "s_bed819a9966243": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6c4777cf-8b1b-4689-b5f7-b9ba4a4efe3b",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
