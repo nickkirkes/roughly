@@ -1,0 +1,23 @@
+CHANGELOG.md
+  s_3d69e65ccd5a90::t_045a3eb75e98ba 9-12
+docs/planning/epics/E04-path-consolidation-and-process-codification.md
+  s_3d69e65ccd5a90::t_f73b8d34930df1 355-356
+  s_3d69e65ccd5a90::t_83eb9542607861 4
+  s_3d69e65ccd5a90::t_4bf99f734541f1 577
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "7fc5114be50ac0d7eb2a8cb06d50a735618e0f21",
+  "prompts": {},
+  "sessions": {
+    "s_3d69e65ccd5a90": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77a2206c-5606-4881-bcd5-93a39a9d3e48",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
