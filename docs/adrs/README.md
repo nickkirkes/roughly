@@ -34,3 +34,5 @@ Bug fixes, template improvements, documentation changes, and new agent definitio
 - [ADR-007](ADR-007-two-stage-review-all-tasks.md) — Two-stage review (spec compliance + quality) runs after every task
 - [ADR-008](ADR-008-opus-for-epic-reviewer-only.md) — Opus reserved for epic-reviewer only; all other agents use Sonnet
 - [ADR-009](ADR-009-plan-mode-detection.md) — Plan-mode auto-detection via UserPromptSubmit hook + preamble update
+- ADR-010 — Reserved for v0.2.0 plan-format-v2 (not yet written)
+- [ADR-011](ADR-011-skill-flags-as-public-api.md) — User-facing skill behavior changes are flags, not env vars

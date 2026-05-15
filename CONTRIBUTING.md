@@ -59,6 +59,8 @@ Canonical example: `skills/setup/SKILL.md` Step 5d Branch 4 opens with the invar
 
 When in doubt: if the cases are truly mutually exclusive, use case-dispatch language. If the steps must all run in order, use sequential language with explicit transitions.
 
+User-facing skill behavior changes are flags, not environment variables (see [ADR-011](docs/adrs/ADR-011-skill-flags-as-public-api.md)).
+
 ## Tooling Pitfalls
 
 Bulk replacement of a token silently corrupts code when the same token serves dual semantic roles in one file — for example, user-facing prose AND a legacy detector that intentionally references the old name. The replace succeeds, the build passes, and the detector becomes a no-op no one notices.
