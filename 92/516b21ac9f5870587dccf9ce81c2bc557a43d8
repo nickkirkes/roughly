@@ -1,0 +1,31 @@
+docs/adrs/ADR-011-skill-flags-as-public-api.md
+  s_d76185cb197427::t_cf8b643cee3379 1-29,31-41,43
+  s_d76185cb197427::t_6a62be6b6add4c 30
+  s_d76185cb197427::t_1b9dd4cf372867 42,44
+docs/adrs/README.md
+  s_d76185cb197427::t_e6e583fb8f5765 38
+  s_d76185cb197427::t_c4fee960eebd9c 37
+CONTRIBUTING.md
+  s_d76185cb197427::t_68c6c81c71fa40 62-63
+docs/plans/E04-S7-adr-011-skill-flags-plan.md
+  s_d76185cb197427::t_c1ba076ead70cf 1-207
+CLAUDE.md
+  s_d76185cb197427::t_827831145b5cb3 60
+  s_d76185cb197427::t_43e43b6c847d1d 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "92516b21ac9f5870587dccf9ce81c2bc557a43d8",
+  "prompts": {},
+  "sessions": {
+    "s_d76185cb197427": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d085c80-d204-40dd-a4f1-e0c0ac6347c5",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
