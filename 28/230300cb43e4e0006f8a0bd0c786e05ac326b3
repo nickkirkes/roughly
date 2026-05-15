@@ -1,0 +1,46 @@
+skills/review-plan/SKILL.md
+  s_bed819a9966243::t_a7b577b7fc3ebb 36
+  s_bed819a9966243::t_406e96f85045ea 44-45
+  s_bed819a9966243::t_ae77784dbc1035 37
+tests/fixtures/review-plan/ac1-pass.md
+  s_bed819a9966243::t_e4fa63469e8900 1-23
+tests/fixtures/review-plan/ac1-needs-revision.md
+  s_bed819a9966243::t_8f08c528100c06 1-22
+docs/plans/E04-S6-plan-discipline-codification-plan.md
+  s_bed819a9966243::t_ba87a7dbd00aab 1-137
+tests/fixtures/review-plan/README.md
+  s_bed819a9966243::t_8a62b3bb1a98f0 1-44
+tests/fixtures/review-plan/ac2-needs-revision.md
+  s_bed819a9966243::t_71b7217059c5a4 1-2,4-9,11-13,17,22
+  s_bed819a9966243::t_ae8e94d76d9de6 21
+  s_bed819a9966243::t_5f680942f47574 3,10,14-16,18-20
+CONTRIBUTING.md
+  s_bed819a9966243::t_ae0d57efb44677 50-55,57,59-61
+  s_bed819a9966243::t_38e654d621e5df 58
+  s_bed819a9966243::t_906b045f7c2557 56
+tests/fixtures/review-plan/ac3-pass.md
+  s_bed819a9966243::t_5bad057c7d9d95 1-17
+tests/fixtures/review-plan/ac3-needs-revision.md
+  s_bed819a9966243::t_d426be3ed23fd6 1-9
+tests/fixtures/review-plan/ac1-carve-out-pass.md
+  s_bed819a9966243::t_944e2027ca792f 21
+  s_bed819a9966243::t_c77a367148b6ac 1-20,22-23
+tests/fixtures/review-plan/ac2-pass.md
+  s_bed819a9966243::t_04059244aaa7dd 1-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "28230300cb43e4e0006f8a0bd0c786e05ac326b3",
+  "prompts": {},
+  "sessions": {
+    "s_bed819a9966243": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6c4777cf-8b1b-4689-b5f7-b9ba4a4efe3b",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
