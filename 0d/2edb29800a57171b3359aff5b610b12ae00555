@@ -1,0 +1,21 @@
+docs/adrs/ADR-011-skill-flags-as-public-api.md
+  s_d76185cb197427::t_4197a8f8b6b1eb 32-35
+  s_d76185cb197427::t_95e7a8defe6937 43
+  s_d76185cb197427::t_2023826e9234ee 17-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "0d2edb29800a57171b3359aff5b610b12ae00555",
+  "prompts": {},
+  "sessions": {
+    "s_d76185cb197427": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d085c80-d204-40dd-a4f1-e0c0ac6347c5",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
