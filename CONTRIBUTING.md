@@ -47,6 +47,18 @@ All conventions are documented in [CLAUDE.md](CLAUDE.md). The key ones:
 - Templates: use `{{PLACEHOLDER}}` markers — never hardcode project-specific values
 - Maturity check IDs must be versioned (e.g., `investigator-v1`)
 
+## Skill authoring conventions
+
+**Multi-branch case dispatch.** When a skill body partitions behavior across mutually-exclusive cases (Case A / Case B / Case C), the dispatch instruction must explicitly state: *"evaluate top-to-bottom; execute only the first matching case."* Reject fall-through prose ("then do X; if not, otherwise do Y") — it invites cumulative execution where later cases run on top of earlier ones.
+
+Canonical example: `skills/help/SKILL.md` Step 3 (Cases A–E) opens with: "The remaining logic is a mutually-exclusive case partition. Determine which case applies by evaluating the conditions in order top-to-bottom; execute ONLY the first matching case's emit logic, then end Step 3. Cases are NOT cumulative — do NOT execute logic from later cases after an earlier one has already matched."
+
+**Sequential-structure carve-out.** Ordered enumeration (Step A → Step B → Step C → Step D, or numbered 1 → 2 → 3 → 4) paired with explicit sequencing prose that *positively asserts all steps execute in order* — an opening invariant clause stating run-in-order semantics, or explicit "previous step" / "next step" references between steps — is intentionally sequential and does NOT require case-dispatch language. Both conditions are required: named/numbered steps in sequence AND prose that commits to all-run-in-order semantics. Functional role labels per step (e.g., "Step A — validation / Step B — prompt") are neutral on whether steps are cumulative or exclusive and do NOT, by themselves, qualify for the carve-out — they must be accompanied by one of the two prose forms above.
+
+Canonical example: `skills/setup/SKILL.md` Step 5d Branch 4 opens with the invariant clause "collect ALL decisions BEFORE any disk mutations" and proceeds through Step A (read-only checks) → Step B (settings-conflict resolution) → Step C (file-conflict prompt) → Step D (commit phase) — each step labeled with its functional role, the opening invariant fixing the ordering.
+
+When in doubt: if the cases are truly mutually exclusive, use case-dispatch language. If the steps must all run in order, use sequential language with explicit transitions.
+
 ## Tooling Pitfalls
 
 Bulk replacement of a token silently corrupts code when the same token serves dual semantic roles in one file — for example, user-facing prose AND a legacy detector that intentionally references the old name. The replace succeeds, the build passes, and the detector becomes a no-op no one notices.
