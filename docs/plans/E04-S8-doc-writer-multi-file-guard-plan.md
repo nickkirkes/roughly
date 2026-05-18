@@ -70,7 +70,7 @@ The file currently has 58 lines. Step 5's bullet list ends at L34 (test-integrat
 **The new sub-bullet (insert verbatim):**
 
 ```
-   - **Multi-file failure handling:** When writing multiple files in one dispatch, invoke `Edit` per file and capture each outcome. On any failure, do NOT roll back successful writes — never claim full success. Emit this exact summary: `doc-writer: partial success — wrote to: <comma-separated list of successful paths>; failed to write: <comma-separated list of failed paths with one-line failure reason each, format '<path>: <reason from Edit error output>'>.`
+   - **Multi-file failure handling (always — overrides step 5's outer gate):** When writing multiple files in one dispatch, invoke `Edit` per file and capture each outcome. On any failure, do NOT roll back successful writes — never claim full success. Emit this exact summary: `"doc-writer: partial success — wrote to: <comma-separated list of successful paths>; failed to write: <comma-separated list of failed paths with one-line failure reason each, format '<path>: <reason from Edit error output>'>."`
 ```
 
 Indentation: three spaces + `- ` to match the existing two sub-bullets' indentation under step 5.
@@ -84,14 +84,14 @@ Use the Edit tool with:
 This preserves L34 byte-identically and appends the new bullet immediately after it. Do NOT use `replace_all`.
 
 **Semantic coverage check against AC1 (a)–(f):**
-- (a) per-file independent `Edit` ✓ "invoke `Edit` per file"
+- (a) per-file independent `Edit` ✓ "invoke `Edit` per file" — gate-override prefix "(always — overrides step 5's outer gate)" added post-implementation (commit `ecf7147`) to address the inherited-gate pitfall (`.roughly/known-pitfalls.md` L56); ensures the clause fires unconditionally on multi-file dispatches, including the case where `.roughly/known-pitfalls.md` itself is the failing file (which would otherwise skip step 5's outer gate). Best-effort hedge; full structural resolution requires AC2/AC4 amendment in v0.1.7 — see epic v0.1.7 candidates section
 - (b) per-file outcome capture ✓ "capture each outcome"
 - (c) non-abort on single-file failure ✓ "do NOT roll back successful writes"
 - (d) emit partial-success summary ✓ "Emit this exact summary"
 - (e) name succeeded + failed paths with reason from Edit ✓ AC5 template verbatim
 - (f) never claim full success on partial failure ✓ "never claim full success"
 
-**AC5 verbatim check:** the template text matches the story's AC5 lock semantically. Per the "AC5 interpretation note" above, the outer typographic double-quotes from story line 430 are NOT included in the emit string — matching the format pattern of the existing `Note:` emit strings on L33 and L34.
+**AC5 verbatim check:** the template text matches the story's AC5 lock. Post-implementation (commit `ac5ddf0`, cubic P2 finding) the outer double-quotes from story line 430 ARE included in the emit string — reversing the "AC5 interpretation note" above. The plan's own anticipation at line 49 ("+0 word count impact, can be flipped at code-review time without re-planning") proved correct.
 
 **Verify (run after the edit):**
 
@@ -211,3 +211,31 @@ This plan has TWO ACs that the human must consciously sign off on:
 2. **OR Path C (alternative):** the human personally edits the epic at line 426 to revise AC3 (e.g., bump cap to 525 for doc-writer), commits that epic-doc edit either before or after this story, and authorizes the orchestrator to proceed with T1 treating AC3 as revised. Confirm by selecting Path C and committing to the epic-doc edit timing.
 
 If neither: abort the pipeline at gate 4.
+
+---
+
+## Post-Implementation Updates
+
+The body of this plan reflects the Stage-3 artifact as approved at gate 4 (Path B accepted). Two cubic-driven findings during post-merge review modified the shipped implementation beyond what the Stage-3 plan anticipated. The body has been surgically updated at the load-bearing references (template at T1's "new sub-bullet" block, AC1 (a) coverage check, AC5 verbatim check); the word-count references in the Constraint Analysis section and Gate 4 question still describe the Stage-3 state (post-edit ~535 from a 68-word clause) and should be read in that historical context.
+
+### P2 — AC5 outer double-quotes (commit `ac5ddf0`)
+
+The plan's "AC5 interpretation note" (above) anticipated this flip might be needed and explicitly noted "+0 word count impact, can be flipped at code-review time without re-planning." Cubic's P2 finding triggered the flip. Shipped state at `agents/doc-writer.md:35` now includes outer `"…"` inside the backticks. Word-count impact: zero (the `"` characters are not whitespace-separated tokens).
+
+### P1 — Inherited-gate override (commit `ecf7147`)
+
+Cubic flagged that the new clause is structurally unreachable for its own target failure case — step 5's outer gate is success-conditional on `.roughly/known-pitfalls.md` write success, so a multi-file dispatch where THAT file fails would skip step 5 entirely and the clause inside never fires. Fix: prepend "(always — overrides step 5's outer gate)" to the sub-bullet heading. Cost: +7 words (`wc -w agents/doc-writer.md`: 535 → 542). Path B violation grows from 35 to 42 over cap.
+
+This is a **best-effort hedge** — it depends on the LLM reading the agent prompt holistically rather than evaluating step 5's outer gate before reading sub-bullet content. The structural issue stems from a spec-level AC2/AC4-AC1 contradiction documented in the E04 epic's v0.1.7 candidates section (entry: "E04.S8 — AC2/AC4 vs AC1-reachability spec contradiction"). Full resolution requires AC amendment in v0.1.7. Future cubic runs on `agents/doc-writer.md:35` should match this entry and close the structural finding as known-deferred.
+
+### Updated final state
+
+Final commit chain on `feat/E04.S8-doc-writer-multi-file-invocation-guard`:
+
+1. `c760a31` feat (initial guard, Stage-3 plan implementation)
+2. `8694830` docs (2 new pitfalls in `.roughly/known-pitfalls.md` L54, L56)
+3. `ac5ddf0` fix (P2 — AC5 outer quotes)
+4. `ecf7147` fix (P1 — gate-override hedge)
+5. `22e180f` docs (5 E04.S8 v0.1.7 candidates in epic doc)
+
+Final post-edit state: `wc -w agents/doc-writer.md` = 542; Path B accepted violation +42 over cap.
