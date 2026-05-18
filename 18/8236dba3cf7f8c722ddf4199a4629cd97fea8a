@@ -1,0 +1,22 @@
+docs/plans/E04-S8-doc-writer-multi-file-guard-plan.md
+  s_38edb9b844cc13::t_86f4fcc2036fa6 87
+  s_38edb9b844cc13::t_a192e169587c70 73
+  s_38edb9b844cc13::t_478a0eec4d13d4 214-241
+  s_38edb9b844cc13::t_959b620a612d6d 94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.9",
+  "base_commit_sha": "188236dba3cf7f8c722ddf4199a4629cd97fea8a",
+  "prompts": {},
+  "sessions": {
+    "s_38edb9b844cc13": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a14b60bc-7ae7-49cd-9a7e-4d0a6007d907",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
