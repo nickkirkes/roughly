@@ -82,13 +82,13 @@ If no check entries are present beyond the version line, emit:
 
 ## STEP 3: PLAN STATE
 
-Run `ls -lt docs/plans/*-plan.md 2>/dev/null` to list plan files sorted by modification time, newest first. Each line of `ls -lt` output contains a timestamp followed by the filename. The timestamp format depends on the system and the file's age — BSD/macOS `ls` emits `Mon DD HH:MM` for files less than ~6 months old (e.g., `May 12 14:33`) and `Mon DD YYYY` for older files (e.g., `Jan 4 2025`); GNU `ls` is similar by default. Use the timestamp string verbatim from the `ls -lt` output — do NOT reformat to a fixed shape (no canonical `YYYY-MM-DD HH:MM` pattern is portably available without `stat`-flag juggling, and reformatting risks the wrong year for old files). If the command output is empty (zero matches) or returns a non-zero exit, treat as zero matches.
+Run `ls -lt .roughly/plans/*-plan.md 2>/dev/null` to list plan files sorted by modification time, newest first. Each line of `ls -lt` output contains a timestamp followed by the filename. The timestamp format depends on the system and the file's age — BSD/macOS `ls` emits `Mon DD HH:MM` for files less than ~6 months old (e.g., `May 12 14:33`) and `Mon DD YYYY` for older files (e.g., `Jan 4 2025`); GNU `ls` is similar by default. Use the timestamp string verbatim from the `ls -lt` output — do NOT reformat to a fixed shape (no canonical `YYYY-MM-DD HH:MM` pattern is portably available without `stat`-flag juggling, and reformatting risks the wrong year for old files). If the command output is empty (zero matches) or returns a non-zero exit, treat as zero matches.
 
 **Skip non-entry lines.** The shown command form (glob expansion to file paths) does NOT emit a leading `total <number>` summary line; that summary only appears when `ls -l` is given a directory argument. Defensive guard: if any line in the output starts with the literal token `total ` followed by digits and nothing else, skip it. Likewise skip blank lines. Treat only file-permission lines (starting with `-`, `d`, `l`, etc.) as plan entries.
 
 Run `git rev-parse --abbrev-ref HEAD 2>/dev/null` to detect the current branch. Treat the result as `unknown` if any of the following is true: the command exits non-zero (not a git repo, git not installed), the output is empty, or the output is the literal string `HEAD` (detached-HEAD state — common in CI checkouts and `git checkout <sha>` workspaces; the literal `HEAD` is git's signal that no branch ref is checked out, NOT a real branch name).
 
-**Detect in-progress plans by branch association.** Plan files persist in `docs/plans/` after their feature ships, so file presence alone is not a reliable in-progress signal. The current git branch is the strongest positive signal: build/fix pipelines run on feature branches whose names typically encode the same story ID as the plan filename (e.g., branch `feat/E03.S8-help-command` ↔ `docs/plans/E03-S8-help-command-plan.md`). To match:
+**Detect in-progress plans by branch association.** Plan files persist in `.roughly/plans/` after their feature ships, so file presence alone is not a reliable in-progress signal. The current git branch is the strongest positive signal: build/fix pipelines run on feature branches whose names typically encode the same story ID as the plan filename (e.g., branch `feat/E03.S8-help-command` ↔ `.roughly/plans/E03-S8-help-command-plan.md`). To match:
 - **Normalize the branch name:** strip leading conventional prefixes (`feat/`, `fix/`, `chore/`, `docs/`, `bug/`, `wip/`); replace `.` with `-`; lowercase.
 - **Normalize each plan filename:** strip the trailing `-plan.md`; lowercase.
 - A plan file is "associated with the current branch" if the normalized branch name contains the normalized filename as a substring, OR the normalized filename contains the normalized branch name as a substring.
@@ -99,30 +99,30 @@ This is a heuristic, not a guarantee — paused features on other branches won't
 
 The remaining logic is a mutually-exclusive case partition. Determine which case applies by evaluating the conditions in order top-to-bottom; execute ONLY the first matching case's emit logic, then end Step 3. Cases are NOT cumulative — do NOT execute logic from later cases after an earlier one has already matched.
 
-Let `N` = total plan files in `docs/plans/` (from the `ls -lt` output).
+Let `N` = total plan files in `.roughly/plans/` (from the `ls -lt` output).
 Let `match_count` = number of plan files whose normalized filename associates with the normalized branch name (per the heuristic above). `match_count` is undefined for main-line branches and `unknown` (the branch-association check is skipped — those cases route on branch type alone).
 
-**Case A — `N == 0`:** emit `"No plan files in docs/plans/."` and end Step 3.
+**Case A — `N == 0`:** emit `"No plan files in .roughly/plans/."` and end Step 3.
 
 **Case B — branch is a main-line branch** (`main`, `master`, `trunk`, `develop`): no in-progress pipeline is likely on a main-line branch. Emit:
-> "<N> plan files in docs/plans/. Current branch is <branch> — no in-progress pipeline detected. Most recent plan: `<filename>` (modified <timestamp from ls -lt, verbatim>)."
+> "<N> plan files in .roughly/plans/. Current branch is <branch> — no in-progress pipeline detected. Most recent plan: `<filename>` (modified <timestamp from ls -lt, verbatim>)."
 
 End Step 3. No prompt. (If the user is mid-pipeline, they can switch back to the feature branch and re-run `/roughly:help`.)
 
 **Case C — branch is `unknown` (git detection failed) OR `match_count == 0` on a feature/fix branch:** branch information is unavailable or the branch-association heuristic missed. In either case the in-progress plan cannot be confidently identified by branch alone, so candidates are surfaced.
 
 If branch is `unknown`, emit:
-> "<N> plan files in docs/plans/. Current branch could not be detected (git unavailable, detached HEAD, or non-standard workspace) — cannot use branch association to identify the in-progress plan. If you have an in-progress pipeline, it is most likely one of the following — verify against the timestamp and filename:"
+> "<N> plan files in .roughly/plans/. Current branch could not be detected (git unavailable, detached HEAD, or non-standard workspace) — cannot use branch association to identify the in-progress plan. If you have an in-progress pipeline, it is most likely one of the following — verify against the timestamp and filename:"
 
 Otherwise (feature/fix branch with `match_count == 0`), emit:
-> "<N> plan files in docs/plans/. None match current branch <branch> via filename association (the branch may not encode the story ID). If you have an in-progress pipeline on this branch, it is most likely one of the following — verify against the timestamp and filename:"
+> "<N> plan files in .roughly/plans/. None match current branch <branch> via filename association (the branch may not encode the story ID). If you have an in-progress pipeline on this branch, it is most likely one of the following — verify against the timestamp and filename:"
 
 Then list up to the 10 most-recent plans from the `ls -lt` output (a generous cap chosen so that even paused or slow-moving pipelines remain visible):
 > - `<filename>` (modified <timestamp from ls -lt, verbatim>)
 > - ...
 
 If `N > 10`, append (with `M = N - 10`):
-> "(<M> older plans not listed — run `ls -lt docs/plans/` if your active plan is older than what's shown above.)"
+> "(<M> older plans not listed — run `ls -lt .roughly/plans/` if your active plan is older than what's shown above.)"
 
 End Step 3. No prompt — this is an informational surface so the user can recognize their plan visually. (To resume a pipeline, the user runs `/roughly:build` or `/roughly:fix` with the relevant feature/bug spec; help does not gate further work.)
 
@@ -131,7 +131,7 @@ End Step 3. No prompt — this is an informational surface so the user can recog
 > - `<filename>` (modified <timestamp from ls -lt, verbatim>)"
 
 If `N > 1` (other plan files exist beyond the matched one), append (with `M = N - 1`):
-> "(<M> other plans in docs/plans/ are unrelated to this branch.)"
+> "(<M> other plans in .roughly/plans/ are unrelated to this branch.)"
 
 End Step 3. No prompt — single match is unambiguous.
 
@@ -143,7 +143,7 @@ Then list every matching file, sorted newest first by mtime:
 > - ...
 
 If `N > match_count` (unmatched plan files also exist), append (with `M = N - match_count`):
-> "(<M> other plans in docs/plans/ are unrelated to this branch.)"
+> "(<M> other plans in .roughly/plans/ are unrelated to this branch.)"
 
 Then ask: **"Which plan is current? (paste filename, or 'none' if no pipeline is in progress)"**
 

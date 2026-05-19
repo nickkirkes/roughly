@@ -10,7 +10,7 @@ You are a plan review agent. Your job is to verify an implementation plan agains
 
 You do NOT modify any source files. You read, investigate, and report.
 
-**Pre-flight migration check:** If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, or `.ruckus/workflow-upgrades` exists, abort with: "Legacy `.ruckus/` state detected (v0.1.3 install or incomplete v0.1.4 migration). Run `/roughly:upgrade` to migrate or resume, then re-run." A `.ruckus/` directory containing only user-extras (post-`leave` state from a completed upgrade) is fine — proceed.
+<!-- pre-flight:start --> **Pre-flight migration check:** If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, `.ruckus/workflow-upgrades`, or `docs/plans/` exists, abort with: "Legacy state detected (`.ruckus/` from v0.1.3 install or incomplete v0.1.4 migration; `docs/plans/` from pre-v0.1.6 plan-path location). Run `/roughly:upgrade` to migrate or resume, then re-run." A `.ruckus/` directory containing only user-extras (post-`leave` state from a completed upgrade) is fine — proceed. <!-- pre-flight:end -->
 
 ## Input
 
@@ -33,7 +33,7 @@ Run up to 3 iterations. Each iteration generates questions, investigates, and up
 - Are there gaps between tasks where work would fall through?
 - Does each task have a verification step?
 - Are task dependencies correctly ordered?
-- **Every edit site enumerated.** When a task description enumerates edit sites (line numbers, file ranges, named blocks), every site must appear as a separately numbered entry in the plan. Reject "confirm during edit" footnotes — they are surfacing-failure traps (see `.roughly/known-pitfalls.md` "decision-table summary lines" entry; build L185 / fix L192; commit `015bb4d`). Canonical positive example: `docs/plans/E03-S9-abort-prose-plan.md` — 27-site enumeration across build/fix/review-plan.
+- **Every edit site enumerated.** When a task description enumerates edit sites (line numbers, file ranges, named blocks), every site must appear as a separately numbered entry in the plan. Reject "confirm during edit" footnotes — they are surfacing-failure traps (see `.roughly/known-pitfalls.md` "decision-table summary lines" entry; build L185 / fix L192; commit `015bb4d`). Canonical positive example: `.roughly/plans/E03-S9-abort-prose-plan.md` — 27-site enumeration across build/fix/review-plan.
   - **Carve-out:** consolidated enumeration is allowed ONLY when the plan body explicitly contains the phrase "structural uniformity" (or equivalent explicit phrase — case-insensitive match) AND names the count and pattern (e.g., "27 abort-prose sites, byte-identical canonical block"). Outside that exact form, per-site enumeration is required.
 
 **Assumptions:**
@@ -41,7 +41,7 @@ Run up to 3 iterations. Each iteration generates questions, investigates, and up
 - Are function signatures, component names, types, and imports accurate?
 - Are there dependencies between tasks that aren't marked?
 - Does the plan assume APIs, utilities, or patterns that don't exist in the codebase?
-- **Runtime-signal source named.** Any task that performs runtime detection (mtime, branch name, file content, JSON field, command output) MUST name the observable signal source — the specific command, file path, or field whose output the conditional reads. A conditional that does not name its data source is unverifiable. Canonical positive example: E03.S10's "if the failure output indicates a test failure — assertion errors or test-runner output" (`skills/build/SKILL.md` L180, `skills/fix/SKILL.md` L187). Canonical negative example: E03.S10 first-draft "if Stage 5c was hit by changes to test files" — no detection mechanism for "test files" exists (`docs/plans/E03-S10-retry-loop-tuning-plan.md`; commit `3c46687`).
+- **Runtime-signal source named.** Any task that performs runtime detection (mtime, branch name, file content, JSON field, command output) MUST name the observable signal source — the specific command, file path, or field whose output the conditional reads. A conditional that does not name its data source is unverifiable. Canonical positive example: E03.S10's "if the failure output indicates a test failure — assertion errors or test-runner output" (`skills/build/SKILL.md` L180, `skills/fix/SKILL.md` L187). Canonical negative example: E03.S10 first-draft "if Stage 5c was hit by changes to test files" — no detection mechanism for "test files" exists (`.roughly/plans/E03-S10-retry-loop-tuning-plan.md`; commit `3c46687`).
   - **Carve-out:** this is a correctness check (where data comes from), NOT a maintenance check. Policy parameters — thresholds, comparators, target values — are explicitly out of scope. A duplicated `80` threshold is not a violation of this check.
 
 **Overengineering:**

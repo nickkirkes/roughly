@@ -57,6 +57,14 @@ If yes: create `.roughly/` directory if it doesn't exist. Move (preserving conte
 
 10. **Idempotency:** A successful migration removes the marker at step 9; re-running the upgrade finds no `.ruckus/` and skips this step at step 1. A mid-migration failure leaves the marker in place; re-running detects it at step 2 and resumes from step 5. Exception: if the user chose `leave` at step 8, `.ruckus/` remains non-empty after cleanup; re-running the upgrade will re-enter step 2 and re-prompt for the conflict — this is expected and safe.
 
+**v0.1.6 migration check:** If `docs/plans/` directory exists in the project (legacy pre-v0.1.6 plan location):
+
+1. **Detection and safety check:** If `docs/plans/` does not exist, skip this step entirely (idempotent). Otherwise check `git status --porcelain docs/plans/ 2>/dev/null` — if non-empty (uncommitted edits to historical plans), abort with: `"Uncommitted changes in docs/plans/. Commit or stash them, or pass --force-plans to override."` If `--force-plans` appears as a standalone token in `$ARGUMENTS` (preceded by whitespace or string start, followed by whitespace or string end — not as a substring of `--force-plans-dry-run` or similar), proceed despite dirty status. Detect git availability with `git rev-parse --git-dir 2>/dev/null` — silent failure means non-git; use plain `mv` otherwise use `git mv` (preserves history per E02.S2.6 precedent).
+
+2. **Move:** Write marker at `.roughly/plans/.migration-in-progress` (create `.roughly/plans/` if absent) containing the current ISO date and plugin version, then perform `git mv docs/plans/ .roughly/plans/` inside git (or plain `mv` otherwise). If the move command returns non-zero, surface the error verbatim and abort — the marker stays in place for re-run. Do NOT fall back between `git mv` and `mv` on failure (post-failure recovery via the other tool produces confusing error output that complicates the user's mental model of which tool moved what — inherits v0.1.4's idiom).
+
+3. **Cleanup:** Remove the marker at `.roughly/plans/.migration-in-progress` once the move completes. Idempotency: a successful migration leaves `docs/plans/` absent; re-running detects the absence at step 1 and skips entirely.
+
 **Version check:** Read `.roughly/workflow-upgrades` and extract the `roughly-version` line. Read `.claude-plugin/plugin.json` for the current plugin version. If they differ:
 > "Plugin version changed: [installed] → [current]. Structural diffs below may include changes from the version bump, not just your edits."
 

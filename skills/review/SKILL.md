@@ -15,7 +15,7 @@ Review scope: $ARGUMENTS
 If `$ARGUMENTS` is empty, review all uncommitted changes:
 !`git diff --name-only HEAD 2>/dev/null || echo "no changes"`
 
-**Pre-flight migration check:** If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, or `.ruckus/workflow-upgrades` exists, abort with: "Legacy `.ruckus/` state detected (v0.1.3 install or incomplete v0.1.4 migration). Run `/roughly:upgrade` to migrate or resume, then re-run." A `.ruckus/` directory containing only user-extras (post-`leave` state from a completed upgrade) is fine — proceed.
+<!-- pre-flight:start --> **Pre-flight migration check:** If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, `.ruckus/workflow-upgrades`, or `docs/plans/` exists, abort with: "Legacy state detected (`.ruckus/` from v0.1.3 install or incomplete v0.1.4 migration; `docs/plans/` from pre-v0.1.6 plan-path location). Run `/roughly:upgrade` to migrate or resume, then re-run." A `.ruckus/` directory containing only user-extras (post-`leave` state from a completed upgrade) is fine — proceed. <!-- pre-flight:end -->
 
 ---
 

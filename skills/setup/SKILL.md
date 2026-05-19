@@ -36,8 +36,8 @@ Display: "Project maturity: [level] ([N] source files). Detected: [test framewor
 
 ## STEP 2: CHECK EXISTING STATE
 
-If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, or `.ruckus/workflow-upgrades` exists:
-> "Legacy `.ruckus/` state detected (v0.1.3 install or incomplete v0.1.4 migration). Run `/roughly:upgrade` first to migrate to `.roughly/` or resume, then re-run `/roughly:setup` if needed. (proceed anyway / abort)"
+If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, `.ruckus/workflow-upgrades`, or `docs/plans/` exists:
+> "Legacy state detected (`.ruckus/` from v0.1.3 install or incomplete v0.1.4 migration; `docs/plans/` from pre-v0.1.6 plan-path location). Run `/roughly:upgrade` first to migrate, then re-run `/roughly:setup` if needed. (proceed anyway / abort)"
 
 Else if `docs/claude/` exists:
 > "Legacy Roughly installation detected at `docs/claude/`. Run `/roughly:upgrade` to migrate to `.roughly/` first, then re-run `/roughly:setup` if needed. (proceed anyway / abort)"

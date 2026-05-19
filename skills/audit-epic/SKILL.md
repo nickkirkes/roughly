@@ -16,7 +16,7 @@ Epic file: $ARGUMENTS
 
 If `$ARGUMENTS` is empty, ask: **"Which epic file should I audit? (provide path)"**
 
-**Pre-flight migration check:** If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, or `.ruckus/workflow-upgrades` exists, abort with: "Legacy `.ruckus/` state detected (v0.1.3 install or incomplete v0.1.4 migration). Run `/roughly:upgrade` to migrate or resume, then re-run." A `.ruckus/` directory containing only user-extras (post-`leave` state from a completed upgrade) is fine — proceed.
+<!-- pre-flight:start --> **Pre-flight migration check:** If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, `.ruckus/workflow-upgrades`, or `docs/plans/` exists, abort with: "Legacy state detected (`.ruckus/` from v0.1.3 install or incomplete v0.1.4 migration; `docs/plans/` from pre-v0.1.6 plan-path location). Run `/roughly:upgrade` to migrate or resume, then re-run." A `.ruckus/` directory containing only user-extras (post-`leave` state from a completed upgrade) is fine — proceed. <!-- pre-flight:end -->
 
 ---
 
@@ -41,7 +41,7 @@ git log --all --oneline --grep="[story ID]" --name-only
 ```
 
 If commit messages don't reference story IDs, fall back to:
-1. Check plan files in `docs/plans/` for file mappings
+1. Check plan files in `.roughly/plans/` for file mappings
 2. Use the epic's technical approach section to identify likely files
 3. Search for recent commits touching files mentioned in the epic
 

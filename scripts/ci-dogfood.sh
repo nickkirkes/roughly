@@ -150,10 +150,10 @@ fi
 # Exit-capture idiom required: under set -euo pipefail with pipefail, a
 # failing `ls` (no matches, missing dir) propagates through the pipe and
 # would silently kill the script before the [-z "$PLAN_FILE"] guard runs.
-PLAN_FILE="$(ls "$WORKTREE/tests/fixtures/hello-roughly/docs/plans/"*-plan.md 2>/dev/null | head -1)" \
+PLAN_FILE="$(ls "$WORKTREE/tests/fixtures/hello-roughly/.roughly/plans/"*-plan.md 2>/dev/null | head -1)" \
   && PLAN_FILE_EXIT=0 || PLAN_FILE_EXIT=$?
 if [ "$PLAN_FILE_EXIT" != 0 ] || [ -z "$PLAN_FILE" ] || [ ! -f "$PLAN_FILE" ]; then
-  echo "ci-dogfood: FAIL — no plan file found in $WORKTREE/tests/fixtures/hello-roughly/docs/plans/" >&2
+  echo "ci-dogfood: FAIL — no plan file found in $WORKTREE/tests/fixtures/hello-roughly/.roughly/plans/" >&2
   printf '%s\n' "$SCENARIO_OUT" | sed 's/^/    /' >&2
   exit 1
 fi

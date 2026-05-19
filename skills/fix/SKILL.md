@@ -16,7 +16,7 @@ You are the fix orchestrator. Drive this pipeline sequentially with human gates 
 
 Issue to fix: $ARGUMENTS
 
-**Pre-flight migration check:** If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, or `.ruckus/workflow-upgrades` exists, abort with: "Legacy `.ruckus/` state detected (v0.1.3 install or incomplete v0.1.4 migration). Run `/roughly:upgrade` to migrate or resume, then re-run." A `.ruckus/` directory containing only user-extras (post-`leave` state from a completed upgrade) is fine — proceed.
+<!-- pre-flight:start --> **Pre-flight migration check:** If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, `.ruckus/workflow-upgrades`, or `docs/plans/` exists, abort with: "Legacy state detected (`.ruckus/` from v0.1.3 install or incomplete v0.1.4 migration; `docs/plans/` from pre-v0.1.6 plan-path location). Run `/roughly:upgrade` to migrate or resume, then re-run." A `.ruckus/` directory containing only user-extras (post-`leave` state from a completed upgrade) is fine — proceed. <!-- pre-flight:end -->
 
 ---
 
@@ -93,7 +93,7 @@ Plan-format-version: 1
 - Watch for: [side effects]
 ```
 
-Write the plan to: `docs/plans/fix-<issue-id-or-name>-plan.md` (e.g., `fix-GH-42-plan.md`)
+Write the plan to: `.roughly/plans/fix-<issue-id-or-name>-plan.md` (e.g., `fix-GH-42-plan.md`; create `.roughly/plans/` with `mkdir -p` if it does not exist).
 
 Do NOT present the plan to the human yet — proceed directly to Stage 4.
 
@@ -126,7 +126,7 @@ Compact context before implementation. Preserve: issue summary with root cause, 
 
 **Prerequisite:** Stage 4 must have completed and been approved.
 
-Re-read the plan file. If the path is no longer in context after Stage 4 compaction, check `docs/plans/` for the most recent plan file matching the issue name or description.
+Re-read the plan file. If the path is no longer in context after Stage 4 compaction, check `.roughly/plans/` for the most recent plan file matching the issue name or description.
 
 ### 5a. Create task tracking
 

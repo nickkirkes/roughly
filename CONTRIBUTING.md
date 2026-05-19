@@ -82,6 +82,10 @@ Before any bulk replace, scan the file for occurrences where the OLD form is int
 
 New pitfalls discovered during a build are recorded in `.roughly/known-pitfalls.md` — the runtime catalog the build pipeline updates at wrap-up when a contributor confirms a new one.
 
+## Migration
+
+v0.1.6 relocated `docs/plans/` to `.roughly/plans/` to consolidate all Roughly runtime state under a single root. Existing projects with historical plans run `/roughly:upgrade` to migrate; `--force-plans` overrides the dirty-tree safety check. Plan files written by the build/fix pipelines now land in `.roughly/plans/<feature>-plan.md`. The pre-flight migration check in the 7 hard-abort skills + setup soft-abort detects either `.ruckus/` or `docs/plans/` legacy state and redirects to `/roughly:upgrade`.
+
 ## Testing
 
 There is no automated test suite — this is pure markdown. To verify changes:
