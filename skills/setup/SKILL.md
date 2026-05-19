@@ -36,8 +36,8 @@ Display: "Project maturity: [level] ([N] source files). Detected: [test framewor
 
 ## STEP 2: CHECK EXISTING STATE
 
-If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, `.ruckus/workflow-upgrades`, or `docs/plans/` exists:
-> "Legacy state detected (`.ruckus/` from v0.1.3 install or incomplete v0.1.4 migration; `docs/plans/` from pre-v0.1.6 plan-path location). Run `/roughly:upgrade` first to migrate, then re-run `/roughly:setup` if needed. (proceed anyway / abort)"
+If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, or `.ruckus/workflow-upgrades` exists, OR if `.roughly/` AND `docs/plans/` BOTH exist AND `.roughly/plans/` does NOT exist (the `.roughly/plans/` absence distinguishes a pre-v0.1.6 Roughly install with un-migrated plans from a Roughly project that has a migrated `.roughly/plans/` alongside an unrelated `docs/plans/`):
+> "Legacy state detected (`.ruckus/` from v0.1.3 install or incomplete v0.1.4 migration; or pre-v0.1.6 plan-path location at `docs/plans/` alongside `.roughly/` with no `.roughly/plans/`). Run `/roughly:upgrade` first to migrate, then re-run `/roughly:setup` if needed. (proceed anyway / abort)"
 
 Else if `docs/claude/` exists:
 > "Legacy Roughly installation detected at `docs/claude/`. Run `/roughly:upgrade` to migrate to `.roughly/` first, then re-run `/roughly:setup` if needed. (proceed anyway / abort)"
