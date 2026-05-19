@@ -1,0 +1,23 @@
+skills/upgrade/SKILL.md
+  s_220659d9c359c7::t_c7367ac5876ea8 60-61
+  s_220659d9c359c7::t_4ae3b498762267 64
+  s_220659d9c359c7::t_ba7426d613387b 66
+skills/setup/SKILL.md
+  s_220659d9c359c7::t_7c29a7ee439fbe 89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.9",
+  "base_commit_sha": "ba8491b5eb3875b430afb38d5cecbc3f600a755c",
+  "prompts": {},
+  "sessions": {
+    "s_220659d9c359c7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "195327f4-afd8-4b48-90b0-f0154b7c47c9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
