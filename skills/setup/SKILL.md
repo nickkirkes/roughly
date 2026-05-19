@@ -86,7 +86,7 @@ Prompt but don't block on:
 
 ## STEP 5: CREATE FILES
 
-Create `.roughly/` and `.roughly/plans/` directories if they don't exist (`mkdir -p .roughly/plans/` — the `.roughly/plans/` directory must exist on every Roughly install so the v0.1.6 pre-flight check correctly distinguishes "pre-v0.1.6 install with un-migrated plans in `docs/plans/`" from "post-v0.1.6 install with an unrelated `docs/plans/` documentation directory"; the latter must not abort).
+Create `.roughly/` directory if it doesn't exist. Also create `.roughly/plans/` UNLESS `docs/plans/` exists in the project: when `docs/plans/` is present, skip `.roughly/plans/` creation so the pre-flight migration check in build/fix/etc. correctly stays in its "Legacy state detected" branch and redirects the user to `/roughly:upgrade` (pre-v0.1.6 install needing migration) or to manual resolution (non-Roughly project with an unrelated `docs/plans/` documentation tree adopting Roughly). When `docs/plans/` is absent (fresh install in a project that has never used `docs/plans/`), create `.roughly/plans/` so the pre-flight check correctly does NOT fire on first build.
 
 ### 5a. CLAUDE.md
 Read `skills/setup/templates/CLAUDE.md.template`. Derive `{{PROJECT_NAME}}` from the repo directory name (or package.json `name` field if available). Replace all `{{PLACEHOLDER}}` markers with collected values:
