@@ -1,0 +1,57 @@
+README.md
+  s_220659d9c359c7::t_72b87832e3a727 214
+skills/build/SKILL.md
+  s_220659d9c359c7::t_678270accf15cc 122
+  s_220659d9c359c7::t_0ad970767d5313 19
+  s_220659d9c359c7::t_bf2ae98f40c1c9 85
+skills/setup/SKILL.md
+  s_220659d9c359c7::t_504b376c33e506 39-40
+tests/fixtures/canonical-preflight-block.txt
+  s_220659d9c359c7::t_8132b24678b171 1
+skills/help/SKILL.md
+  s_220659d9c359c7::t_5c645cb3d39368 85,91,102,105,108,115,118,125,134,146
+skills/review-plan/SKILL.md
+  s_220659d9c359c7::t_18084e66978a5d 13
+  s_220659d9c359c7::t_885254c77df38f 44
+  s_220659d9c359c7::t_9a775b62058310 36
+scripts/ci-dogfood.sh
+  s_220659d9c359c7::t_9bdb6dae94e243 153,156
+skills/audit-epic/SKILL.md
+  s_220659d9c359c7::t_68b9de47ddf9a1 44
+  s_220659d9c359c7::t_a8ec4e25b471e1 19
+CHANGELOG.md
+  s_220659d9c359c7::t_7a9187454c5013 33-38
+  s_220659d9c359c7::t_f6fddd403caed6 31
+  s_220659d9c359c7::t_bade5d9bb707a4 32
+skills/review-epic/SKILL.md
+  s_220659d9c359c7::t_a1e53478f746f1 17
+skills/fix/SKILL.md
+  s_220659d9c359c7::t_f251e25187171b 19
+  s_220659d9c359c7::t_12922bf895db78 129
+  s_220659d9c359c7::t_f5cbd4d3e87da8 96
+skills/upgrade/SKILL.md
+  s_220659d9c359c7::t_9e84188bbcc0bf 62
+  s_220659d9c359c7::t_ebafc26c743841 60-61,63-67
+skills/review/SKILL.md
+  s_220659d9c359c7::t_810536fe6c71cf 18
+skills/verify-all/SKILL.md
+  s_220659d9c359c7::t_51e39ef772e733 15
+CONTRIBUTING.md
+  s_220659d9c359c7::t_9611f9f45118f2 85-88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.9",
+  "base_commit_sha": "3b2b542ad9c6d2f01b8a910f2babd8ec9ca918f7",
+  "prompts": {},
+  "sessions": {
+    "s_220659d9c359c7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "195327f4-afd8-4b48-90b0-f0154b7c47c9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
