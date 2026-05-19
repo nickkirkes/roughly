@@ -86,7 +86,7 @@ Prompt but don't block on:
 
 ## STEP 5: CREATE FILES
 
-Create `.roughly/` directory if it doesn't exist.
+Create `.roughly/` and `.roughly/plans/` directories if they don't exist (`mkdir -p .roughly/plans/` — the `.roughly/plans/` directory must exist on every Roughly install so the v0.1.6 pre-flight check correctly distinguishes "pre-v0.1.6 install with un-migrated plans in `docs/plans/`" from "post-v0.1.6 install with an unrelated `docs/plans/` documentation directory"; the latter must not abort).
 
 ### 5a. CLAUDE.md
 Read `skills/setup/templates/CLAUDE.md.template`. Derive `{{PROJECT_NAME}}` from the repo directory name (or package.json `name` field if available). Replace all `{{PLACEHOLDER}}` markers with collected values:
