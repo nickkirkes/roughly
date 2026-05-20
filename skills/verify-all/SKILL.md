@@ -12,7 +12,7 @@ Run all verification checks in sequence. Iterate until clean or escalate failure
 
 Read CLAUDE.md to resolve verification commands. If commands are missing, warn and ask the human to provide them.
 
-**Pre-flight migration check:** If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, or `.ruckus/workflow-upgrades` exists, abort with: "Legacy `.ruckus/` state detected (v0.1.3 install or incomplete v0.1.4 migration). Run `/roughly:upgrade` to migrate or resume, then re-run." A `.ruckus/` directory containing only user-extras (post-`leave` state from a completed upgrade) is fine — proceed.
+<!-- pre-flight:start --> **Pre-flight migration check:** If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, or `.ruckus/workflow-upgrades` exists, OR if `.roughly/` exists AND any file matching `docs/plans/*-plan.md` exists (the `*-plan.md` filename pattern is Roughly's plan naming convention — its presence inside `docs/plans/` alongside an existing `.roughly/` install distinguishes a pre-v0.1.6 Roughly install with un-migrated plans from a Roughly project that has an unrelated `docs/plans/` documentation directory using non-Roughly filenames), abort with: "Legacy state detected (`.ruckus/` from v0.1.3 install or incomplete v0.1.4 migration; or pre-v0.1.6 Roughly plans matching `docs/plans/*-plan.md` alongside `.roughly/`). Run `/roughly:upgrade` to migrate or resume, then re-run." A `.ruckus/` directory containing only user-extras (post-`leave` state from a completed upgrade) is fine — proceed. A `docs/plans/` directory without any `*-plan.md` files (or in a project without `.roughly/`) is also fine — proceed (not a Roughly install or an unrelated documentation tree). <!-- pre-flight:end -->
 
 ---
 
