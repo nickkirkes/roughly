@@ -36,8 +36,8 @@ Display: "Project maturity: [level] ([N] source files). Detected: [test framewor
 
 ## STEP 2: CHECK EXISTING STATE
 
-If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, or `.ruckus/workflow-upgrades` exists, OR if `.roughly/` AND `docs/plans/` BOTH exist AND `.roughly/plans/` does NOT exist (the `.roughly/plans/` absence distinguishes a pre-v0.1.6 Roughly install with un-migrated plans from a Roughly project that has a migrated `.roughly/plans/` alongside an unrelated `docs/plans/`):
-> "Legacy state detected (`.ruckus/` from v0.1.3 install or incomplete v0.1.4 migration; or pre-v0.1.6 plan-path location at `docs/plans/` alongside `.roughly/` with no `.roughly/plans/`). Run `/roughly:upgrade` first to migrate, then re-run `/roughly:setup` if needed. (proceed anyway / abort)"
+If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, or `.ruckus/workflow-upgrades` exists, OR if `.roughly/` exists AND any file matching `docs/plans/*-plan.md` exists (the `*-plan.md` pattern distinguishes pre-v0.1.6 Roughly plans from unrelated `docs/plans/` documentation):
+> "Legacy state detected (`.ruckus/` from v0.1.3 install or incomplete v0.1.4 migration; or pre-v0.1.6 Roughly plans matching `docs/plans/*-plan.md` alongside `.roughly/`). Run `/roughly:upgrade` first to migrate, then re-run `/roughly:setup` if needed. (proceed anyway / abort)"
 
 Else if `docs/claude/` exists:
 > "Legacy Roughly installation detected at `docs/claude/`. Run `/roughly:upgrade` to migrate to `.roughly/` first, then re-run `/roughly:setup` if needed. (proceed anyway / abort)"
@@ -86,7 +86,7 @@ Prompt but don't block on:
 
 ## STEP 5: CREATE FILES
 
-Create `.roughly/` directory if it doesn't exist. Also create `.roughly/plans/` UNLESS `docs/plans/` exists in the project: when `docs/plans/` is present, skip `.roughly/plans/` creation so the pre-flight migration check in build/fix/etc. correctly stays in its "Legacy state detected" branch and redirects the user to `/roughly:upgrade` (pre-v0.1.6 install needing migration) or to manual resolution (non-Roughly project with an unrelated `docs/plans/` documentation tree adopting Roughly). When `docs/plans/` is absent (fresh install in a project that has never used `docs/plans/`), create `.roughly/plans/` so the pre-flight check correctly does NOT fire on first build.
+Create `.roughly/` directory if it doesn't exist. (`.roughly/plans/` is created on demand by build/fix Stage 3's `mkdir -p` — no need to pre-create it during setup since the v0.1.6+ pre-flight check uses `docs/plans/*-plan.md` filename detection rather than `.roughly/plans/` absence as its signal.)
 
 ### 5a. CLAUDE.md
 Read `skills/setup/templates/CLAUDE.md.template`. Derive `{{PROJECT_NAME}}` from the repo directory name (or package.json `name` field if available). Replace all `{{PLACEHOLDER}}` markers with collected values:
