@@ -1,0 +1,23 @@
+.roughly/known-pitfalls.md
+  s_220659d9c359c7::t_7c135fccdd868b 88
+skills/upgrade/SKILL.md
+  s_220659d9c359c7::t_a8c5f10fca5b73 64
+.roughly/plans/E04-S1-plan-path-consolidation-plan.md
+  s_220659d9c359c7::t_57c99d1822428c 119
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.10",
+  "base_commit_sha": "02d9551f01db5fb8769a0684322f48837887c3e6",
+  "prompts": {},
+  "sessions": {
+    "s_220659d9c359c7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "195327f4-afd8-4b48-90b0-f0154b7c47c9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
