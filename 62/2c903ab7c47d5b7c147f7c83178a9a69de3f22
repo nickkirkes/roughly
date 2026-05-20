@@ -1,0 +1,38 @@
+skills/fix/SKILL.md
+  s_220659d9c359c7::t_532fd4d972c624 19
+skills/setup/SKILL.md
+  s_220659d9c359c7::t_46386780c04ab9 39-40
+  s_220659d9c359c7::t_c7c5431771531c 89
+CHANGELOG.md
+  s_220659d9c359c7::t_5c7426fc7069fa 31
+skills/review-plan/SKILL.md
+  s_220659d9c359c7::t_18b9bb5400342c 13
+skills/audit-epic/SKILL.md
+  s_220659d9c359c7::t_6bf0da44caab40 19
+skills/build/SKILL.md
+  s_220659d9c359c7::t_c861a20265934e 19
+skills/review-epic/SKILL.md
+  s_220659d9c359c7::t_622a85de596c51 17
+tests/fixtures/canonical-preflight-block.txt
+  s_220659d9c359c7::t_9ec6bc1a17595d 1
+skills/review/SKILL.md
+  s_220659d9c359c7::t_64e92a8bcad25a 18
+skills/verify-all/SKILL.md
+  s_220659d9c359c7::t_a55cbc4cab41c3 15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.10",
+  "base_commit_sha": "622c903ab7c47d5b7c147f7c83178a9a69de3f22",
+  "prompts": {},
+  "sessions": {
+    "s_220659d9c359c7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "195327f4-afd8-4b48-90b0-f0154b7c47c9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
