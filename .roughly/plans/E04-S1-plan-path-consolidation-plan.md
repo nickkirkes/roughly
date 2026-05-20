@@ -116,7 +116,7 @@ Replace with the two-form soft-abort block from the design section above. Net de
 ### T4: Substitute `docs/plans/` → `.roughly/plans/` in 5 skill bodies (~5 min)
 **Files:** `skills/build/SKILL.md`, `skills/fix/SKILL.md`, `skills/help/SKILL.md`, `skills/audit-epic/SKILL.md`, `skills/review-plan/SKILL.md`
 **Action:** Replace every `docs/plans/` reference in these 5 skill bodies with `.roughly/plans/`. Inline substitution-only — no surrounding prose changes.
-**Details:** 18 substitutions total across 5 files:
+**Details:** 17 substitutions total across 5 files:
 - `skills/build/SKILL.md` L85, L122 (2 refs)
 - `skills/fix/SKILL.md` L96, L129 (2 refs)
 - `skills/help/SKILL.md` L85, L91, L102, L105, L108, L115, L118, L125, L134, L146 (10 refs)
