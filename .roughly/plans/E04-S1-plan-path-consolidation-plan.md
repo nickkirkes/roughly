@@ -123,7 +123,9 @@ Replace with the two-form soft-abort block from the design section above. Net de
 - `skills/audit-epic/SKILL.md` L44 (1 ref)
 - `skills/review-plan/SKILL.md` L36, L44 (2 refs — canonical-positive-example citations to `E03-S9-abort-prose-plan.md` and `E03-S10-retry-loop-tuning-plan.md`; per Discovery point 1, these are missed by the story spec but required for AC1's `rg -Fn` zero-match invariant)
 
-Per-file approach: use `Edit` with `replace_all: true` and `old_string: "docs/plans/"`, `new_string: ".roughly/plans/"`. This is safe — the literal `docs/plans/` appears only as a path reference in each of these 5 files (no semantic-token collisions per the `Edit replace_all` pitfall in `CONTRIBUTING.md ## Tooling Pitfalls`; verified by Discovery's `rg -Fn "docs/plans" skills/` enumeration).
+Per-file approach (T2/T4 ordering note): T2 introduces new `docs/plans/` literals into the pre-flight blocks of 4 of the 5 files in T4's scope (build, fix, audit-epic, review-plan — review-plan also has the canonical-example citations to migrate). After T2 runs, those pre-flight `docs/plans/` literals are legitimate legacy-detection text that MUST be preserved by T4. Therefore:
+- `skills/help/SKILL.md`: T4 may use `Edit` with `replace_all: true` and `old_string: "docs/plans/"`, `new_string: ".roughly/plans/"` — help has no pre-flight block, so no semantic-token collision (verified by Discovery's `rg -Fn "docs/plans" skills/` enumeration).
+- `skills/build/SKILL.md`, `skills/fix/SKILL.md`, `skills/audit-epic/SKILL.md`, `skills/review-plan/SKILL.md`: T4 MUST use anchored Edits at each enumerated line. `replace_all: true` would corrupt the pre-flight block's legacy-detection text (per the `Edit replace_all` dual-semantic-token pitfall in `CONTRIBUTING.md ## Tooling Pitfalls`). Use the surrounding prose at each enumerated line as the unique `old_string` anchor.
 
 Net line-count delta per skill: 0 (pure path substitution; the new path is 2 chars longer per ref but doesn't push any line past markdown's effective wrap).
 **Verify:**
