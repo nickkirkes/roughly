@@ -1,0 +1,28 @@
+.claude/hooks/verify-all.sh
+  s_849f1d5eb2e750::t_de88bbec18ea04 45-47,67
+  s_849f1d5eb2e750::t_325d845265ece3 79-85,87-89
+  s_849f1d5eb2e750::t_97f879254eccdb 70-78
+  s_849f1d5eb2e750::t_5e5fc59c419652 86
+  s_849f1d5eb2e750::t_8fd0d678a017a8 41-43,68-69
+  s_849f1d5eb2e750::t_e7c09741afad85 44,48-66
+CONTRIBUTING.md
+  s_849f1d5eb2e750::t_4563a763a9b8ab 134-147
+agents/doc-writer.md
+  s_849f1d5eb2e750::t_8f56db3cb675bc 33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.11",
+  "base_commit_sha": "8ec428aba88a85610999e1ade29060fd019b3c74",
+  "prompts": {},
+  "sessions": {
+    "s_849f1d5eb2e750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a32a0a28-8c13-452f-bccd-a56039b3afab",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
