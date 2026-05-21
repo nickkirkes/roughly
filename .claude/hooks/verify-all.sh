@@ -38,6 +38,55 @@ if [ "$opens" != "1" ] || [ "$closes" != "1" ]; then
   issues="${issues}- agent-preamble.md HTML comment broken: $opens openers, $closes closers\n"
 fi
 
+# Pre-flight wording byte-identity across 7 hard-abort skills
+# (Canonical source: tests/fixtures/canonical-preflight-block.txt.
+# setup/SKILL.md uses a soft-abort form by design and is excluded — see .roughly/known-pitfalls.md.)
+# Uses `shasum` (cross-platform: macOS ships it by default; Linux provides it via perl/coreutils).
+if [ ! -f tests/fixtures/canonical-preflight-block.txt ]; then
+  issues="${issues}- pre-flight canonical fixture missing: tests/fixtures/canonical-preflight-block.txt — Check 1 cannot run\n"
+else
+  preflight_missing_markers=""
+  for skill in audit-epic build fix review review-plan review-epic verify-all; do
+    block=$(awk '/<!-- pre-flight:start -->/,/<!-- pre-flight:end -->/' "skills/${skill}/SKILL.md" 2>/dev/null)
+    [ -z "$block" ] && preflight_missing_markers="${preflight_missing_markers}${skill} "
+  done
+  if [ -n "$preflight_missing_markers" ]; then
+    issues="${issues}- pre-flight markers missing in skills: ${preflight_missing_markers% }\n"
+  else
+    unique_preflight=$(
+      {
+        for skill in audit-epic build fix review review-plan review-epic verify-all; do
+          awk '/<!-- pre-flight:start -->/,/<!-- pre-flight:end -->/' "skills/${skill}/SKILL.md" | shasum | awk '{print $1}'
+        done
+        shasum tests/fixtures/canonical-preflight-block.txt | awk '{print $1}'
+      } | sort -u | grep -cv '^$'
+    )
+    if [ "$unique_preflight" -ne 1 ]; then
+      issues="${issues}- pre-flight wording drift: ${unique_preflight} unique blocks across 7 hard-abort skills (expected 1)\n"
+    fi
+  fi
+fi
+
+# plan-mode-gate hook-pair byte-identity
+# (verify-all-stop-hook.sh.template ↔ dogfood verify-all.sh divergence is intentional — see CONTRIBUTING.md
+# "Stop hook drift checks" section citing E03.S2.)
+if [ -f .claude/hooks/plan-mode-gate.sh ] && [ -f skills/setup/templates/plan-mode-gate.sh.template ]; then
+  if ! diff -q .claude/hooks/plan-mode-gate.sh skills/setup/templates/plan-mode-gate.sh.template >/dev/null 2>&1; then
+    issues="${issues}- plan-mode-gate hook drift: .claude/hooks/plan-mode-gate.sh and skills/setup/templates/plan-mode-gate.sh.template differ (run \`diff\` for details)\n"
+  fi
+fi
+
+# .roughly/known-pitfalls.md organize-suggestion threshold (closes E03.S3 manual-edit coverage gap).
+# Bidirectional sync: matching policy parameter in agents/doc-writer.md Process step 5
+# ("Organize suggestion"). Update both if the threshold changes.
+PITFALLS_ORGANIZE_THRESHOLD=80
+if [ -f .roughly/known-pitfalls.md ]; then
+  n=$(wc -l < .roughly/known-pitfalls.md)
+  if [ "$n" -gt "$PITFALLS_ORGANIZE_THRESHOLD" ]; then
+    issues="${issues}- .roughly/known-pitfalls.md is $((n)) lines (>${PITFALLS_ORGANIZE_THRESHOLD} threshold) — consider organizing\n"
+  fi
+fi
+
 emit_drift_json() {
   local m="$1"
   if command -v jq >/dev/null 2>&1; then
