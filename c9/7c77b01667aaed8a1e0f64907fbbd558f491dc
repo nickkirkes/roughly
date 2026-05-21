@@ -1,0 +1,25 @@
+.roughly/plans/E04-S5-stop-hook-drift-coverage-expansion-plan.md
+  s_849f1d5eb2e750::t_a38d75ff0017ca 282
+  s_849f1d5eb2e750::t_14763bf9186358 212
+  s_849f1d5eb2e750::t_171c046b1ca90a 204
+  s_849f1d5eb2e750::t_747cc1d400cda4 220
+  s_849f1d5eb2e750::t_22861cdfdbf9ab 1-64,66-183,185-203,205-211,213-219,221-281,283-299
+  s_849f1d5eb2e750::t_53d87eeaf851ef 65
+  s_849f1d5eb2e750::t_1a9988cc1ae875 184
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.11",
+  "base_commit_sha": "c97c77b01667aaed8a1e0f64907fbbd558f491dc",
+  "prompts": {},
+  "sessions": {
+    "s_849f1d5eb2e750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a32a0a28-8c13-452f-bccd-a56039b3afab",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
