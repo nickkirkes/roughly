@@ -9,3 +9,6 @@ Thumbs.db
 
 # Node (if tooling is added later)
 node_modules/
+
+# Claude Code runtime artifacts (per-session)
+.claude/scheduled_tasks.lock
