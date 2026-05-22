@@ -1,0 +1,19 @@
+.gitignore
+  s_ae01946246f021::t_cf13369107068e 11-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "2391c2562a048df34de9deec912ce5c7d7aad119",
+  "prompts": {},
+  "sessions": {
+    "s_ae01946246f021": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3df9d2ba-b116-4087-bce3-f95dd3852687",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
