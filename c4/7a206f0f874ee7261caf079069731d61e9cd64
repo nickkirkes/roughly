@@ -1,0 +1,30 @@
+skills/upgrade/SKILL.md
+  s_ae01946246f021::t_41fb52da8d8242 62
+  s_ae01946246f021::t_be4f9ff6ec841f 44
+  s_ae01946246f021::t_f94b59bf1df7b6 64
+  s_ae01946246f021::t_fd2c13bd27877b 26
+.roughly/plans/E04-S2-marker-aware-resume-reporting-plan.md
+  s_ae01946246f021::t_76af8f8e20a4df 11
+  s_ae01946246f021::t_76fe6abfcd7c5e 190-191
+  s_ae01946246f021::t_e56b9eadbfc3a8 159-160,162
+  s_ae01946246f021::t_8b93c181d57f5a 85
+  s_ae01946246f021::t_0e7eb59ecf1ec4 1-10,12-84,86-158,161,163-189,192-227
+CHANGELOG.md
+  s_ae01946246f021::t_3cd908882bdbad 9-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "c47a206f0f874ee7261caf079069731d61e9cd64",
+  "prompts": {},
+  "sessions": {
+    "s_ae01946246f021": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3df9d2ba-b116-4087-bce3-f95dd3852687",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
