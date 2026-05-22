@@ -67,9 +67,9 @@ else
   fi
 fi
 
-# plan-mode-gate hook-pair byte-identity
-# (verify-all-stop-hook.sh.template ↔ dogfood verify-all.sh divergence is intentional — see CONTRIBUTING.md
-# "Stop hook drift checks" section citing E03.S2.)
+# plan-mode-gate hook-pair byte-identity.
+# Note: a DIFFERENT pair — verify-all-stop-hook.sh.template ↔ dogfood verify-all.sh —
+# is intentionally NOT checked here (per E03.S2; see CONTRIBUTING.md "Stop hook drift checks").
 if [ -f .claude/hooks/plan-mode-gate.sh ] && [ -f skills/setup/templates/plan-mode-gate.sh.template ]; then
   if ! diff -q .claude/hooks/plan-mode-gate.sh skills/setup/templates/plan-mode-gate.sh.template >/dev/null 2>&1; then
     issues="${issues}- plan-mode-gate hook drift: .claude/hooks/plan-mode-gate.sh and skills/setup/templates/plan-mode-gate.sh.template differ (run \`diff\` for details)\n"
