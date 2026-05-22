@@ -71,13 +71,17 @@ else
   fi
 fi
 
-# plan-mode-gate hook-pair byte-identity.
+# plan-mode-gate hook-pair presence + byte-identity.
+# Both files MUST exist in this plugin source repo; missing either is a structural break
+# (plan-mode protection silently unregistered — the failure mode ADR-009 was written to prevent).
 # Note: a DIFFERENT pair — verify-all-stop-hook.sh.template ↔ dogfood verify-all.sh —
 # is intentionally NOT checked here (per E03.S2; see CONTRIBUTING.md "Stop hook drift checks").
-if [ -f .claude/hooks/plan-mode-gate.sh ] && [ -f skills/setup/templates/plan-mode-gate.sh.template ]; then
-  if ! diff -q .claude/hooks/plan-mode-gate.sh skills/setup/templates/plan-mode-gate.sh.template >/dev/null 2>&1; then
-    issues="${issues}- plan-mode-gate hook drift: .claude/hooks/plan-mode-gate.sh and skills/setup/templates/plan-mode-gate.sh.template differ (run \`diff\` for details)\n"
-  fi
+if [ ! -f skills/setup/templates/plan-mode-gate.sh.template ]; then
+  issues="${issues}- plan-mode-gate template missing: skills/setup/templates/plan-mode-gate.sh.template — Check 2 canonical source absent\n"
+elif [ ! -f .claude/hooks/plan-mode-gate.sh ]; then
+  issues="${issues}- plan-mode-gate hook missing: .claude/hooks/plan-mode-gate.sh — plan-mode protection may be unregistered\n"
+elif ! diff -q .claude/hooks/plan-mode-gate.sh skills/setup/templates/plan-mode-gate.sh.template >/dev/null 2>&1; then
+  issues="${issues}- plan-mode-gate hook drift: .claude/hooks/plan-mode-gate.sh and skills/setup/templates/plan-mode-gate.sh.template differ (run \`diff\` for details)\n"
 fi
 
 # .roughly/known-pitfalls.md organize-suggestion threshold (closes E03.S3 manual-edit coverage gap).
