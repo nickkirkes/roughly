@@ -21,26 +21,48 @@ Reference: `docs/planning/epics/E04-path-consolidation-and-process-codification.
 **Details:**
 - Insertion: replace the existing blank line at L40 with the block below (a new blank line is preserved at the end so subsequent blocks insert cleanly).
 - The block must:
-  - Use a pipeline `{ <loop>; <fixture md5sum>; } | sort -u | grep -cv '^$'` to count unique hashes across 7 skills + fixture (8 inputs total).
-  - Hash the awk-extracted block per skill: `awk '/<!-- pre-flight:start -->/,/<!-- pre-flight:end -->/' "skills/${skill}/SKILL.md" 2>/dev/null | md5sum | awk '{print $1}'`. The trailing `awk '{print $1}'` extracts the hash field so the fixture's filename column (`<hash>  tests/fixtures/...`) does not differ from the pipe column (`<hash>  -`) at `sort -u`.
+  - Use a pipeline `{ <loop>; <fixture shasum>; } | sort -u | grep -cv '^$'` to count unique hashes across 7 skills + fixture (8 inputs total).
+  - Hash the awk-extracted block per skill: `awk '/<!-- pre-flight:start -->/,/<!-- pre-flight:end -->/' "skills/${skill}/SKILL.md" | "$PREFLIGHT_SHA" | awk '{print $1}'`. The trailing `awk '{print $1}'` extracts the hash field so the fixture's filename column (`<hash>  tests/fixtures/...`) does not differ from the pipe column (`<hash>  -`) at `sort -u`.
   - List the 7 hard-abort skill names inline: `audit-epic build fix review review-plan review-epic verify-all` (setup is excluded by design — see leading comment).
+  - Use `shasum` (Perl-based, default on macOS + full Linux distros) with `sha1sum` fallback (coreutils, present on BusyBox/Alpine minimal containers). Detect at script setup via `PREFLIGHT_SHA=$(command -v shasum 2>/dev/null || command -v sha1sum 2>/dev/null)`. `md5sum` is NOT portable — macOS does not ship it (only `md5`, which has different output format).
+  - Guard fixture-existence at the top of the block; if fixture missing, emit a directed `- pre-flight canonical fixture missing: ... — Check 1 cannot run\n` drift entry and skip the pipeline (silent-failure mitigation: empty-input hashes collapse in `sort -u`).
+  - Guard hash-tool availability; if both shasum and sha1sum absent, emit `- pre-flight check tooling unavailable: neither shasum nor sha1sum on PATH — Check 1 cannot run\n`.
+  - Guard per-skill marker presence (detect empty awk extraction before hashing); if any skill is missing pre-flight markers, emit a directed `- pre-flight markers missing in skills: <list>\n` instead of running the hash comparison (diagnostic precision over generic drift).
   - Emit drift entry on `unique_preflight != 1` using AC1.2 verbatim format: `- pre-flight wording drift: ${unique_preflight} unique blocks across 7 hard-abort skills (expected 1)\n`
-- Exact block to insert (replaces the existing L40 blank line; preserves a trailing blank line):
+- Exact block to insert (replaces the existing L40 blank line; preserves a trailing blank line). **Note:** the version below reflects the as-built state after Stage 6 review (silent-failure-hunter Critical → fixture-existence + per-file marker guards + empty-block detection) and Stage 8 cubic review (P1 macOS portability → shasum with sha1sum fallback + tooling-unavailable branch):
 
 ```bash
 # Pre-flight wording byte-identity across 7 hard-abort skills
 # (Canonical source: tests/fixtures/canonical-preflight-block.txt.
 # setup/SKILL.md uses a soft-abort form by design and is excluded — see .roughly/known-pitfalls.md.)
-unique_preflight=$(
-  {
-    for skill in audit-epic build fix review review-plan review-epic verify-all; do
-      awk '/<!-- pre-flight:start -->/,/<!-- pre-flight:end -->/' "skills/${skill}/SKILL.md" 2>/dev/null | md5sum | awk '{print $1}'
-    done
-    md5sum tests/fixtures/canonical-preflight-block.txt 2>/dev/null | awk '{print $1}'
-  } | sort -u | grep -cv '^$'
-)
-if [ "$unique_preflight" -ne 1 ]; then
-  issues="${issues}- pre-flight wording drift: ${unique_preflight} unique blocks across 7 hard-abort skills (expected 1)\n"
+# Uses `shasum` (default on macOS + full Linux distros); falls back to `sha1sum`
+# (default on BusyBox/Alpine and other minimal containers without Perl).
+PREFLIGHT_SHA=$(command -v shasum 2>/dev/null || command -v sha1sum 2>/dev/null)
+if [ ! -f tests/fixtures/canonical-preflight-block.txt ]; then
+  issues="${issues}- pre-flight canonical fixture missing: tests/fixtures/canonical-preflight-block.txt — Check 1 cannot run\n"
+elif [ -z "$PREFLIGHT_SHA" ]; then
+  issues="${issues}- pre-flight check tooling unavailable: neither shasum nor sha1sum on PATH — Check 1 cannot run\n"
+else
+  preflight_missing_markers=""
+  for skill in audit-epic build fix review review-plan review-epic verify-all; do
+    block=$(awk '/<!-- pre-flight:start -->/,/<!-- pre-flight:end -->/' "skills/${skill}/SKILL.md" 2>/dev/null)
+    [ -z "$block" ] && preflight_missing_markers="${preflight_missing_markers}${skill} "
+  done
+  if [ -n "$preflight_missing_markers" ]; then
+    issues="${issues}- pre-flight markers missing in skills: ${preflight_missing_markers% }\n"
+  else
+    unique_preflight=$(
+      {
+        for skill in audit-epic build fix review review-plan review-epic verify-all; do
+          awk '/<!-- pre-flight:start -->/,/<!-- pre-flight:end -->/' "skills/${skill}/SKILL.md" | "$PREFLIGHT_SHA" | awk '{print $1}'
+        done
+        "$PREFLIGHT_SHA" tests/fixtures/canonical-preflight-block.txt | awk '{print $1}'
+      } | sort -u | grep -cv '^$'
+    )
+    if [ "$unique_preflight" -ne 1 ]; then
+      issues="${issues}- pre-flight wording drift: ${unique_preflight} unique blocks across 7 hard-abort skills (expected 1)\n"
+    fi
+  fi
 fi
 
 ```
@@ -277,7 +299,7 @@ The file is currently at 90 lines (already > 80) per discovery §4. Check 3 is *
 **Watch for:**
 - Word-cap regression on `agents/doc-writer.md` (already at 542/500 over cap; T4 adds ~17 words). The hook's agent word cap check (L27–31) will continue to emit a drift entry for this file — pre-existing, not regressed by E04.S5. Document in PR description that the doc-writer.md cap violation is inherited from E04.S8 (Path B acceptance).
 - Hook line cap (AC6 soft 150): projected ~85–90 post-T3. Stays well under cap.
-- `set -e` is deliberately absent from `verify-all.sh` per known-pitfall L26–28. Do NOT add `set -e`, `set -u`, or `set -o pipefail`. New blocks tolerate subcommand failures gracefully (existence guards + `2>/dev/null` on awk/md5sum).
+- `set -e` is deliberately absent from `verify-all.sh` per known-pitfall L26–28. Do NOT add `set -e`, `set -u`, or `set -o pipefail`. New blocks tolerate subcommand failures gracefully (existence guards + `2>/dev/null` on awk; hash command detected dynamically via `command -v`).
 - Check 3 fires immediately on the current 90-line `.roughly/known-pitfalls.md`. This is correct behavior (it closes the manual-edit gap by design), but contributors will see drift on every Claude turn until the next organize pass. Document in PR description.
 - Bash quoting in T2's drift entry: literal backticks around `diff` must be escaped to avoid command substitution. The plan specifies `\`diff\`` form (single backslash before each backtick) within the double-quoted assignment.
 

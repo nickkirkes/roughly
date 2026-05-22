@@ -41,9 +41,13 @@ fi
 # Pre-flight wording byte-identity across 7 hard-abort skills
 # (Canonical source: tests/fixtures/canonical-preflight-block.txt.
 # setup/SKILL.md uses a soft-abort form by design and is excluded — see .roughly/known-pitfalls.md.)
-# Uses `shasum` (cross-platform: macOS ships it by default; Linux provides it via perl/coreutils).
+# Uses `shasum` (default on macOS + full Linux distros); falls back to `sha1sum`
+# (default on BusyBox/Alpine and other minimal containers without Perl).
+PREFLIGHT_SHA=$(command -v shasum 2>/dev/null || command -v sha1sum 2>/dev/null)
 if [ ! -f tests/fixtures/canonical-preflight-block.txt ]; then
   issues="${issues}- pre-flight canonical fixture missing: tests/fixtures/canonical-preflight-block.txt — Check 1 cannot run\n"
+elif [ -z "$PREFLIGHT_SHA" ]; then
+  issues="${issues}- pre-flight check tooling unavailable: neither shasum nor sha1sum on PATH — Check 1 cannot run\n"
 else
   preflight_missing_markers=""
   for skill in audit-epic build fix review review-plan review-epic verify-all; do
@@ -56,9 +60,9 @@ else
     unique_preflight=$(
       {
         for skill in audit-epic build fix review review-plan review-epic verify-all; do
-          awk '/<!-- pre-flight:start -->/,/<!-- pre-flight:end -->/' "skills/${skill}/SKILL.md" | shasum | awk '{print $1}'
+          awk '/<!-- pre-flight:start -->/,/<!-- pre-flight:end -->/' "skills/${skill}/SKILL.md" | "$PREFLIGHT_SHA" | awk '{print $1}'
         done
-        shasum tests/fixtures/canonical-preflight-block.txt | awk '{print $1}'
+        "$PREFLIGHT_SHA" tests/fixtures/canonical-preflight-block.txt | awk '{print $1}'
       } | sort -u | grep -cv '^$'
     )
     if [ "$unique_preflight" -ne 1 ]; then
