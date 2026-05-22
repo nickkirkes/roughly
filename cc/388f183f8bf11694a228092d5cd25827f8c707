@@ -1,0 +1,27 @@
+scripts/ci-dogfood.sh
+  s_b305bfd5bfab30::t_8345e725d61d06 140
+  s_b305bfd5bfab30::t_c0610884fc5391 74
+  s_b305bfd5bfab30::t_26a0a829dcd79d 23-28
+  s_b305bfd5bfab30::t_4ecc6947e24d4b 13-22
+  s_b305bfd5bfab30::t_aa33710f71e036 100
+.roughly/plans/E04-S9-ci-dogfood-polish-plan.md
+  s_b305bfd5bfab30::t_4dfe3053ad7c57 1-173
+CONTRIBUTING.md
+  s_b305bfd5bfab30::t_092f852ecdb780 134-135
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "cc388f183f8bf11694a228092d5cd25827f8c707",
+  "prompts": {},
+  "sessions": {
+    "s_b305bfd5bfab30": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "328a1e5b-3599-4f66-9679-c7862e27682d",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
