@@ -1,0 +1,21 @@
+.claude/hooks/verify-all.sh
+  s_849f1d5eb2e750::t_01e26b2ba395b8 70-72
+CONTRIBUTING.md
+  s_849f1d5eb2e750::t_724185f15b4e67 143
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "b3c5b9fcb8d2431a02bd90c42cfa47421a4308f1",
+  "prompts": {},
+  "sessions": {
+    "s_849f1d5eb2e750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a32a0a28-8c13-452f-bccd-a56039b3afab",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
