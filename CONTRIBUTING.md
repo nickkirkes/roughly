@@ -131,6 +131,20 @@ CI cost is a non-trivial release-cost driver at high PR push frequency — flag 
 
 **Auth.** Requires the `ANTHROPIC_API_KEY` repo secret (Settings → Secrets and variables → Actions). The smoke step consumes the secret via a step-scoped `env:` mapping on `Run dogfood scaffolding`; the auth-failure negative-test step uses a deliberately-invalid placeholder, also step-scoped. The real secret is never exposed at workflow-global scope.
 
+## Stop hook drift checks
+
+`.claude/hooks/verify-all.sh` runs as a non-blocking Stop hook after every Claude turn (always exits 0, informational only — see `skills/setup/templates/verify-all-stop-hook.sh.template` header). It enforces seven structural invariants:
+
+1. **Path drift** — `agents/` files must not reference legacy `.ruckus/known-pitfalls`.
+2. **Skill line cap** — every `skills/*/SKILL.md` stays ≤ 300 lines.
+3. **Agent word cap** — every `agents/*.md` stays ≤ 500 words.
+4. **HTML comment integrity** — `agents/agent-preamble.md` contains exactly one `<!--` opener and one `-->` closer.
+5. **Pre-flight wording byte-identity across 7 hard-abort skills** — `audit-epic`, `build`, `fix`, `review`, `review-plan`, `review-epic`, `verify-all` must have byte-identical pre-flight migration check blocks (canonical source: `tests/fixtures/canonical-preflight-block.txt`). `skills/setup/SKILL.md` uses an intentionally-divergent soft-abort form and is excluded.
+6. **`plan-mode-gate` hook-pair presence + byte-identity** — `.claude/hooks/plan-mode-gate.sh` and `skills/setup/templates/plan-mode-gate.sh.template` must both exist and be byte-identical. Missing either file is itself drift (plan-mode protection would be silently unregistered, the failure mode ADR-009 was written to prevent). **A separate, unrelated pair — `verify-all-stop-hook.sh.template` ↔ dogfood `verify-all.sh` — is intentionally NOT enforced** (different files, different purpose): per `docs/planning/epics/complete/E03-trust-and-ergonomics.md` section `#### E03.S2: Stop-hook-v1 maturity check completion` under `### Trust hardening cluster`, the dogfood "stays as-is (project-specific drift checks for the plugin's own development); this story produces a separate, project-agnostic template."
+7. **`.roughly/known-pitfalls.md` organize threshold** — fires when `wc -l > PITFALLS_ORGANIZE_THRESHOLD` (currently 80). The matching policy parameter lives in `agents/doc-writer.md` Process step 5 ("Organize suggestion") — bidirectional sync comments name each consumer.
+
+Checks 1–4 are pre-existing (S2-era structural invariants). Checks 5–7 land in E04.S5 as a coverage-completion bundle.
+
 ## License
 
 By contributing, you agree that your contributions will be licensed under the MIT License.
