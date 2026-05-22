@@ -1,0 +1,24 @@
+.claude/hooks/verify-all.sh
+  s_849f1d5eb2e750::t_126ef1e6a4f266 44-46,49-50,63,65
+agents/doc-writer.md
+  s_849f1d5eb2e750::t_f0907648c06395 33
+.roughly/plans/E04-S5-stop-hook-drift-coverage-expansion-plan.md
+  s_849f1d5eb2e750::t_56321a93c24eb7 24-25,27-30,32,38-65
+  s_849f1d5eb2e750::t_1da6aaec5af111 302
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "49c6aa183f27ef08f07fb0fa02f4ee5b518fa0d7",
+  "prompts": {},
+  "sessions": {
+    "s_849f1d5eb2e750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a32a0a28-8c13-452f-bccd-a56039b3afab",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
