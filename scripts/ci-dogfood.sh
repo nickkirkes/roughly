@@ -10,6 +10,22 @@ if [ -z "$ROOT" ] || [ ! -f "$ROOT/.claude-plugin/plugin.json" ]; then
   exit 1
 fi
 
+# Portability: select timeout binary (Linux uses 'timeout'; macOS via coreutils uses 'gtimeout').
+if command -v timeout >/dev/null 2>&1; then
+  TIMEOUT=timeout
+elif command -v gtimeout >/dev/null 2>&1; then
+  TIMEOUT=gtimeout
+else
+  echo "ci-dogfood: FAIL — no timeout binary available (install coreutils on macOS via 'brew install coreutils')" >&2
+  exit 1
+fi
+
+# Guard: ANTHROPIC_API_KEY must be set (the ${VAR:-} form is required because `set -u` is active above).
+if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+  echo "ci-dogfood: FAIL — ANTHROPIC_API_KEY not set or empty (configure in GitHub Settings → Secrets and variables → Actions, or export for local repro)" >&2
+  exit 1
+fi
+
 # Resolve SHA (CI provides $GITHUB_SHA; locally, derive from HEAD)
 SHA="${GITHUB_SHA:-$(git -C "$ROOT" rev-parse HEAD)}"
 
@@ -55,7 +71,7 @@ cd "$WORKTREE"
 # Without it, `set -e` would kill the script at the assignment on any
 # non-zero exit (timeout 124, auth failure, budget breach), producing a
 # bare exit with no diagnostic instead of the FAIL message below.
-SMOKE_OUT="$(timeout 25 claude --bare --plugin-dir "$WORKTREE" \
+SMOKE_OUT="$($TIMEOUT 25 claude --bare --plugin-dir "$WORKTREE" \
   --no-session-persistence --max-budget-usd 0.05 \
   -p "respond with the literal string ok" 2>&1)" && SMOKE_EXIT=0 || SMOKE_EXIT=$?
 if [ "$SMOKE_EXIT" = 124 ]; then
@@ -81,7 +97,7 @@ fi
 # flag in -p mode, so this is the most reliable approximation. The
 # /roughly:setup anchor is the deterministic plugin-load proof:
 # if it appears in the response, --plugin-dir was honored.
-PLUGIN_OUT="$(timeout 25 claude --bare --plugin-dir "$WORKTREE" \
+PLUGIN_OUT="$($TIMEOUT 25 claude --bare --plugin-dir "$WORKTREE" \
   --no-session-persistence --max-budget-usd 0.05 \
   -p "List each of your available slash commands on a separate line with the / prefix. Do not include any other text." 2>&1)" && PLUGIN_EXIT=0 || PLUGIN_EXIT=$?
 if [ "$PLUGIN_EXIT" = 124 ]; then
@@ -121,7 +137,7 @@ cd "$WORKTREE/tests/fixtures/hello-roughly"
 
 # 1.50 USD ≈ ~150K mixed Sonnet tokens at current pricing (3/M in + 15/M
 # out, ~80/20 mix). Recompute if pricing changes.
-SCENARIO_OUT="$(timeout 270 claude --bare --plugin-dir "$WORKTREE" \
+SCENARIO_OUT="$($TIMEOUT 270 claude --bare --plugin-dir "$WORKTREE" \
   --no-session-persistence --max-budget-usd 1.50 \
   -p "/roughly:build --ci add a NAME constant to src/greeter.sh and update the echo to use it" 2>&1)" \
   && SCENARIO_EXIT=0 || SCENARIO_EXIT=$?

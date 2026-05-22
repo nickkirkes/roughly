@@ -131,6 +131,8 @@ CI cost is a non-trivial release-cost driver at high PR push frequency — flag 
 
 **Auth.** Requires the `ANTHROPIC_API_KEY` repo secret (Settings → Secrets and variables → Actions). The smoke step consumes the secret via a step-scoped `env:` mapping on `Run dogfood scaffolding`; the auth-failure negative-test step uses a deliberately-invalid placeholder, also step-scoped. The real secret is never exposed at workflow-global scope.
 
+macOS contributors running `scripts/ci-dogfood.sh` locally need `gtimeout` from `brew install coreutils`.
+
 ## Stop hook drift checks
 
 `.claude/hooks/verify-all.sh` runs as a non-blocking Stop hook after every Claude turn (always exits 0, informational only — see `skills/setup/templates/verify-all-stop-hook.sh.template` header). It enforces seven structural invariants:
