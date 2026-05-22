@@ -1,0 +1,21 @@
+CHANGELOG.md
+  s_ae01946246f021::t_ef5430d056e196 9
+skills/upgrade/SKILL.md
+  s_ae01946246f021::t_e8197c9427a428 62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "04e299657c0f7e39a6c1913ce670d31977f5f80d",
+  "prompts": {},
+  "sessions": {
+    "s_ae01946246f021": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3df9d2ba-b116-4087-bce3-f95dd3852687",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
