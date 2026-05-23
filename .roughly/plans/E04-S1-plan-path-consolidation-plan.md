@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit 49398753401448d2c1c3cc1fe1a41f80937cf625 on 2026-05-20. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E04.S1 — Plan-path consolidation `docs/plans/` → `.roughly/plans/`
 
 Plan-format-version: 1

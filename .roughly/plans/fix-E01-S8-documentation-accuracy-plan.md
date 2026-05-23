@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit d6714710b9c1aff7f9bc370c1f733f151615d237 on 2026-04-27. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Fix Plan: E01.S8 — Documentation Accuracy
 
 ## Root Cause

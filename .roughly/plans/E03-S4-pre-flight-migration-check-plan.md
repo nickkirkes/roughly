@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit b3a6750fddb3abf13dee12cceb815ad464f89886 on 2026-05-07. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E03.S4 — Pre-flight migration check in remaining 2 skills
 
 ## File Table

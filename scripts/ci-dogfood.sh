@@ -193,6 +193,17 @@ if ! grep -qE '^### T1' "$PLAN_FILE"; then
   exit 1
 fi
 
+# Assertion 5: plan file's first line is the Status block marker (proves
+# the new Stage 8 plan-historical-marking step ran — E04.S3). The block
+# format is fully specified per CONTRIBUTING.md "Plan-file lifecycle";
+# this assertion only checks the opening marker pattern, not the SHA or
+# date fields (those are runtime-dependent).
+if ! head -1 "$PLAN_FILE" | grep -qE '^> \*\*Status:\*\* Historical'; then
+  echo "ci-dogfood: FAIL — plan file at $PLAN_FILE missing Status block on first line (expected '> **Status:** Historical — ...'; the build skill's new Stage 8 step 4 may not have run, or the block was inserted elsewhere)" >&2
+  sed 's/^/    /' "$PLAN_FILE" >&2
+  exit 1
+fi
+
 # Assertion 5a: NAME= assignment present at line start (proves the constant
 # was added as a real assignment). Line-start anchor with optional indent
 # and optional `readonly`/`export` prefix — rejects comment lines like
@@ -244,7 +255,7 @@ if grep -qE '^[[:space:]]*echo[[:space:]]+"hello"[[:space:]]*($|[#;&|<>])' "$WOR
   exit 1
 fi
 
-echo "ci-dogfood: full-scenario — all 6 structural assertions passed"
+echo "ci-dogfood: full-scenario — all 7 structural assertions passed"
 
 # Post-state check: confirm no source-tree pollution
 POST_STATE="$(git -C "$ROOT" status --porcelain)"

@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit 74c64529d3e426c613e47e4b1f84e5699e3b6b2a on 2026-04-27. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E01.S5 Agent Preamble Drift Documentation and Detection
 
 ## File Table

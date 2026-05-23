@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit fd22bfb8e6de8f7cafa74b5297f4342a6c160347 on 2026-04-25. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: S2 — Pipeline Loop Caps
 
 ## Context

@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit f73466b6b80185be4abe9145c32044bfae2e7d2c on 2026-05-08. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E03.S11a Plugin self-test CI scaffolding
 
 Plan-format-version: 1

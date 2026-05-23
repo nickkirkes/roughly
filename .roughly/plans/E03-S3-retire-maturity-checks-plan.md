@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit 48c9f9a3ef45809d4c0c11de877d22562253af38 on 2026-05-04. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E03.S3 — Retire test-verify-v1 and pitfalls-organized-v1
 
 **Story:** [docs/planning/epics/E03-trust-and-ergonomics.md](../planning/epics/E03-trust-and-ergonomics.md) lines 226-261

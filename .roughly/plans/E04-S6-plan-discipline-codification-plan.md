@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit 9a18161f8087240a436a5d56d7cf592f95dd0936 on 2026-05-15. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E04.S6 — Plan-discipline codification
 
 Plan-format-version: 1

@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit 2a4dfdcb85abb9b88aeaf2defdb7ae6cebde75d5 on 2026-05-12. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E03.S9 — Situation-specific abort prose at every pipeline failure point
 
 Plan-format-version: 1

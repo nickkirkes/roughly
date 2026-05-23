@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit e5d630fcebab60649584034bd935cdcf54270df6 on 2026-05-01. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E03.S0 — Plan-mode detection spike
 
 Plan-format-version: 1

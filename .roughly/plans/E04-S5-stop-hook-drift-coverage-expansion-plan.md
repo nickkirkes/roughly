@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit bd8e37cacbcf8f45008a156e5ed2eaa391a3b5a3 on 2026-05-21. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E04.S5 Stop Hook Drift Coverage Expansion
 
 Plan-format-version: 1

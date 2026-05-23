@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit f3ff1ed149c4e3b811462caad746c02d1d79ffcf on 2026-05-22. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E04.S9 — CI dogfood polish (macOS `gtimeout` + `ANTHROPIC_API_KEY` empty-guard)
 
 Plan-format-version: 1
