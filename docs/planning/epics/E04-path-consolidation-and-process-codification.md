@@ -160,14 +160,16 @@ Stories are grouped by cluster. Sequencing — which is by dependency, not clust
 
 **Maps to v0.1.6 candidate:** "Plan-file self-marking historical at completion (S8 deferral)"
 
-**Context:** S8 retrospective surfaced that plan files become stale post-implementation — cubic reads them as active instructions; root cause for two late P2 findings during S8 review. S8's one-off mitigation was an explicit Status block at the top of `.roughly/plans/E03-S8-help-command-plan.md` (post-rename per E04.S1). Generalize: every implementation plan self-marks historical at completion. Right insertion point is build/fix Stage 7 (commit + wrap-up) — when the implementation is done, the orchestrator prepends a Status block to the plan before the final commit.
+**Context:** S8 retrospective surfaced that plan files become stale post-implementation — cubic reads them as active instructions; root cause for two late P2 findings during S8 review. S8's one-off mitigation was an explicit Status block at the top of `.roughly/plans/E03-S8-help-command-plan.md` (post-rename per E04.S1). Generalize: every implementation plan self-marks historical at completion. Right insertion point is build/fix **Stage 8 (WRAP-UP)** via a **2-commit pattern** — commit 1 lands the implementation; commit 2 prepends the Status block referencing commit 1's SHA. (PM-time draft said "Stage 7 (commit + wrap-up)" and "before the final commit" — both incorrect against the actual stage numbering and against the single-commit-can't-reference-its-own-SHA constraint; corrected post-S3 ship.)
 
-**Files touched:**
-- `skills/build/SKILL.md` — Stage 7 prose addition instructing the orchestrator to prepend a Status block to the plan before the final wrap-up commit. ~3–4 net lines projected.
-- `skills/fix/SKILL.md` — same Stage 7 addition. ~3–4 net lines.
-- `CONTRIBUTING.md` — short subsection documenting the Status block format under existing `## Plan files`-style prose (or new subsection) so future contributors recognize it.
-- `.roughly/plans/*.md` (post-E04.S1) — all 25 existing historical plans get retro-marked with the Status block via a one-shot Edit sweep in the same PR.
-- **Not delegated to doc-writer.** Decision at PM time: keep the marking in Stage 7's inline prose rather than dispatching doc-writer. Rationale: doc-writer's current Process steps are organize-suggestion + test-integration suggestion (conditional on a known-pitfalls.md write); plan-historical-marking is unconditional on every successful build/fix completion. Different trigger surface, different conditional shape — inline is cleaner.
+**Files touched (final, post-S3 ship):**
+- `skills/build/SKILL.md` — **Stage 8 step 4** prose addition instructing the orchestrator to use the 2-commit pattern: capture `IMPL_SHA=$(git rev-parse HEAD)` post-implementation commit, prepend Status block via `Edit`, separate commit for the marking. +1 net line (298 → 299).
+- `skills/fix/SKILL.md` — same Stage 8 step 4 addition. +1 net line (299 → 300, **AT CAP**).
+- `CONTRIBUTING.md` — `## Plan-file lifecycle` subsection between `## Migration` and `## Testing` documenting the Status block format AND the `head -1 | grep -qE` verify pattern (24 lines, expanded from PM-draft 10–15 to accommodate the `grep -L` false-positive documentation surfaced by cycle-1 review).
+- `scripts/ci-dogfood.sh` — new Assertion 5 (`head -1 "$PLAN_FILE" | grep -qE '^> \*\*Status:\*\* Historical'`); structural-assertion count 6 → 7.
+- `.roughly/plans/*.md` (post-E04.S1) — **34 historical plans** retro-marked with the Status block via per-file `Edit` sweep (33 pre-S3 + S3's own via the new Stage 8 step 4 — bootstrap of the 2-commit pattern). PM draft said "25" based on pre-S2/S5/S7/S8/S9 count; the +9 plans (S1, S2, S4, S5, S6, S7, S8, S9 plans + a fix plan) landed during v0.1.6 implementation between epic-write and S3 dispatch.
+- `.roughly/known-pitfalls.md` L112 — new `grep -L` false-positive pitfall captured post-cycle-1.
+- **Not delegated to doc-writer.** Decision at PM time held: marking stays in Stage 8 step 4's inline prose rather than dispatching doc-writer. Rationale: doc-writer's current Process steps are organize-suggestion + test-integration suggestion (conditional on a known-pitfalls.md write); plan-historical-marking is unconditional on every successful build/fix completion. Different trigger surface, different conditional shape — inline is cleaner.
 
 **Acceptance criteria:**
 
