@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit b22144f969f36b9ae5ac510fca7c3bbf682a67a0 on 2026-05-08. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E03.S6 — Plan-format version field
 
 Plan-format-version: 1

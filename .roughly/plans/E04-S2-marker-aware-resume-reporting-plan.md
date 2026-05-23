@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit 9dddf9d08f9cdda5edeff43394fe1a9f5f880ec8 on 2026-05-22. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E04.S2 — Marker-aware resume reporting in `/roughly:upgrade`
 
 Plan-format-version: 1

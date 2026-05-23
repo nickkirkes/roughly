@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit 0099afedc967434e256218a0047a6c6cafa343f0 on 2026-05-13. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Fix Plan: E03 audit doc-hygiene findings
 
 Plan-format-version: 1

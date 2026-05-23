@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit b58f4bd4e6d495c748e3301be048a7770d9aac01 on 2026-05-07. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E03.S5 — Tooling Pitfalls section in CONTRIBUTING.md
 
 ## File Table

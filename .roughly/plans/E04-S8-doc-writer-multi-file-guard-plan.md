@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit ecae83fd6ad54ae6759f40c6feff9c8eda40f658 on 2026-05-18. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E04.S8 — doc-writer multi-file-invocation guard
 
 Plan-format-version: 1

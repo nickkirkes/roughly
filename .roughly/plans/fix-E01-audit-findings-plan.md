@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit cea271f97857f061a3aec91c436cc1b8c08af3d9 on 2026-04-28. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Fix Plan: E01 Audit Findings + Upgrade Agent Installation Bug
 
 ## Root Cause

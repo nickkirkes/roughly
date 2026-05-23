@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit 5bf8f3623e70ff2e29ae09104fc5598e3f60618d on 2026-05-11. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E03.S10 — Retry-loop tuning
 
 **Story:** E03.S10 (docs/planning/epics/E03-trust-and-ergonomics.md#L581-L641)

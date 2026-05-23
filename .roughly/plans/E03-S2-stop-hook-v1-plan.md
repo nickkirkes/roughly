@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit a3d7afcecbdd7869b275f77e80f5e8983059286f on 2026-05-06. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E03.S2 — Stop-hook-v1 maturity check completion
 
 **Plan format version:** 1

@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit 78c9ff2b8133a2f35486babb232576a3e0d30b06 on 2026-05-10. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E03.S11b-2 Scripted dogfood happy-path build cycle
 
 Plan-format-version: 1

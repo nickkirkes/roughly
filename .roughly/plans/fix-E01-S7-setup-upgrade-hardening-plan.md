@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit d50316fc9df8a727ec739825a7dbceb9507317ac on 2026-04-27. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Fix Plan: E01.S7 — Setup and Upgrade Hardening
 
 ## Root Cause

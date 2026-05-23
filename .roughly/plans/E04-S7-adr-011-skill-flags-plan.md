@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit b92e16f13220c80dca5f996a2d7f5d270d5f930a on 2026-05-15. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E04.S7 — ADR-011 Skill Flags as Public API
 
 Plan-format-version: 1

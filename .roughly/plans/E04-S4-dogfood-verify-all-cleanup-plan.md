@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit 301786153c2a904fc6e756d333052492928ca7c8 on 2026-05-14. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E04.S4 — Dogfood `.claude/hooks/verify-all.sh` cleanup
 
 ## Summary

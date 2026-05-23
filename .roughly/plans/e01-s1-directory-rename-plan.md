@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit 9a22ac156c7df51f04ebefd95b72266bed463ac9 on 2026-04-25. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E01.S1 — Rename `docs/claude/` to `.ruckus/`
 
 ## File Table

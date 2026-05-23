@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit 740ab5f7dfa0f6f51e696114749bc1654340d5ef on 2026-05-13. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E03.S8 — `/roughly:help` command
 
 **Branch:** `feat/E03.S8-help-command`

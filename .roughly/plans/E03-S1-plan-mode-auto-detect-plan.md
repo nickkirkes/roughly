@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit 2ddefac9befa64f59693c2c45d34970ce8f32a1b on 2026-05-03. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E03.S1 — Plan-mode auto-detect/exit at Stage 1 of build/fix
 
 **Story spec:** [docs/planning/epics/E03-trust-and-ergonomics.md:101-154](../planning/epics/E03-trust-and-ergonomics.md)

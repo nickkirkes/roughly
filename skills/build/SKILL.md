@@ -233,8 +233,9 @@ Compact context before wrap-up. Preserve: feature summary, files changed, task c
    Tested: [verification summary]
    ```
 3. Show commit for approval. Commit but do NOT push.
-4. Run maturity checks (see below).
-5. Ask: "Did this work reveal any new pitfalls or conventions for `.roughly/known-pitfalls.md`?" If yes, dispatch `doc-writer` agent.
+4. **Plan historical marking (2nd commit, post-implementation):** Read the plan file from Stage 3 to capture its current first line. Run `IMPL_SHA=$(git rev-parse HEAD)`. Prepend Status block via `Edit` (not `Write` — append-only pitfall; `replace_all: false`): `old_string` = the plan file's first line; `new_string` = literal text `> **Status:** Historical — implemented and merged in commit <SHA> on <YYYY-MM-DD>. This plan was an active build/fix artifact; treat as historical reference only.` (substituting `$IMPL_SHA` for `<SHA>` and today's date in ISO `YYYY-MM-DD` form for `<YYYY-MM-DD>` — the resulting first line MUST NOT contain literal `<SHA>` or `<YYYY-MM-DD>` text), then a blank line, then the original first line. Then `git add <plan-file>` and `git commit -m "docs: mark <feature> plan historical"` (do NOT push; deterministic content — no approval gate needed). On any failure (empty SHA, Edit no-match, commit hook rejection), halt and escalate to the human.
+5. Run maturity checks (see below).
+6. Ask: "Did this work reveal any new pitfalls or conventions for `.roughly/known-pitfalls.md`?" If yes, dispatch `doc-writer` agent.
 
 ---
 

@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit efc4ca0f32d8d4caf981634197f80fd90b8d3d47 on 2026-04-27. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E01.S6 — Audit-epic Token Budget Batching
 
 ## Context

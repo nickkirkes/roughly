@@ -86,6 +86,30 @@ New pitfalls discovered during a build are recorded in `.roughly/known-pitfalls.
 
 v0.1.6 relocated `docs/plans/` to `.roughly/plans/` to consolidate all Roughly runtime state under a single root. Existing projects with historical plans run `/roughly:upgrade` to migrate; `--force-plans` overrides the dirty-tree safety check. Plan files written by the build/fix pipelines now land in `.roughly/plans/<feature>-plan.md`. The pre-flight migration check in the 7 hard-abort skills + setup soft-abort detects either `.ruckus/` or `docs/plans/` legacy state and redirects to `/roughly:upgrade`.
 
+## Plan-file lifecycle
+
+Plan files in `.roughly/plans/` are build/fix pipeline artifacts. Once the pipeline's wrap-up stage completes, the plan is historical reference — not actionable instructions.
+
+At Stage 8 of every successful build/fix run, the orchestrator prepends a Status block to the plan file in a second wrap-up commit:
+
+```
+> **Status:** Historical — implemented and merged in commit <SHA> on <YYYY-MM-DD>. This plan was an active build/fix artifact; treat as historical reference only.
+```
+
+The SHA is the implementation feat commit (parent of the wrap-up commit). The date is the wrap-up date. Format is fully specified — no LLM creative writing.
+
+This signals to external review tools (cubic and similar) that the plan content is historical reference, not actionable instructions. Without it, plan files accumulate as stale prose that cubic reads as live findings during later reviews (the S8 retrospective surfaced this; root cause for two late P2 findings during the S8 review pass).
+
+Existing plans were retro-marked in E04.S3 via a one-shot `Edit` sweep. Each plan's SHA + date came from its first-add commit: `git log --diff-filter=A --follow --format='%H %ad' --date=short -- <plan-file> | tail -1`. The `--follow` flag is required to trace through the E04.S1 rename (`docs/plans/` → `.roughly/plans/`); without it, pre-E04.S1 plans return the rename commit, not the original add.
+
+**Verifying the sweep.** A naïve `grep -L "^> \*\*Status:\*\* Historical" .roughly/plans/*.md` returns false positives because plan files that quote the Status block format in their own bodies (e.g., the E04.S3 plan describes the format) match the pattern anywhere on any line. For accurate first-line-only checks, use:
+
+```bash
+for f in .roughly/plans/*.md; do head -1 "$f" | grep -qE '^> \*\*Status:\*\* Historical' || echo "$f"; done
+```
+
+Each unmarked plan prints its path; a clean sweep prints nothing. The CI dogfood's Assertion 5 uses the same `head -1 | grep -qE` form for the same reason.
+
 ## Testing
 
 There is no automated test suite — this is pure markdown. To verify changes:

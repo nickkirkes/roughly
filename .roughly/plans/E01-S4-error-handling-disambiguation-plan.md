@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit 17cf10a1faf441a1600353482f12fa7d892bb834 on 2026-04-25. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E01.S4 — Error handling disambiguation
 
 ## Context

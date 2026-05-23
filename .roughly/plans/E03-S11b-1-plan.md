@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit ea66e9bc07bc5a87ccf837521e18a8d93abdf50a on 2026-05-08. This plan was an active build/fix artifact; treat as historical reference only.
+
 Plan-format-version: 1
 
 # Implementation Plan: E03.S11b-1 — CLI plumbing smoke test
