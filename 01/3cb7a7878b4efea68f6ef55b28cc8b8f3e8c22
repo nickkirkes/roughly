@@ -1,0 +1,100 @@
+CONTRIBUTING.md
+  s_dd1363162c1174::t_57efe7d342a898 105-112
+  s_dd1363162c1174::t_cc6079ef5dfeee 89-104
+.roughly/plans/e01-s1-directory-rename-plan.md
+  s_dd1363162c1174::t_c56bce61f60fff 1-2
+skills/build/SKILL.md
+  s_dd1363162c1174::t_f1eccf0516e6e6 236
+  s_dd1363162c1174::t_325bb71583114e 237-238
+.roughly/plans/E04-S4-dogfood-verify-all-cleanup-plan.md
+  s_dd1363162c1174::t_2e2dc66f248aee 1-2
+.roughly/plans/E03-S3-retire-maturity-checks-plan.md
+  s_dd1363162c1174::t_4d4fe7ad0671ef 1-2
+.roughly/plans/E04-S8-doc-writer-multi-file-guard-plan.md
+  s_dd1363162c1174::t_40c38ba2452d7a 1-2
+.roughly/plans/E03-S1-plan-mode-auto-detect-plan.md
+  s_dd1363162c1174::t_9326d77d33fc9b 1-2
+.roughly/plans/fix-E03-audit-doc-hygiene-plan.md
+  s_dd1363162c1174::t_c1e5996975f88f 1-2
+.roughly/plans/E03-S10-retry-loop-tuning-plan.md
+  s_dd1363162c1174::t_fbb5b118b5c126 1-2
+.roughly/plans/E01-S4-error-handling-disambiguation-plan.md
+  s_dd1363162c1174::t_a5309ca95b082a 1-2
+.roughly/plans/E03-S0-plan-mode-detection-spike-plan.md
+  s_dd1363162c1174::t_ac58ec00126d53 1-2
+.roughly/plans/S02.7-final-verification-plan.md
+  s_dd1363162c1174::t_4617707aac4e30 1-2
+scripts/ci-dogfood.sh
+  s_dd1363162c1174::t_e25154c314fc5d 258
+  s_dd1363162c1174::t_dc56ff549af39e 196-200,203-206
+  s_dd1363162c1174::t_017d3c792cfce7 201-202
+.roughly/plans/E04-S1-plan-path-consolidation-plan.md
+  s_dd1363162c1174::t_e454ee8b2281da 1-2
+.roughly/plans/e01-s2-pipeline-loop-caps-plan.md
+  s_dd1363162c1174::t_1f1337d5edd25f 1-2
+.roughly/plans/E04-S2-marker-aware-resume-reporting-plan.md
+  s_dd1363162c1174::t_00c79ed7b99154 1-2
+.roughly/plans/E03-S11b-2-scripted-dogfood-happy-path-build-cycle-plan.md
+  s_dd1363162c1174::t_c48d715a33fe9a 1-2
+.roughly/plans/s5-agent-preamble-drift-plan.md
+  s_dd1363162c1174::t_465fe53a6a9b77 1-2
+.roughly/plans/E03-S9-abort-prose-plan.md
+  s_dd1363162c1174::t_e46a7dafcb7c59 1-2
+.roughly/plans/S02.5-documentation-plan.md
+  s_dd1363162c1174::t_ad05df0f6db200 1-2
+.roughly/plans/E03-S11b-1-plan.md
+  s_dd1363162c1174::t_3ae4be555a6f6e 1-2
+skills/fix/SKILL.md
+  s_dd1363162c1174::t_3af3dc3043a872 239
+  s_dd1363162c1174::t_c953bfef62c241 240-241
+.roughly/plans/E03-S6-plan-format-version-field-plan.md
+  s_dd1363162c1174::t_57f1303a149bfb 1-2
+.roughly/plans/E03-S11a-plugin-self-test-ci-scaffolding-plan.md
+  s_dd1363162c1174::t_222c5edf83afa0 1-2
+.roughly/plans/E04-S9-ci-dogfood-polish-plan.md
+  s_dd1363162c1174::t_5bf42870fac4b3 1-2
+.roughly/plans/E04-S7-adr-011-skill-flags-plan.md
+  s_dd1363162c1174::t_3017064a4e9331 1-2
+.roughly/plans/S2.3-agent-preamble-sync-plan.md
+  s_dd1363162c1174::t_372385bf37d13c 1-2
+.roughly/plans/audit-epic-batching-plan.md
+  s_dd1363162c1174::t_2de6f37a60a26e 1-2
+.roughly/plans/fix-E01-S7-setup-upgrade-hardening-plan.md
+  s_dd1363162c1174::t_3837bb60364e4e 1-2
+.roughly/plans/E04-S6-plan-discipline-codification-plan.md
+  s_dd1363162c1174::t_4c7971fd33d14b 1-2
+.roughly/plans/E03-S2-stop-hook-v1-plan.md
+  s_dd1363162c1174::t_7d7b2bfbd7e214 1-2
+.roughly/plans/E04-S5-stop-hook-drift-coverage-expansion-plan.md
+  s_dd1363162c1174::t_1453f0313aa63d 1-2
+.roughly/plans/E03-S4-pre-flight-migration-check-plan.md
+  s_dd1363162c1174::t_a01fca0640a99b 1-2
+.roughly/plans/fix-E01-audit-findings-plan.md
+  s_dd1363162c1174::t_4f11595b2bed50 1-2
+.roughly/plans/E03-S5-tooling-pitfalls-plan.md
+  s_dd1363162c1174::t_0c3f68dc8388e8 1-2
+.roughly/plans/E03-S8-help-command-plan.md
+  s_dd1363162c1174::t_a13aa75e7a3b16 1-2
+.roughly/plans/E04-S3-plan-file-self-marking-plan.md
+  s_dd1363162c1174::t_f712908cd873ac 100,104,108,115,135-136
+  s_dd1363162c1174::t_1573268fa51a31 224,227-229,233,235,237-242,244-246,248-252,254-256,258-271,274,278-279
+  s_dd1363162c1174::t_9ca5a3e5bd7a57 1-99,101-103,105-107,109-114,116-134,137-223,225-226,230-232,234,236,243,247,253,257,272-273,275-277,280-321
+.roughly/plans/fix-E01-S8-documentation-accuracy-plan.md
+  s_dd1363162c1174::t_1a91daea2d9513 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "013cb7a7878b4efea68f6ef55b28cc8b8f3e8c22",
+  "prompts": {},
+  "sessions": {
+    "s_dd1363162c1174": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "92ee5dae-e94b-4470-a09c-04f9db8967f9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
