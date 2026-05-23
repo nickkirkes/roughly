@@ -1,0 +1,19 @@
+.roughly/plans/E04-S3-plan-file-self-marking-plan.md
+  s_dd1363162c1174::t_4f6e2554f6ceb6 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "f964c81db1107f208a9ff01be6fd0d714ac179fc",
+  "prompts": {},
+  "sessions": {
+    "s_dd1363162c1174": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "92ee5dae-e94b-4470-a09c-04f9db8967f9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
