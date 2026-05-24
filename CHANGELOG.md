@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased] — v0.1.6
+## [0.1.6] — 2026-05-24
 
 > Path consolidation + process codification. Scope per [docs/planning/epics/E04-path-consolidation-and-process-codification.md](docs/planning/epics/E04-path-consolidation-and-process-codification.md).
 

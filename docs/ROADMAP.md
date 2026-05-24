@@ -1,6 +1,6 @@
 # Roughly Roadmap
 
-**Current:** v0.1.5 · **Updated:** 2026-05-13
+**Current:** v0.1.6 · **Updated:** 2026-05-24
 
 ## Thesis
 
@@ -13,6 +13,7 @@ Primary user through v1.0: solo dev first, teams second. Team adoption is downst
 | Release | Theme | Effort |
 |---|---|---|
 | v0.1.5 | Trust hardening + ergonomics + CI | 6-7 wk |
+| v0.1.6 | Path consolidation + process codification | ~10 days |
 | v0.2.0 | Cost-aware pipeline (Haiku routing, plan format v2) | 4-5 wk |
 | v0.3.0 | Monorepo support | 6-8 wk |
 | v0.4.0 | Team governance | 4-6 wk |
@@ -78,6 +79,21 @@ PM handoff: detail level sufficient for an epic-writing agent to expand into sto
 - Setup flow changes
 - New agents
 - Cost optimization
+
+---
+
+## v0.1.6 — Path consolidation + process codification
+
+**Effort:** ~10 days (medium release; 9 stories across 5 clusters) · **Status:** SHIPPED 2026-05-24.
+
+Scope and per-story details: [docs/planning/epics/E04-path-consolidation-and-process-codification.md](planning/epics/E04-path-consolidation-and-process-codification.md). Headline outcomes — 9/9 stories merged across PRs #39–#47; post-implementation audit (PR #48) reported 71/75 ACs MET with 0 regressions; Risk 1 (plan-path migration dual-state) + Risk 6 (cubic-gate format rejection) closed; Risks 3/4/5 in their by-design open windows. Two `.roughly/known-pitfalls.md` entries added per story average; line-cap budget contract held across all 9 stories (final fix/SKILL.md at 300/300 — the off-ramp becomes binding for any v0.1.7 fix-touching story).
+
+### Out of scope (→ v0.1.7)
+
+- Doc-writer failure-handling cluster (5 items from E04.S8 — recommended as a single v0.1.7 story; AC3 cap-revision is the structural unblock)
+- Review-plan-as-spec-quality-gate cluster (5 items from E04.S1/S2/S5/S6/S9 — recommended as a single v0.1.7 story)
+- E04.S3 ABORT HANDLING gap for Stage 8's 2-commit window (requires off-ramp invocation due to fix/SKILL.md at-cap)
+- Full v0.1.7 candidates list: see [E04 epic v0.1.7 candidates section](planning/epics/E04-path-consolidation-and-process-codification.md#v017-candidates).
 
 ---
 

@@ -665,15 +665,15 @@ Order is by dependency, not roadmap or cluster number. Stories #1–4 are mutual
 ## Definition of done
 
 - [x] **All 9 stories merged** (S1, S2, S3, S4, S5, S6, S7, S8, S9 — completed 2026-05-23 with S3 ship; no deferral needed, Risk 6 closed)
-- [ ] **v0.1.6 tag pushed**: `git tag v0.1.6 && git push origin v0.1.6`
-- [ ] **CHANGELOG entries cover Added / Changed / Migration for each story** under `## [0.1.6] — YYYY-MM-DD`
-- [ ] **ROADMAP.md updated** to reflect v0.1.6 shipped + v0.1.7 candidates surfaced; ROADMAP header `**Current:**` bumped from v0.1.5 → v0.1.6
-- [ ] **CI dogfood passing on `main`** against the new `.roughly/plans/` assertion path with `--max-budget-usd 1.50` held
-- [ ] **ADR-011 merged**; `CLAUDE.md` ADR count updated 9 → 10; `docs/adrs/README.md` index updated
-- [ ] **After every merge**, `wc -l skills/build/SKILL.md skills/fix/SKILL.md` is recorded in the PR description; final values ≤ 300 each
+- [ ] **v0.1.6 tag pushed**: `git tag v0.1.6 && git push origin v0.1.6` (operator step — destructive write to remote tag namespace; explicit authorization required)
+- [x] **CHANGELOG entries cover Added / Changed / Migration for each story** under `## [0.1.6] — 2026-05-24` (heading renamed in release-prep commit)
+- [x] **ROADMAP.md updated** to reflect v0.1.6 shipped + v0.1.7 candidates surfaced; ROADMAP header `**Current:**` bumped v0.1.5 → v0.1.6, `**Updated:**` → 2026-05-24; new v0.1.6 row added to release map between v0.1.5 and v0.2.0; new v0.1.6 detail section added with epic pointer + v0.1.7 carry-forward summary
+- [x] **CI dogfood passing on `main`** against the new `.roughly/plans/` assertion path with `--max-budget-usd 1.50` held (verified post-E04.S1 + E04.S3)
+- [x] **ADR-011 merged**; `CLAUDE.md` ADR count updated 9 → 10; `docs/adrs/README.md` index updated (E04.S7)
+- [x] **After every merge**, `wc -l skills/build/SKILL.md skills/fix/SKILL.md` is recorded in the PR description; final values build 299 / fix 300 (fix AT CAP — v0.1.7 off-ramp binding)
 - [ ] **Risk 3** acknowledged as opportunistic post-release close at 30-day dogfood window; will be assessed at v0.1.7 retrospective
 - [ ] **Risk 5** acknowledged as opportunistic; closes only if real-dogfood multi-file invocations occur during the v0.1.6 release window; do not manufacture writes to force close
 - [ ] **v0.1.7 candidates list reviewed** and prep next epic PM prompt
-- [ ] **Plugin version bump**: `.claude-plugin/plugin.json` + `.claude-plugin/marketplace.json` `version` field → `0.1.6`
-- [ ] **CHANGELOG heading rename**: `## [Unreleased] — v0.1.6` → `## [0.1.6] — YYYY-MM-DD` at tag time
-- [ ] **Audit `.roughly/workflow-upgrades` for retired-check markers before tag.** S4 wrap-up wrote `pitfalls-organized-v1-added 2026-05-14` to this repo's dogfood workflow-upgrades file even though E03.S3 retired that check. Marker left in place for v0.1.6 (defaulted 2026-05-14 — defect surface for the v0.1.7 install-marker schema candidate). At v0.1.6 tag time: decide remove vs keep based on whether the v0.1.7 schema fix has shipped (if shipped: marker can be re-categorized; if not: remove the dogfood marker to keep the retirement clean).
+- [x] **Plugin version bump**: `.claude-plugin/plugin.json` `version` field → `0.1.6` (marketplace.json has no version field; original DoD note was slightly off — only plugin.json bumped)
+- [x] **CHANGELOG heading rename**: `## [Unreleased] — v0.1.6` → `## [0.1.6] — 2026-05-24`
+- [x] **Audit `.roughly/workflow-upgrades` for retired-check markers before tag.** S4 wrap-up wrote `pitfalls-organized-v1-added 2026-05-14` to this repo's dogfood workflow-upgrades file even though E03.S3 retired that check. **Decision 2026-05-24:** removed (v0.1.7 install-marker schema fix has not shipped; keeping the marker would contradict E03.S3's retirement). Workflow-upgrades also bumped `roughly-version 0.1.4 2026-05-01` → `0.1.6 2026-05-24`.
