@@ -1,0 +1,21 @@
+docs/planning/epics/E04-path-consolidation-and-process-codification-audit.md
+  s_3d69e65ccd5a90::t_ce3e62c99faade 40
+docs/planning/epics/E04-path-consolidation-and-process-codification.md
+  s_3d69e65ccd5a90::t_a4a5f78ac8f8c6 99
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "95471ee6a73a2d46b914acf959bee9572251c484",
+  "prompts": {},
+  "sessions": {
+    "s_3d69e65ccd5a90": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77a2206c-5606-4881-bcd5-93a39a9d3e48",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
