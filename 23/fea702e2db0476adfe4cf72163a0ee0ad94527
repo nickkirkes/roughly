@@ -1,0 +1,30 @@
+.roughly/workflow-upgrades
+  s_3d69e65ccd5a90::t_62d35d3d959c05 1
+.claude-plugin/plugin.json
+  s_3d69e65ccd5a90::t_bde2e28d4cc6f1 4
+CHANGELOG.md
+  s_3d69e65ccd5a90::t_cee211e55dbed3 3
+docs/planning/epics/E04-path-consolidation-and-process-codification.md
+  s_3d69e65ccd5a90::t_748fb43133a38b 668
+  s_3d69e65ccd5a90::t_b9d84aabc3f03b 669-673,677-679
+docs/ROADMAP.md
+  s_3d69e65ccd5a90::t_1e754718aaa741 85-99
+  s_3d69e65ccd5a90::t_2fc5a37a65e80d 3
+  s_3d69e65ccd5a90::t_bb970c047a7c0d 16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "23fea702e2db0476adfe4cf72163a0ee0ad94527",
+  "prompts": {},
+  "sessions": {
+    "s_3d69e65ccd5a90": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77a2206c-5606-4881-bcd5-93a39a9d3e48",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
