@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and merged in commit 432b778f6b88f2793f245abd1597334f7ada3e37 on 2026-05-26. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Implementation Plan: E05.S1 — project-wide agent word cap revision 500 → 650
 
 Plan-format-version: 1
