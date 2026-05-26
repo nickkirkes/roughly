@@ -36,7 +36,7 @@ Open an issue to discuss before submitting a PR for these areas.
 2. Fork → branch → PR against `main`
 3. Include an updated CHANGELOG entry under `[Unreleased]`
 4. If the change involves a design decision, draft an ADR (see `docs/adrs/README.md`)
-5. Ensure skills stay under 300 lines and agents under 500 words
+5. Ensure skills stay under 300 lines and agents under 650 words
 
 ## Code Standards
 
@@ -118,7 +118,7 @@ There is no automated test suite — this is pure markdown. To verify changes:
 2. Exercise the skill you changed (e.g., `/roughly:build` for build changes)
 3. Check that frontmatter is valid YAML
 4. Check that cross-references (agent names in skills, file paths) are accurate
-5. Verify line/word limits: skills < 300 lines, agents < 500 words
+5. Verify line/word limits: skills < 300 lines, agents < 650 words
 
 ## CI
 
@@ -163,13 +163,15 @@ macOS contributors running `scripts/ci-dogfood.sh` locally need `gtimeout` from 
 
 1. **Path drift** — `agents/` files must not reference legacy `.ruckus/known-pitfalls`.
 2. **Skill line cap** — every `skills/*/SKILL.md` stays ≤ 300 lines.
-3. **Agent word cap** — every `agents/*.md` stays ≤ 500 words.
+3. **Agent word cap** — every `agents/*.md` stays ≤ 650 words.
 4. **HTML comment integrity** — `agents/agent-preamble.md` contains exactly one `<!--` opener and one `-->` closer.
 5. **Pre-flight wording byte-identity across 7 hard-abort skills** — `audit-epic`, `build`, `fix`, `review`, `review-plan`, `review-epic`, `verify-all` must have byte-identical pre-flight migration check blocks (canonical source: `tests/fixtures/canonical-preflight-block.txt`). `skills/setup/SKILL.md` uses an intentionally-divergent soft-abort form and is excluded.
 6. **`plan-mode-gate` hook-pair presence + byte-identity** — `.claude/hooks/plan-mode-gate.sh` and `skills/setup/templates/plan-mode-gate.sh.template` must both exist and be byte-identical. Missing either file is itself drift (plan-mode protection would be silently unregistered, the failure mode ADR-009 was written to prevent). **A separate, unrelated pair — `verify-all-stop-hook.sh.template` ↔ dogfood `verify-all.sh` — is intentionally NOT enforced** (different files, different purpose): per `docs/planning/epics/complete/E03-trust-and-ergonomics.md` section `#### E03.S2: Stop-hook-v1 maturity check completion` under `### Trust hardening cluster`, the dogfood "stays as-is (project-specific drift checks for the plugin's own development); this story produces a separate, project-agnostic template."
 7. **`.roughly/known-pitfalls.md` organize threshold** — fires when `wc -l > PITFALLS_ORGANIZE_THRESHOLD` (currently 80). The matching policy parameter lives in `agents/doc-writer.md` Process step 5 ("Organize suggestion") — bidirectional sync comments name each consumer.
 
 Checks 1–4 are pre-existing (S2-era structural invariants). Checks 5–7 land in E04.S5 as a coverage-completion bundle.
+
+agent word cap raised 500 → 650 in E05.S1 to accommodate failure-handling clauses with verbatim summary templates and to provide real headroom (≥50 words at projected post-E05.S2 state) rather than landing at the edge of a tighter cap.
 
 ## License
 
