@@ -1,0 +1,31 @@
+.claude/hooks/verify-all.sh
+  s_012e7c1e3c5a89::t_07abf19c2cc135 30
+  s_012e7c1e3c5a89::t_f2af1576013705 27
+CHANGELOG.md
+  s_012e7c1e3c5a89::t_430b91f83cf14b 3-8
+.roughly/plans/E05-S1-agent-word-cap-revision-plan.md
+  s_012e7c1e3c5a89::t_8fa6128af8c5c3 1-198
+CONTRIBUTING.md
+  s_012e7c1e3c5a89::t_b2225ccecbf2c7 121
+  s_012e7c1e3c5a89::t_b568a68c38a462 39
+  s_012e7c1e3c5a89::t_5ef9f11c51112b 166
+  s_012e7c1e3c5a89::t_c6fe699a8dd0dd 174-175
+CLAUDE.md
+  s_012e7c1e3c5a89::t_8f3d4f2a4fb8be 39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "432b778f6b88f2793f245abd1597334f7ada3e37",
+  "prompts": {},
+  "sessions": {
+    "s_012e7c1e3c5a89": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6c18d438-4285-4158-a944-d2a70d927cb8",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
