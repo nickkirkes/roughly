@@ -1,0 +1,19 @@
+docs/planning/epics/E05-doc-writer-hardening-and-spec-quality-gates.md
+  s_4610408a694afd::t_113714263c0f35 1-463
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "285675dee81c8c21163bfdb7ab3f618e65a27b4b",
+  "prompts": {},
+  "sessions": {
+    "s_4610408a694afd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a8a9502-b893-4fcb-b523-54ecb46832c1",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
