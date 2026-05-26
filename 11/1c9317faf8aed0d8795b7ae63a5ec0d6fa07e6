@@ -1,0 +1,19 @@
+.roughly/plans/E05-S1-agent-word-cap-revision-plan.md
+  s_012e7c1e3c5a89::t_b980e9b2d2c4a6 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "111c9317faf8aed0d8795b7ae63a5ec0d6fa07e6",
+  "prompts": {},
+  "sessions": {
+    "s_012e7c1e3c5a89": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6c18d438-4285-4158-a944-d2a70d927cb8",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
