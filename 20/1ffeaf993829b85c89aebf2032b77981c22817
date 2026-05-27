@@ -1,0 +1,21 @@
+.roughly/plans/e05-s3-review-plan-spec-quality-gates-plan.md
+  s_b54b76a8bb959a::t_59b6bf5366a4e4 1-2
+  s_b54b76a8bb959a::t_8813abdadf838c 3-149,152-411
+  s_b54b76a8bb959a::t_4615363e4fbf09 150-151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "201ffeaf993829b85c89aebf2032b77981c22817",
+  "prompts": {},
+  "sessions": {
+    "s_b54b76a8bb959a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ca93ce34-ffc8-4000-81fc-c3481d1f1b28",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
