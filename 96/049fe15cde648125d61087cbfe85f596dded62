@@ -1,0 +1,24 @@
+tests/fixtures/review-plan/ac3-defensive-guard-borderline-pass.md
+  s_b54b76a8bb959a::t_9733f796b8f196 24
+  s_b54b76a8bb959a::t_22b2422e0b1fc8 30
+  s_b54b76a8bb959a::t_c952cb234405b6 48-50
+  s_b54b76a8bb959a::t_4e10c4d3e289f0 65
+  s_b54b76a8bb959a::t_d5f29d0457171a 35
+  s_b54b76a8bb959a::t_19ecb6a46d5384 63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "96049fe15cde648125d61087cbfe85f596dded62",
+  "prompts": {},
+  "sessions": {
+    "s_b54b76a8bb959a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ca93ce34-ffc8-4000-81fc-c3481d1f1b28",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
