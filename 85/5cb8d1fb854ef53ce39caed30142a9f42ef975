@@ -1,0 +1,20 @@
+tests/fixtures/review-plan/ac5-self-defeating-pass.md
+  s_b54b76a8bb959a::t_e0342ce94a9cf6 46-47
+  s_b54b76a8bb959a::t_b0247761b8a06d 61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "855cb8d1fb854ef53ce39caed30142a9f42ef975",
+  "prompts": {},
+  "sessions": {
+    "s_b54b76a8bb959a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ca93ce34-ffc8-4000-81fc-c3481d1f1b28",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
