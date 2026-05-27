@@ -61,6 +61,18 @@ When in doubt: if the cases are truly mutually exclusive, use case-dispatch lang
 
 User-facing skill behavior changes are flags, not environment variables (see [ADR-011](docs/adrs/ADR-011-skill-flags-as-public-api.md)).
 
+**README/doc invocation examples align with skill invocation surface.** Any README, CONTRIBUTING.md, or skill doc that documents `/roughly:<skill>` as a user-invocable slash command must cross-check that the skill is actually invocable from a slash-command form. Pipeline coordinator skills (`build`, `fix`) have `disable-model-invocation: true` but ARE user-invocable via slash command — the field prevents conversational invocation, not slash-command dispatch. Pure subagent-dispatch-only skills (`review-plan`, `review`, `review-epic`, `audit-epic`, `verify-all`) also have `disable-model-invocation: true` AND are dispatched programmatically only — they have no slash-command surface and must NOT be documented as `claude /roughly:<skill>`. User-invocable skills with slash-command surfaces: `setup`, `upgrade`, `help`, `build`, `fix`. Canonical reference: `tests/fixtures/review-plan/README.md` post-`9d61030` enumerates the invocation surface explicitly per fixture.
+
+## Cross-epic AC amendments
+
+When amending an already-shipped story's AC from a later epic, three artifacts must land together:
+
+1. **The amending epic entry is the canonical source** of the corrected AC text. Write the new AC contract in full inside the amending story's entry.
+2. **The original epic entry gains a back-pointer note** at each amended AC location, in the form `**Amended in <new-story-id> — see <new-story-id> for the corrected contract.**`. The original AC text is NOT edited in-place — the back-pointer preserves the historical record while making the amendment trail discoverable.
+3. **The `CHANGELOG.md` `### Changed` entry** documents the contract revision and cross-references both the original AC location (epic + story ID) and the amending location (epic + story ID).
+
+Canonical first instance: E05.S2 amends E04.S8 AC2/AC4/AC5 (corrected contract in E05.S2 entry of `docs/planning/epics/E05-doc-writer-hardening-and-spec-quality-gates.md`; back-pointers in `docs/planning/epics/complete/E04-path-consolidation-and-process-codification.md` E04.S8 entry; CHANGELOG `### Changed` entry references both).
+
 ## Tooling Pitfalls
 
 Bulk replacement of a token silently corrupts code when the same token serves dual semantic roles in one file — for example, user-facing prose AND a legacy detector that intentionally references the old name. The replace succeeds, the build passes, and the detector becomes a no-op no one notices.
