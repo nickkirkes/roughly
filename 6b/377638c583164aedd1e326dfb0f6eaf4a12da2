@@ -1,0 +1,64 @@
+tests/fixtures/review-plan/ac5-self-defeating-needs-revision.md
+  s_b54b76a8bb959a::t_c9e9c6fca90b43 1-33
+tests/fixtures/review-plan/ac3-defensive-guard-pass.md
+  s_b54b76a8bb959a::t_904b91918bf5e1 1-59
+tests/fixtures/review-plan/ac5-self-defeating-borderline-pass.md
+  s_b54b76a8bb959a::t_6cf4aa18fdaccf 1-60
+CHANGELOG.md
+  s_b54b76a8bb959a::t_1d7c19bf80369b 11
+  s_b54b76a8bb959a::t_f431ba2a3fb45d 5-10,12
+skills/review-plan/SKILL.md
+  s_b54b76a8bb959a::t_2d89aa092938fe 81-82
+  s_b54b76a8bb959a::t_ad6c88be7a7189 56-61
+  s_b54b76a8bb959a::t_0d5b353f52580b 114
+  s_b54b76a8bb959a::t_c4f257899bdb59 40
+  s_b54b76a8bb959a::t_bf996fed319e13 39,41-47
+tests/fixtures/review-plan/ac2-grep-fc-borderline-pass.md
+  s_b54b76a8bb959a::t_7c84ff0f513483 1-30
+tests/fixtures/review-plan/ac4-doc-coverage-pass.md
+  s_b54b76a8bb959a::t_c1d17abe8092d6 1-23
+tests/fixtures/review-plan/ac4-doc-coverage-needs-revision.md
+  s_b54b76a8bb959a::t_5e0c060461387c 1
+  s_b54b76a8bb959a::t_da487017f10ff2 2-32
+tests/fixtures/review-plan/ac1-broader-scope-pass.md
+  s_b54b76a8bb959a::t_e14d8d08db3109 1-26
+tests/fixtures/review-plan/ac3-defensive-guard-borderline-pass.md
+  s_b54b76a8bb959a::t_ad0eb0737f4b4f 1-27,29-66
+  s_b54b76a8bb959a::t_3d2b490c03ba33 28
+tests/fixtures/review-plan/ac2-grep-fc-needs-revision.md
+  s_b54b76a8bb959a::t_407d17c54a76b5 1-26
+tests/fixtures/review-plan/ac1-broader-scope-needs-revision.md
+  s_b54b76a8bb959a::t_3fb53dcbc979ad 1-22
+CONTRIBUTING.md
+  s_b54b76a8bb959a::t_e67ba0b47a70e0 66-75
+  s_b54b76a8bb959a::t_fdc3a1196c2089 64-65
+tests/fixtures/review-plan/ac2-grep-fc-pass.md
+  s_b54b76a8bb959a::t_f752e8a48c3c57 1-24,26,28-29
+  s_b54b76a8bb959a::t_e7c684880dbfc8 25,27
+tests/fixtures/review-plan/README.md
+  s_b54b76a8bb959a::t_979c8b9d3ea63e 3-7,20-34,44-52,55-57,66,68,77
+tests/fixtures/review-plan/ac1-broader-scope-borderline-pass.md
+  s_b54b76a8bb959a::t_0672483346c7dc 1-26
+tests/fixtures/review-plan/ac3-defensive-guard-needs-revision.md
+  s_b54b76a8bb959a::t_1f56b2ce1fccc6 1-62
+tests/fixtures/review-plan/ac5-self-defeating-pass.md
+  s_b54b76a8bb959a::t_7d4e4d1f228bd7 1-62
+tests/fixtures/review-plan/ac4-doc-coverage-borderline-pass.md
+  s_b54b76a8bb959a::t_7fa707f1c3d3c9 1-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "6b377638c583164aedd1e326dfb0f6eaf4a12da2",
+  "prompts": {},
+  "sessions": {
+    "s_b54b76a8bb959a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ca93ce34-ffc8-4000-81fc-c3481d1f1b28",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
