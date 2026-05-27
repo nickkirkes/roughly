@@ -43,8 +43,8 @@ if [ -d ".ruckus" ]; then
 fi
 ```
 
-**Verify:** `rg -Fn "legacy-ruckus-dir detected" scripts/ README.md CONTRIBUTING.md`
-Verify scope explicitly excludes `skills/` — the detection-prose location (`skills/build/SKILL.md`) is a documented self-reference site and is NOT in the verify scope. The runtime files under `scripts/`, `README.md`, and `CONTRIBUTING.md` do not contain the literal except where intentionally added by T2/T3. This verify is not self-defeating because `skills/build/SKILL.md` is outside the scanned paths.
+**Verify:** `rg -Fn "legacy-ruckus-dir detected" scripts/`
+Verify scope is restricted to `scripts/` — the only active-runtime surface where the literal must functionally appear (T2's error-message string). Two self-reference sites are explicitly excluded from the verify scope: (a) `skills/build/SKILL.md` (T1's detection prose — instructional/error-message text describing the trigger condition) and (b) `README.md` (T3's user-facing Troubleshooting documentation entry — explanatory docs describing the error). Both are documented self-reference sites per AC5's "new detection prose or newly-added historical/explanatory docs" criterion; both would inflate the literal-count if included in scope. The verify is not self-defeating because the scanned path (`scripts/`) contains no documentation surfaces — only the intentional T2 runtime addition.
 **UI:** no
 
 ### T3: Document the migration error in README (~4 min)
@@ -58,5 +58,5 @@ Edit site 1: `README.md` Troubleshooting section — append:
 Remove the `.ruckus/` directory from your project root. This directory was created by an older version of the tool and is no longer used. Run `rm -rf .ruckus/` then retry.
 ```
 
-**Verify:** covered by T2's verify (README.md is in scope).
+**Verify:** (no verify for T3 — prose-only documentation task. `README.md` is intentionally excluded from T2's verify scope as a documented self-reference site for the literal, matching T1's treatment of `skills/build/SKILL.md`.)
 **UI:** no
