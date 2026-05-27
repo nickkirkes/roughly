@@ -36,7 +36,7 @@ There is no build step — this is pure markdown.
 - Agents must have YAML frontmatter with `name`, `description`, `tools`, `model`
 - Pipeline skills (build, fix) must have `disable-model-invocation: true`
 - Coordinator skills (review, review-plan, verify-all, audit-epic, review-epic) must have `disable-model-invocation: true`
-- Agent prompts must stay under 500 words
+- Agent prompts must stay under 650 words
 - Skill bodies must stay under 300 lines
 - Project-specific values use `{{PLACEHOLDER}}` markers — never hardcode project names, commands, or paths
 - Maturity check IDs must be versioned (e.g., `investigator-v1`)

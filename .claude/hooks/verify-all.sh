@@ -24,10 +24,10 @@ for f in skills/*/SKILL.md; do
   [ "$n" -gt 300 ] && issues="${issues}- $f: $n lines exceeds 300 cap\n"
 done
 
-# Agent word cap (500)
+# Agent word cap (650)
 for f in agents/*.md; do
   n=$(wc -w < "$f")
-  [ "$n" -gt 500 ] && issues="${issues}- $f: $n words exceeds 500 cap\n"
+  [ "$n" -gt 650 ] && issues="${issues}- $f: $n words exceeds 650 cap\n"
 done
 
 # HTML comment integrity in agent-preamble.md

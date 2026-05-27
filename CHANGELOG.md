@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- **E05.S1 — Agent word cap raised 500 → 650 project-wide.** The cap constant moved in [.claude/hooks/verify-all.sh](.claude/hooks/verify-all.sh) at two lines: line 27 (the comment documenting the threshold) and line 30 (the single-line conditional plus drift-message format string `- $f: $n words exceeds <N> cap`); only the numeric value swaps — the format string itself is preserved verbatim (AC2). [CONTRIBUTING.md](CONTRIBUTING.md) was updated in three normative locations — line 39 (PR Process), line 121 (Testing section), and line 166 (Check 3 under `## Stop hook drift checks`) — plus a one-line rationale paragraph appended to the `## Stop hook drift checks` section immediately before `## License`. [CLAUDE.md](CLAUDE.md) line 39 (`Agent prompts must stay under 650 words`) was updated as the project's own runtime-read convention statement. Compliance: `agents/doc-writer.md` is now compliant at **557/650** pre-E05.S2 (previously 557/500 — an accepted Path B violation from E04.S8 that closes structurally with this revision); projected **595–625** post-E05.S2, preserving ≥25 words of headroom at the upper projection. Rationale: accommodates E05.S2's failure-handling clauses (verbatim summary templates, all-fail branch, empty-error fallback) and provides ≥50 words of headroom at the projected post-E05.S2 state rather than landing at the edge of a tighter cap. Scope note: the original E05.S1 spec named 3 files; discovery surfaced normative `500` references in CONTRIBUTING.md lines 39 and 121 (outside the `## Stop hook drift checks` section the spec named) and CLAUDE.md line 39, which would have created internal contradiction if left at 500; scope expanded to 4 files with user approval, and AC5 amended in the implementation plan to enumerate the 4 expected files in `git diff --stat`.
+
 ## [0.1.6] — 2026-05-24
 
 > Path consolidation + process codification. Scope per [docs/planning/epics/E04-path-consolidation-and-process-codification.md](docs/planning/epics/E04-path-consolidation-and-process-codification.md).
