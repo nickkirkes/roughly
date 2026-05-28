@@ -14,7 +14,8 @@ This is a plugin, not a standalone app. It runs inside Claude Code sessions in t
 | `skills/setup/templates/` | Templates populated by `/roughly:setup` |
 | `skills/build/implementer-prompt.md` | Reference copy of implementation subagent prompt (runtime copy is inlined in build/fix SKILL.md) |
 | `skills/build/spec-reviewer-prompt.md` | Reference copy of spec compliance checklist (runtime copy is inlined in build/fix SKILL.md) |
-| `docs/adrs/` | Architecture Decision Records (ADR-001 through ADR-009, ADR-011; ADR-010 reserved for v0.2.0 plan-format-v2) |
+| `skills/shared/<name>.md` | Runtime-shared procedural references read by build/fix SKILL.md at section heads (see ADR-012) |
+| `docs/adrs/` | Architecture Decision Records (ADR-001 through ADR-009, ADR-011, ADR-012; ADR-010 reserved for v0.2.0 plan-format-v2) |
 | `.roughly/` | Runtime files installed per-project: `known-pitfalls.md` and `workflow-upgrades` |
 | `.claude-plugin/plugin.json` | Plugin manifest |
 
@@ -58,6 +59,7 @@ See `docs/adrs/` for full reasoning. Summary:
 | ADR-008 | Opus reserved for epic-reviewer only; all other agents use Sonnet |
 | ADR-009 | Plan-mode auto-detect via UserPromptSubmit hook + preamble substitution |
 | ADR-011 | User-facing skill behavior changes are flags, not env vars |
+| ADR-012 | Procedural prose duplicated across build/fix SKILL.md extracted to `skills/shared/` and referenced via runtime `Read` directive |
 
 ## Known Pitfalls for Contributors
 

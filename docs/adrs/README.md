@@ -36,3 +36,4 @@ Bug fixes, template improvements, documentation changes, and new agent definitio
 - [ADR-009](ADR-009-plan-mode-detection.md) — Plan-mode auto-detection via UserPromptSubmit hook + preamble update
 - ADR-010 — Reserved for v0.2.0 plan-format-v2 (not yet written)
 - [ADR-011](ADR-011-skill-flags-as-public-api.md) — User-facing skill behavior changes are flags, not env vars
+- [ADR-012](ADR-012-runtime-shared-procedural-references.md) — Procedural prose duplicated across build/fix SKILL.md extracted to `skills/shared/` and referenced via runtime `Read` directive
