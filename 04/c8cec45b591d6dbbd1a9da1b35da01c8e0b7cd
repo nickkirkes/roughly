@@ -1,0 +1,19 @@
+.roughly/plans/E05.S4-off-ramp-refactor-plan.md
+  s_d038e6be0d0106::t_08cf7b7b0491a1 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "04c8cec45b591d6dbbd1a9da1b35da01c8e0b7cd",
+  "prompts": {},
+  "sessions": {
+    "s_d038e6be0d0106": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e16af709-3072-4e97-a130-dc10f269d080",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
