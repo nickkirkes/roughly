@@ -1,0 +1,46 @@
+docs/adrs/README.md
+  s_d038e6be0d0106::t_a2cf740a518292 39
+docs/adrs/ADR-012-runtime-shared-procedural-references.md
+  s_d038e6be0d0106::t_243c7603cc007c 1-54
+CONTRIBUTING.md
+  s_d038e6be0d0106::t_a44c43481be5d4 66-67
+skills/fix/SKILL.md
+  s_d038e6be0d0106::t_c11bbc620da091 228
+  s_d038e6be0d0106::t_b759a2c09b7fde 267
+skills/build/SKILL.md
+  s_d038e6be0d0106::t_ab9558467b19df 225
+  s_d038e6be0d0106::t_4b3ada529a2a68 266
+CLAUDE.md
+  s_d038e6be0d0106::t_cd475127e1a33a 62
+  s_d038e6be0d0106::t_d3dab224a9b389 18
+  s_d038e6be0d0106::t_2a4eaceed7678c 17
+skills/shared/stage-8-wrap-up.md
+  s_d038e6be0d0106::t_cce8b8b1774650 1-30
+.claude/hooks/verify-all.sh
+  s_d038e6be0d0106::t_0d0070ece8300e 100,113-118
+  s_d038e6be0d0106::t_78aebf799a03a6 106-112,121-131
+  s_d038e6be0d0106::t_817e61aa78b95c 98-99,101-105,119-120
+skills/shared/abort-handling.md
+  s_d038e6be0d0106::t_f6cb40bac6079b 1-25
+CHANGELOG.md
+  s_d038e6be0d0106::t_e93c60f77a8670 16
+  s_d038e6be0d0106::t_0b86b2b0a3c98a 15
+.roughly/plans/E05.S4-off-ramp-refactor-plan.md
+  s_d038e6be0d0106::t_8638cbe3c1ab8d 1-391
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "738a6af4d09e998b7dd15bbdc4ec46e3184b7897",
+  "prompts": {},
+  "sessions": {
+    "s_d038e6be0d0106": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e16af709-3072-4e97-a130-dc10f269d080",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
