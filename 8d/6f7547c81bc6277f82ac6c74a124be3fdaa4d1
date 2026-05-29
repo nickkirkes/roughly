@@ -1,0 +1,22 @@
+agents/doc-writer.md
+  s_7db8d8ce3c8936::t_46496d6541b473 39,41-45,57
+.roughly/known-pitfalls.md
+  s_7db8d8ce3c8936::t_4b2cc111119144 82
+  s_7db8d8ce3c8936::t_0002189f5cc0ad 80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "8d6f7547c81bc6277f82ac6c74a124be3fdaa4d1",
+  "prompts": {},
+  "sessions": {
+    "s_7db8d8ce3c8936": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8e359b9c-ab1c-4621-86da-5495b8f94c7b",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
