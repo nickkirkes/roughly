@@ -21,7 +21,7 @@ Update the project documentation to capture this knowledge for future runs.
 
 - `.roughly/known-pitfalls.md` — Add new pitfalls discovered during development
 - `CLAUDE.md` — Add new conventions or update existing ones
-- `docs/adr/` — Create ADRs for significant architectural decisions (if directory exists)
+- `docs/adrs/` — Create ADRs for significant architectural decisions (if directory exists)
 
 ## Process
 
@@ -32,8 +32,29 @@ Update the project documentation to capture this knowledge for future runs.
 5. **Post-write suggestions (run after any Write or Edit to `.roughly/known-pitfalls.md` in this session; skip otherwise)**:
    - **Organize suggestion:** Read `.roughly/known-pitfalls.md` and count the lines in the result. If Read fails or returns empty, skip this check. <!-- Bidirectional sync: matches the PITFALLS_ORGANIZE_THRESHOLD constant in .claude/hooks/verify-all.sh. Update both if threshold changes. --> If line count > 80, append a single one-line note to your return summary (NOT to any file): `Note: known-pitfalls.md is now [N] lines — consider reorganizing or deduplicating in a future session.`
    - **Test-integration suggestion:** First, verify `CLAUDE.md` exists at the project root. If absent, skip this check entirely. Detect test config — any of: `package.json` with a `scripts.test` value not equal to the npm-init default `"echo \"Error: no test specified\" && exit 1"`; `pytest.ini`; `pyproject.toml` containing `[tool.pytest`; any `vitest.config.*` or `jest.config.*`. If detected AND CLAUDE.md's Commands table Test row value indicates no test command (`none`, `none yet`, `n/a`, `N/A`, an em-dash, whitespace-only, or the un-replaced `{{TEST_COMMAND}}` placeholder), append a single one-line note to your return summary (NOT to any file): `Note: project has test config but verify-all skips tests — consider updating CLAUDE.md Commands table Test row.`
-   - **Multi-file failure handling (always — overrides step 5's outer gate):** When writing multiple files in one dispatch, invoke `Edit` per file and capture each outcome. On any failure, do NOT roll back successful writes — never claim full success. Emit this exact summary: `"doc-writer: partial success — wrote to: <comma-separated list of successful paths>; failed to write: <comma-separated list of failed paths with one-line failure reason each, format '<path>: <reason from Edit error output>'>."`
 6. **Deduplicate** — Don't add if something equivalent already exists
+
+## Failure handling
+
+Invoke `Edit` per file in multi-file dispatch; capture outcomes; do NOT roll back successful writes.
+
+Your return summary MUST literally begin with one of the three templates below. Format your return summary EXACTLY as this string, substituting only the placeholders. Pick template by outcome: 0 failed → all-success; ≥1 failed and ≥1 succeeded → partial-success; 0 succeeded → all-fail.
+
+```
+doc-writer: wrote to: <comma-separated list of successful paths>.
+```
+
+```
+doc-writer: partial success — wrote to: <comma-separated list of successful paths>; failed to write: <comma-separated list of failed paths with one-line failure reason each, format '<path>: <reason from Edit error output>'>.
+```
+
+```
+doc-writer: all writes failed — <comma-separated list of failed paths with one-line failure reason each, format '<path>: <reason from Edit error output>'>.
+```
+
+If Edit's error output is empty for a failed path, write '(no error output)' as the reason.
+
+Before returning, confirm your first line begins with `doc-writer: wrote to:`, `doc-writer: partial success —`, or `doc-writer: all writes failed —`.
 
 ## Writing Guidelines
 
