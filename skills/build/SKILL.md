@@ -222,20 +222,7 @@ Compact context before wrap-up. Preserve: feature summary, files changed, task c
 
 ## STAGE 8: WRAP-UP
 
-1. `git add` changed files
-2. Draft commit message:
-   ```
-   feat: [short description]
-
-   [What was built and why]
-   Tasks: [N] completed
-   Changes: [file list with one-line descriptions]
-   Tested: [verification summary]
-   ```
-3. Show commit for approval. Commit but do NOT push.
-4. **Plan historical marking (2nd commit, post-implementation):** Read the plan file from Stage 3 to capture its current first line. Run `IMPL_SHA=$(git rev-parse HEAD)`. Prepend Status block via `Edit` (not `Write` — append-only pitfall; `replace_all: false`): `old_string` = the plan file's first line; `new_string` = literal text `> **Status:** Historical — implemented and merged in commit <SHA> on <YYYY-MM-DD>. This plan was an active build/fix artifact; treat as historical reference only.` (substituting `$IMPL_SHA` for `<SHA>` and today's date in ISO `YYYY-MM-DD` form for `<YYYY-MM-DD>` — the resulting first line MUST NOT contain literal `<SHA>` or `<YYYY-MM-DD>` text), then a blank line, then the original first line. Then `git add <plan-file>` and `git commit -m "docs: mark <feature> plan historical"` (do NOT push; deterministic content — no approval gate needed). On any failure (empty SHA, Edit no-match, commit hook rejection), halt and escalate to the human.
-5. Run maturity checks (see below).
-6. Ask: "Did this work reveal any new pitfalls or conventions for `.roughly/known-pitfalls.md`?" If yes, dispatch `doc-writer` agent.
+Read `skills/shared/stage-8-wrap-up.md` and apply the procedure documented there.
 
 ---
 
@@ -276,24 +263,4 @@ If never: record `stop-hook-v1-declined`.
 
 ## ABORT HANDLING
 
-When the human selects "abort" at any gate, respond based on how far the pipeline progressed:
-
-**Stages 1-2 (no files written):** Acknowledge abort. No cleanup needed.
-
-**Stages 3-4 (plan written, no implementation):** Ask: "Delete the plan file at [path]? (yes / keep it)"
-- If yes: delete the plan file
-- Clear any TodoWrite entries created for this pipeline run
-
-**Stages 5-7 (implementation started):** Offer rollback:
-> "Implementation is in progress. Options:
-> 1. `git stash -u` — stash all uncommitted changes including new files (recoverable via `git stash pop`)
-> 2. `git reset --hard HEAD && git clean -fd` — discard all uncommitted changes (staged and unstaged) and remove new files (**irreversible — cannot be undone**)
-> 3. Keep changes as-is — leave working tree dirty for manual review"
-
-If the human selects option 2, require explicit re-confirmation: "This will permanently delete all uncommitted changes. Type 'discard' to confirm."
-
-Wait for human choice. Execute their selection. Then:
-- Clear all TodoWrite entries for this pipeline run
-- Delete the plan file only if the human also confirms
-
-**Always on abort:** End with a clear message: "Pipeline aborted at Stage [N]. [cleanup summary]."
+Read `skills/shared/abort-handling.md` and apply the procedure documented there.

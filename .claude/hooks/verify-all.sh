@@ -95,6 +95,40 @@ if [ -f .roughly/known-pitfalls.md ]; then
   fi
 fi
 
+# Shared procedural reference drift (ADR-012). Four modes:
+#   (a) skills/shared/ directory missing (directed diagnostic)
+#   (b) either shared file missing
+#   (c) either consumer's Read directive absent or not at line-start within 3 lines of
+#       its section heading (ADR-012/AC5). awk index()==1 enforces line-start with
+#       fixed-string match — regex metacharacters in filenames cannot bypass.
+#   (d) either consumer contains inline duplication of a shared-file load-bearing phrase.
+# Bidirectional sync: load-bearing phrases below MUST appear in the shared files too.
+if [ ! -d skills/shared ]; then
+  issues="${issues}- shared procedural reference drift: skills/shared/ directory missing\n"
+else
+  for shared in abort-handling.md stage-8-wrap-up.md; do
+    [ ! -f "skills/shared/${shared}" ] && issues="${issues}- shared procedural reference drift: skills/shared/${shared} missing\n"
+  done
+  for skill in build fix; do
+    for pair in "STAGE 8: WRAP-UP|stage-8-wrap-up.md" "ABORT HANDLING|abort-handling.md"; do
+      heading="${pair%%|*}"
+      shared="${pair##*|}"
+      window=$(grep -A 3 "^## ${heading}\$" "skills/${skill}/SKILL.md" 2>/dev/null)
+      if [ -z "$window" ]; then
+        issues="${issues}- shared procedural reference drift: skills/${skill}/SKILL.md missing ## ${heading} section heading\n"
+      elif ! printf '%s\n' "$window" | awk -v p="Read \`skills/shared/${shared}\`" 'index($0, p) == 1 {f=1} END {exit !f}'; then
+        issues="${issues}- shared procedural reference drift: skills/${skill}/SKILL.md missing Read directive for ${shared} at line-start within 3 lines of ## ${heading}\n"
+      fi
+    done
+    if grep -qF 'When the human selects "abort"' "skills/${skill}/SKILL.md" 2>/dev/null; then
+      issues="${issues}- shared procedural reference drift: skills/${skill}/SKILL.md contains inline duplication of abort-handling.md content (matched phrase: When the human selects \"abort\")\n"
+    fi
+    if grep -qF '1. `git add` changed files' "skills/${skill}/SKILL.md" 2>/dev/null; then
+      issues="${issues}- shared procedural reference drift: skills/${skill}/SKILL.md contains inline duplication of stage-8-wrap-up.md content (matched phrase: 1. \`git add\` changed files)\n"
+    fi
+  done
+fi
+
 emit_drift_json() {
   local m="$1"
   if command -v jq >/dev/null 2>&1; then
