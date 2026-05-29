@@ -1,0 +1,35 @@
+agents/doc-writer.md
+  s_7db8d8ce3c8936::t_277d01752af82e 37-54
+  s_7db8d8ce3c8936::t_6200e6a89a0f77 24
+docs/planning/epics/complete/E04-path-consolidation-and-process-codification.md
+  s_7db8d8ce3c8936::t_6aad50b70642cd 442-443
+  s_7db8d8ce3c8936::t_4c6997e6c48855 452-453
+  s_7db8d8ce3c8936::t_1c79d65b63d6ef 448-449
+.roughly/plans/E05.S2-doc-writer-multi-file-failure-handling-plan.md
+  s_7db8d8ce3c8936::t_683dc32e10f9c7 1-19,21-40,42-52,54-85,87-176,178-184,186-206,208-240
+  s_7db8d8ce3c8936::t_796d9d6bb76905 86
+  s_7db8d8ce3c8936::t_6236d3f3884cc7 53
+  s_7db8d8ce3c8936::t_4fb7571698599c 207
+  s_7db8d8ce3c8936::t_a8cf8472f18224 20
+  s_7db8d8ce3c8936::t_068ffea98b75bc 41
+  s_7db8d8ce3c8936::t_b1d01e6226b24b 177
+  s_7db8d8ce3c8936::t_a9c6ba66e98a02 185
+CHANGELOG.md
+  s_7db8d8ce3c8936::t_f8444c0a6da977 15-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "9fbaf176b041b79e3bc21518ec63f78d1b0b63fd",
+  "prompts": {},
+  "sessions": {
+    "s_7db8d8ce3c8936": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8e359b9c-ab1c-4621-86da-5495b8f94c7b",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
