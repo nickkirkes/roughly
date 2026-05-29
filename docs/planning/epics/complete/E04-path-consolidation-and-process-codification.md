@@ -439,11 +439,17 @@ The clause locks complete-what-you-can semantics: when one of N writes fails, do
 
 - **AC2 — Strictly additive.** Existing Process steps 1–4 and 6+ byte-identical pre/post-edit; new content only within the step 5 addition site (or wherever Process step 5's failure-handling additions live). Verify via `git diff agents/doc-writer.md` inspection: no content removed or modified outside the addition site. HTML comment markers around the new clause are acceptable and do not trigger a violation.
 
+  **Amended in E05.S2 — see E05.S2 for the corrected contract.**
+
 - **AC3 — Agent word cap held.** `wc -w agents/doc-writer.md` post-edit ≤500. New clause is ~60 words; pre-edit count plus addition stays under cap.
 
 - **AC4 — Two-part-gate preserved.** S3's existing two-part-gate (organize-suggestion + test-integration suggestions fire only when (a) user confirms new pitfalls/conventions at wrap-up AND (b) doc-writer actually writes to `.roughly/known-pitfalls.md`) is preserved. The new multi-file failure-handling clause does NOT gate the suggestions — when a partial-success summary is emitted, the suggestions still fire based on the SUCCESSFUL-write outcome only. Verification: read Process step 5 pre/post; confirm the two-part-gate conditional is unchanged.
 
+  **Amended in E05.S2 — see E05.S2 for the corrected contract.**
+
 - **AC5 — Partial-success summary format specified, not free-form.** The summary template is locked: `"doc-writer: partial success — wrote to: <comma-separated list of successful paths>; failed to write: <comma-separated list of failed paths with one-line failure reason each, format '<path>: <reason from Edit error output>'>."` Implementation does not invent alternate formats.
+
+  **Amended in E05.S2 — see E05.S2 for the corrected contract.**
 
 **Verification:**
 
