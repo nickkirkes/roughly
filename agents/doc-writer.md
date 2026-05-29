@@ -36,9 +36,13 @@ Update the project documentation to capture this knowledge for future runs.
 
 ## Failure handling
 
-When writing multiple files in one dispatch, invoke `Edit` per file and capture each outcome. On any failure, do NOT roll back successful writes — never claim full success.
+Invoke `Edit` per file in multi-file dispatch; capture outcomes; do NOT roll back successful writes.
 
-Your return summary MUST literally begin with one of the two templates below. Format your return summary EXACTLY as this string, substituting only the placeholders. Use the partial-success template when ≥1 write succeeded; use the all-fail template when 0 writes succeeded.
+Your return summary MUST literally begin with one of the three templates below. Format your return summary EXACTLY as this string, substituting only the placeholders. Pick template by outcome: 0 failed → all-success; ≥1 failed and ≥1 succeeded → partial-success; 0 succeeded → all-fail.
+
+```
+doc-writer: wrote to: <comma-separated list of successful paths>.
+```
 
 ```
 doc-writer: partial success — wrote to: <comma-separated list of successful paths>; failed to write: <comma-separated list of failed paths with one-line failure reason each, format '<path>: <reason from Edit error output>'>.
@@ -50,7 +54,7 @@ doc-writer: all writes failed — <comma-separated list of failed paths with one
 
 If Edit's error output is empty for a failed path, write '(no error output)' as the reason.
 
-Before returning, confirm your summary's first line is `doc-writer: partial success — …` or `doc-writer: all writes failed — …`.
+Before returning, confirm your first line begins with `doc-writer: wrote to:`, `doc-writer: partial success —`, or `doc-writer: all writes failed —`.
 
 ## Writing Guidelines
 
