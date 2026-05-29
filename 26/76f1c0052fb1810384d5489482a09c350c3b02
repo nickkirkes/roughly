@@ -1,0 +1,19 @@
+.roughly/plans/E05.S2-doc-writer-multi-file-failure-handling-plan.md
+  s_7db8d8ce3c8936::t_6a6fc9684f448a 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "2676f1c0052fb1810384d5489482a09c350c3b02",
+  "prompts": {},
+  "sessions": {
+    "s_7db8d8ce3c8936": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8e359b9c-ab1c-4621-86da-5495b8f94c7b",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
