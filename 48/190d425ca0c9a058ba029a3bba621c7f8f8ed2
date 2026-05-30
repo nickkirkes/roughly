@@ -1,0 +1,19 @@
+CHANGELOG.md
+  s_4610408a694afd::t_fee4267652db76 14-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "48190d425ca0c9a058ba029a3bba621c7f8f8ed2",
+  "prompts": {},
+  "sessions": {
+    "s_4610408a694afd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a8a9502-b893-4fcb-b523-54ecb46832c1",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
