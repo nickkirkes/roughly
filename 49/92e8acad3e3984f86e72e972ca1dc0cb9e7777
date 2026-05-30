@@ -1,0 +1,23 @@
+CHANGELOG.md
+  s_4610408a694afd::t_202652e2e7eb4d 12
+  s_4610408a694afd::t_a485651f28fc2e 18-19,21-23
+  s_4610408a694afd::t_ce313d4dd61cd3 26-31
+  s_4610408a694afd::t_1c3b9b0e9cac6a 20
+  s_4610408a694afd::t_e01e474e93c9f7 36-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "4992e8acad3e3984f86e72e972ca1dc0cb9e7777",
+  "prompts": {},
+  "sessions": {
+    "s_4610408a694afd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a8a9502-b893-4fcb-b523-54ecb46832c1",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
