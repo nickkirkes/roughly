@@ -1,0 +1,35 @@
+.roughly/plans/E05.S4.5-mkdir-p-audit-plan.md
+  s_905662e433644a::t_dc5ebc82d8caa5 68,70-71,73,75,77,79
+  s_905662e433644a::t_7fc1c1b2420f8f 16,18
+  s_905662e433644a::t_3ff89ad88c2fd0 30
+  s_905662e433644a::t_6451806e1325a3 87,89,92,97
+  s_905662e433644a::t_789e8d864bf4c5 146,150-153
+  s_905662e433644a::t_c6f1589daa3856 1-15,17,19-29,31-63,65-67,69,72,74,76,78,80-86,88,90-91,93-96,98-119,121-127,129,132-145,147-149,155-167,169-171,175,177-185
+  s_905662e433644a::t_fb1ab156fbd0ab 154,233
+  s_905662e433644a::t_53378e4de09b4d 128,130-131,206-207,209
+  s_905662e433644a::t_47cf465cc1ffe7 168
+  s_905662e433644a::t_e872eeb5f2116f 120
+  s_905662e433644a::t_7a3fd52b6b3ed6 64
+  s_905662e433644a::t_a4cea39d895cdb 172-174,176
+  s_905662e433644a::t_90f4aee8031fa2 186-205,208,210-232
+skills/shared/stage-8-wrap-up.md
+  s_905662e433644a::t_438cea403381ed 28
+CHANGELOG.md
+  s_905662e433644a::t_5674821d84a43e 21-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "b883677cb701d0e20c58c76afb2e5eb18140d43c",
+  "prompts": {},
+  "sessions": {
+    "s_905662e433644a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e722801f-b613-44d6-af40-8176700aefe4",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
