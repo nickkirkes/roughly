@@ -1,0 +1,19 @@
+.roughly/plans/E05.S5-stage-8-2-commit-window-abort-handling-plan.md
+  s_701505ec8cba96::t_15bbd642ab2ad7 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "ce1886fb56bfe655a745c59e6af6fbd8e5056c08",
+  "prompts": {},
+  "sessions": {
+    "s_701505ec8cba96": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c1828a91-53db-4e22-baef-dbff28ffe1e6",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
