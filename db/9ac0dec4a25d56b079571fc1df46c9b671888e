@@ -1,0 +1,19 @@
+.roughly/plans/E05.S4.5-mkdir-p-audit-plan.md
+  s_905662e433644a::t_d9aa8eb88b30ea 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "db9ac0dec4a25d56b079571fc1df46c9b671888e",
+  "prompts": {},
+  "sessions": {
+    "s_905662e433644a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e722801f-b613-44d6-af40-8176700aefe4",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
