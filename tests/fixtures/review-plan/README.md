@@ -1,8 +1,9 @@
 # review-plan Fixtures
 
-Synthetic plan/skill-body fixtures exercising E04.S6's AC checks (AC1, AC2) and E05.S3's 5 new
-AC checks (AC1–AC5), plus the AC3 case-dispatch convention codified in CONTRIBUTING.md. Used for
-pre-merge self-verification per E04.S6 AC6 and E05.S3 BORDERLINE-PASS coverage.
+Synthetic plan/skill-body fixtures exercising E04.S6's AC checks (AC1, AC2), E05.S3's 5 new
+AC checks (AC1–AC5), and E05.S6's AC2 plan-level joint-satisfiability check, plus the AC3
+case-dispatch convention codified in CONTRIBUTING.md. Used for pre-merge self-verification per
+E04.S6 AC6 and E05.S3 BORDERLINE-PASS coverage.
 
 **Fixture forms:** PASS (clean — no violation present, or carve-out unambiguously applies), NEEDS REVISION (clear violation with the AC cited by name in the verdict), BORDERLINE-PASS (legitimate plan structure exercising the AC's carve-out boundary — requires the reviewer to recognize substantive rationale, not just literal phrase matching). The BORDERLINE-PASS form was introduced in E05.S3 to protect against false-positive review-fatigue (epic Risk 3).
 
@@ -32,6 +33,8 @@ pre-merge self-verification per E04.S6 AC6 and E05.S3 BORDERLINE-PASS coverage.
 | `ac5-self-defeating-pass.md` | E05.S3 AC5 (self-defeating verify) | PASS | Verify scope explicitly excludes the new-detection-prose location; literal absent from runtime files. |
 | `ac5-self-defeating-needs-revision.md` | E05.S3 AC5 | NEEDS REVISION | Literal-form `grep -Fc` verify against same file containing new detection prose; new prose contributes to count, self-defeating. |
 | `ac5-self-defeating-borderline-pass.md` | E05.S3 AC5 | PASS | `grep -v` exclusion with line-number-keyed sites; exhaustiveness debatable (could prefer structural-position verify); exercises boundary. |
+| `ac-joint-satisfiability-pass.md` | E05.S6 AC2 (AC joint satisfiability) | PASS | Two ACs reference orthogonal surfaces (different files, different tasks, different prose regions); carve-out applies and the check skips. |
+| `ac-joint-satisfiability-needs-revision.md` | E05.S6 AC2 | NEEDS REVISION | Two ACs target the same file + same step + same prose region; AC1 mandates one net-added line while AC2 forbids any net change to line count — structural impossibility. |
 
 ## How to Verify
 
@@ -50,6 +53,7 @@ Read each fixture and mentally apply the relevant check prose from `skills/revie
 - E05.S3 AC3 (defensive guard vs new invariant): line 56 — guard vs invariant + carve-out
 - E05.S3 AC4 (behavior-divergence doc coverage): line 59 — doc coverage + carve-out
 - E05.S3 AC5 (self-defeating verify pattern): line 45 — self-defeating + carve-out
+- E05.S6 AC2 (AC joint satisfiability): line 62 — joint satisfiability + carve-out
 
 For every fixture, confirm the expected verdict in the inventory table above matches what the
 check prose would produce. For BORDERLINE-PASS fixtures, confirm the reviewer would recognize the

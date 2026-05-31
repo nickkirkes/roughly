@@ -205,6 +205,8 @@ Compact context before review. Preserve: issue summary, task ID list, list of al
 
 Invoke `/roughly:review` with a description of the fix. Fix critical findings and re-run (max 2 review-fix cycles; if still failing, escalate: emit `Stage 6 review cannot proceed: 2 review-fix cycles exhausted. Findings: [list]. Files: [dirty list]. Recovery: human inspect and fix.` — OQ3 #5: most expensive loop in the pipeline, conversion-to-prompt deferred pending v0.1.5 dogfood evidence).
 
+Cubic iterations (post-merge re-runs of `/roughly:review` or an external cubic tool) terminate when: (a) cubic returns `{"issues": []}` (clean), OR (b) 5 iterations have completed with progressively narrower findings (diminishing-returns observable: each iteration surfaces fewer or lower-severity issues than the prior), OR (c) the remaining finding can only be addressed by spec amendment — escalate as a candidate via the active epic's v0.1.X candidates section, then accept the current state as documented-deferral. Evidence artifacts: option (b) requires a one-line iteration summary per cubic run (issue count + max severity) so diminishing returns are citable, not asserted; option (c) requires the candidate to be appended to the epic file (the diff to the v0.1.X candidates section is the evidence) before accepting the deferral.
+
 **Gate:** "Review complete. Proceed to verification? (yes / list warnings to address [then re-review once] / abort)" On abort: emit `Stage 6 review aborted: [reason]. Files modified, not committed. Recovery: choose rollback option per ABORT HANDLING.`
 
 Compact context before verification. Preserve: issue summary, files changed, review verdict, any deferred warnings.
