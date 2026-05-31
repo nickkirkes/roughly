@@ -1,0 +1,20 @@
+.roughly/plans/E05.S6-reviewer-brief-process-improvements-plan.md
+  s_3e4940f8ebffdc::t_e7ad3f338d47a1 1-2
+  s_3e4940f8ebffdc::t_fa417c092b23eb 3-184
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "29743e1b851abd26715dd9f52a6c9b1caca06c51",
+  "prompts": {},
+  "sessions": {
+    "s_3e4940f8ebffdc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a09b343a-3b6b-448c-8f68-b4af0e3d1334",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
