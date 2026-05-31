@@ -74,7 +74,7 @@ E05 lands as a debt-and-amendment release that closes its intended scope cleanly
 | AC5 drift check (a)+(b)+(c) | MET | verify-all.sh: shared/ existence L106; per-file checks L109–111; Read-directive window L116–121; content-duplication phrase greps L123–128 |
 | AC6 CLAUDE.md + ADRs/README.md | MET | CLAUDE.md L17 Structure row + L18 ADR enumeration + L62 Key Design Decisions row; `docs/adrs/README.md:39` |
 
-**Quality notes:** Read directives placed correctly under section heads (single-line, well within 3-line window). `verify-all.sh` lands at exactly the 150-line soft cap (148 lines) — no overage but no further headroom.
+**Quality notes:** Read directives placed correctly under section heads (single-line, well within 3-line window). `verify-all.sh` is at 148/150 lines — 2-line headroom under the soft cap; no overage but minimal slack for further additions.
 
 ### E05.S4.5: Stage 3 `mkdir -p` audit across skill/agent `.roughly/` writes
 
@@ -218,6 +218,7 @@ The pre-existing v0.1.8 candidate #1 from CHANGELOG L31 ("Risk 1 T2 runtime clas
 ### Test reproduction
 
 ```bash
+# macOS / BSD (as run on 2026-05-31):
 SANDBOX=/tmp/doc-writer-t2-sandbox
 mkdir -p "$SANDBOX"
 cat > "$SANDBOX/pitfalls-stub.md" << 'EOF'
@@ -230,17 +231,21 @@ cat > "$SANDBOX/claude-stub.md" << 'EOF'
 ## Conventions
 (none)
 EOF
-# For partial-success: chflags uchg "$SANDBOX/claude-stub.md"
-# For all-fail: chflags uchg "$SANDBOX"/*
+# Block writes deterministically — macOS/BSD form:
+#   For partial-success: chflags uchg "$SANDBOX/claude-stub.md"
+#   For all-fail:        chflags uchg "$SANDBOX"/*
 # Dispatch roughly:doc-writer subagent with the sandbox paths overridden as targets.
 # Cleanup: chflags nouchg "$SANDBOX"/* && rm -rf "$SANDBOX"
 ```
 
+**Linux equivalent (ext2/3/4, btrfs, xfs):** replace `chflags uchg` with `sudo chattr +i` and `chflags nouchg` with `sudo chattr -i`. The immutability flag on Linux requires `CAP_LINUX_IMMUTABLE` (hence `sudo`) and is filesystem-specific — on filesystems without immutability support (e.g., tmpfs in some configurations, NFS, exFAT), use a writable-parent-dir approach instead: place the "fail" target inside a parent directory the user does not own / cannot write, OR `chmod 000` the parent directory of the fail target after the agent has Read it (different failure mode — affects rename, not file-content writes, so still triggers the Edit-tool write-temp + rename pattern's failure path). The audit test ran on macOS; cross-platform reproduction has not been independently validated and may surface filesystem-specific edge cases.
+
 Test setup design choices:
 
 - Sandbox paths (not real `.roughly/known-pitfalls.md` / `CLAUDE.md`) to avoid polluting the actual project files
-- `chflags uchg` instead of `chmod 444` because the Edit tool's write-temp + rename pattern silently no-ops through chmod 444 (chmod 444 changes file-content perms; rename uses parent-directory perms which remain writable)
+- `chflags uchg` / `chattr +i` instead of `chmod 444` because the Edit tool's write-temp + rename pattern silently no-ops through chmod 444 (chmod 444 changes file-content perms; rename uses parent-directory perms which remain writable) — the immutability flag blocks both the rename and any in-place write attempt at the kernel layer
 - Sandbox content cleared on disk post-cleanup; both scenarios independently verifiable
+- OS constraint: the canonical run used macOS-specific `chflags`. Linux requires the equivalent `chattr` form above. Windows / WSL paths and POSIX-only environments without the immutability flag concept require the alternative parent-directory mechanism described above. Test fidelity depends on the kernel propagating the write error to the Edit tool as a discrete error code (EPERM on the systems tested); platforms that return a different errno may surface a different reason string in the runtime LLM's emitted template, but the template-selection logic under test is errno-agnostic.
 
 ---
 
