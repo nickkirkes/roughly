@@ -1,0 +1,49 @@
+tests/fixtures/epic-reviewer/ac-mutual-satisfiability-needs-revision.md
+  s_3e4940f8ebffdc::t_f9bb245070fb80 1-28
+skills/shared/stage-8-wrap-up.md
+  s_3e4940f8ebffdc::t_4d62acb6a8d70b 29
+  s_3e4940f8ebffdc::t_b28162590b87b6 30
+tests/fixtures/review-plan/README.md
+  s_3e4940f8ebffdc::t_698718a340a133 3-6
+  s_3e4940f8ebffdc::t_24ca1ec2423051 36-37
+  s_3e4940f8ebffdc::t_39f50c314d7b4b 56
+CHANGELOG.md
+  s_3e4940f8ebffdc::t_f52a9bcfa2b9af 17-19
+skills/fix/SKILL.md
+  s_3e4940f8ebffdc::t_75627bc882a334 209
+  s_3e4940f8ebffdc::t_bb0f8b1322158a 208
+tests/fixtures/epic-reviewer/ac-mutual-satisfiability-pass.md
+  s_3e4940f8ebffdc::t_770f6ae945abf7 1-23
+tests/fixtures/review-plan/ac-joint-satisfiability-pass.md
+  s_3e4940f8ebffdc::t_d920331c0ac6e6 1,11,30
+  s_3e4940f8ebffdc::t_f21057ad00f18a 2-10,12-29
+skills/build/SKILL.md
+  s_3e4940f8ebffdc::t_c0e87164520196 206
+  s_3e4940f8ebffdc::t_73183fa193e1d1 205
+agents/epic-reviewer.md
+  s_3e4940f8ebffdc::t_244551c13fe9d0 64-66
+  s_3e4940f8ebffdc::t_f3e8f5763993e3 33
+skills/review-plan/SKILL.md
+  s_3e4940f8ebffdc::t_5c601629d4b5b3 63
+  s_3e4940f8ebffdc::t_073a8623061cd9 62,64
+tests/fixtures/review-plan/ac-joint-satisfiability-needs-revision.md
+  s_3e4940f8ebffdc::t_c8e486bbac8d93 1-29
+tests/fixtures/epic-reviewer/README.md
+  s_3e4940f8ebffdc::t_6c0626227fd8ae 1-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "fa28b77816e129380058a0bee594e2e5d13e23bd",
+  "prompts": {},
+  "sessions": {
+    "s_3e4940f8ebffdc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a09b343a-3b6b-448c-8f68-b4af0e3d1334",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
