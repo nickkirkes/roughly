@@ -1,6 +1,6 @@
 # Roughly Roadmap
 
-**Current:** v0.1.6 · **Updated:** 2026-05-24
+**Current:** v0.1.7 · **Updated:** 2026-06-01
 
 ## Thesis
 
@@ -14,6 +14,7 @@ Primary user through v1.0: solo dev first, teams second. Team adoption is downst
 |---|---|---|
 | v0.1.5 | Trust hardening + ergonomics + CI | 6-7 wk |
 | v0.1.6 | Path consolidation + process codification | ~10 days |
+| v0.1.7 | Doc-writer hardening + review-plan codification + structural off-ramp | ~6 days |
 | v0.2.0 | Cost-aware pipeline (Haiku routing, plan format v2) | 4-5 wk |
 | v0.3.0 | Monorepo support | 6-8 wk |
 | v0.4.0 | Team governance | 4-6 wk |
@@ -94,6 +95,22 @@ Scope and per-story details: [docs/planning/epics/E04-path-consolidation-and-pro
 - Review-plan-as-spec-quality-gate cluster (5 items from E04.S1/S2/S5/S6/S9 — recommended as a single v0.1.7 story)
 - E04.S3 ABORT HANDLING gap for Stage 8's 2-commit window (requires off-ramp invocation due to fix/SKILL.md at-cap)
 - Full v0.1.7 candidates list: see [E04 epic v0.1.7 candidates section](planning/epics/E04-path-consolidation-and-process-codification.md#v017-candidates).
+
+---
+
+## v0.1.7 — Doc-writer hardening + review-plan codification + structural off-ramp
+
+**Effort:** ~6 days (medium release; 7 stories across 4 clusters) · **Status:** SHIPPED 2026-06-01.
+
+Scope and per-story details: [docs/planning/epics/E05-doc-writer-hardening-and-spec-quality-gates.md](planning/epics/E05-doc-writer-hardening-and-spec-quality-gates.md). Headline outcomes — 7/7 stories merged across PRs #50–#56; post-implementation audit (PR #57) reported 43/45 ACs MET (2 PARTIAL backfilled in audit cycle; 0 NOT MET; 0 regressions); Risks 3/4/5 closed; Risk 1 partial-close (T2 PARTIAL PASS surfaces the all-fail template misfire as v0.1.8 substantive work); Risk 2 (off-ramp shared-reference drift) in by-design 30-day dogfood window (closes ~2026-06-27 on zero false-positive accumulation). Line-cap budget contract closed the v0.1.6 binding state — fix/SKILL.md recovered from 300/300 to 269/300; doc-writer.md compliant at 649/650 post-cap-revision. ADR-012 codifies the new runtime-shared-procedural-references pattern (skills/shared/abort-handling.md + skills/shared/stage-8-wrap-up.md). CONTRIBUTING.md gains `## Cross-epic AC amendments` convention (codified in S3, first-applied in S2).
+
+### Out of scope (→ v0.1.8)
+
+- **Risk 1 substantive: AC4 all-fail-branch anchoring tightening + T2 re-run** (T2 ran during E05 audit; PARTIAL PASS revealed all-fail template misfire — LLM regresses to partial-success container with `(none)` placeholder for the successful-paths slot; three concrete tightening hypotheses in audit report)
+- **agents/doc-writer.md cap relief** (now at 649/650 hard cap; any v0.1.8 doc-writer-touching story needs relief OR explicit carve-out)
+- **.claude/hooks/verify-all.sh cap relief** (now at 148/150 soft cap; next drift check addition needs the same off-ramp pattern E05.S4 invoked for build/fix)
+- **CI-coverage cluster** — negative-path CI + fix-side `--ci` (carried from E05 OQ4 resolution; unblocked now that fix/SKILL.md headroom is restored)
+- **Full v0.1.8 candidates list**: see CHANGELOG `## [0.1.7]` section + [E05 epic](planning/epics/E05-doc-writer-hardening-and-spec-quality-gates.md) + [E05 audit report](planning/epics/E05-doc-writer-hardening-and-spec-quality-gates-audit.md).
 
 ---
 

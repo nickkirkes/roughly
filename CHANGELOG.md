@@ -1,6 +1,8 @@
 # Changelog
 
-## [Unreleased]
+## [0.1.7] — 2026-06-01
+
+> Doc-writer hardening + review-plan codification + structural off-ramp. Scope per [docs/planning/epics/E05-doc-writer-hardening-and-spec-quality-gates.md](docs/planning/epics/E05-doc-writer-hardening-and-spec-quality-gates.md).
 
 ### Added
 
