@@ -1,0 +1,27 @@
+.roughly/workflow-upgrades
+  s_4610408a694afd::t_a600b6175ee9d4 1
+.claude-plugin/plugin.json
+  s_4610408a694afd::t_1deddce22d5cd5 4
+CHANGELOG.md
+  s_4610408a694afd::t_3b3f3180f035e0 3-5
+docs/ROADMAP.md
+  s_4610408a694afd::t_712a3fd1eccea4 101-116
+  s_4610408a694afd::t_7631f9f60c4815 3
+  s_4610408a694afd::t_e550843f234944 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "a725d0a3a4144a85751b345a401888b2ac4cc9aa",
+  "prompts": {},
+  "sessions": {
+    "s_4610408a694afd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a8a9502-b893-4fcb-b523-54ecb46832c1",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
