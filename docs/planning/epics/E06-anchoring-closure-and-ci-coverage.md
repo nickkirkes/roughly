@@ -1,0 +1,547 @@
+# E06: doc-writer all-fail anchoring + CI coverage + reviewer-brief codification
+
+**Date:** 2026-06-02 (PM round)
+**Status:** PM draft — pre-implementation review pending.
+**Target version:** v0.1.8
+**Target effort:** ~7-9 days part-time (7 stories across 3 clusters; one substantive AC re-amendment with bundled cap-relief trim, two CI-coverage stories on different verification surfaces, four small/micro codifier closures).
+**Dependencies on prior epics:**
+
+- **E05** (doc-writer hardening + review-plan codification + structural off-ramp) — primary. E06.S1 amends E05.S2.AC4's all-fail-branch anchoring via the cross-epic AC amendment convention codified in E05.S3 (first re-amendment instance — extends the convention to multi-hop with an in-story addition to CONTRIBUTING.md). E06.S2/S3 are unblocked by E05.S4's off-ramp recovering `skills/fix/SKILL.md` headroom (300/300 → 269/300). E05 Risk 1 is the primary inherited risk substantively addressed in this epic; Risk 2's 30-day window assessment lands in v0.1.8 retrospective.
+- **E03** (trust hardening + ergonomics + CI) — secondary. E03.S11b-2's build-side `--ci` flag is the structural reference for E06.S2's fix-side mirror. The CI scaffolding (E03.S11a) and dogfood harness (`scripts/ci-dogfood.sh`) are the substrate for E06.S3's negative-path fixtures.
+- **E04** (path consolidation + process codification) — secondary. E04 Risk 3 (Stop hook drift 30-day window, opened 2026-05-20, closes ~2026-06-19) and E04 Risk 5 (synthetic CI-test promotion for doc-writer multi-file invocations) both have close-or-promote decisions in v0.1.8 retrospective. CONTRIBUTING.md `## Cross-epic AC amendments` convention (codified E05.S3 under E04 epic's review-plan-as-spec-quality-gate cluster) is the structural foundation for E06.S1's re-amendment work.
+- **E01, E02** — none beyond inherited pattern set.
+
+---
+
+## Release thesis
+
+v0.1.7's Risk 1 closed partially. The partial-success template anchored cleanly under three-form reinforcement (MUST + code-fenced template + post-emit self-check), but the all-fail branch misfired at runtime — the LLM regressed to the partial-success container with `(none)` as the successful-paths slot value instead of switching templates. v0.1.8's primary work is the second swing: tighten AC4's all-fail-template anchoring by layering all three audit-named hypotheses (lift branch-selection rule to its own MUST + self-check; three-form reinforcement on the L52 all-fail template; all-fail-specific post-emit self-check), bundled with a trim-based cap-relief sub-task because `agents/doc-writer.md` is at 649/650 hard cap with no slack for additive change. Secondary work is the CI-coverage cluster — fix-side `--ci` flag (structural mirror of E03.S11b-2's build-side) and negative-path CI scenarios (build Stage 6 max-cycles abort + build NEEDS REVISION recovery) — deferred from v0.1.6 and v0.1.7 and now unblocked by E05.S4's headroom recovery. Tertiary work is a bundle of carry-forward codifications that would have prevented several v0.1.7 post-merge deferrals if they had landed earlier: AC quoted-wording marker convention, Stage 6 SFH third-disposition gate, `/roughly:help` install-marker schema fix, and audit-table-in-PR-body convention. Out of bounds for v0.1.8: structural relief for `.claude/hooks/verify-all.sh` (148/150 soft cap; off-ramp prepared but no forcing function in this epic); dogfood-self template-sync mechanism; cubic-readable known-issues mechanism; preamble + Stage 1 extraction to `skills/shared/`; `agents/agent-preamble.md` lift of doc-writer failure-handling clauses; per-agent word caps; plan-format v2 / Haiku routing / pre-compaction trim (all v0.2.0).
+
+---
+
+## Risk register
+
+1. **AC4 all-fail-branch tightening may still not move runtime LLM behavior — second-swing cost-of-failure is high.** E06.S1 layers all three audit-named hypotheses (branch-selection rule lifted to its own MUST + post-emit self-check pair; three-form reinforcement on the L52 all-fail template; all-fail-specific post-emit self-check) on top of the existing partial-success anchoring. If the runtime LLM still regresses to the partial-success container on the 0-succeeded case, the underlying issue is judged to be beyond prose-only intervention; Risk 1 promotes to v0.1.9 with a programmatic fallback (response-validation subagent that asserts output-shape post-emission, OR programmatic template parser that re-formats free-form output to the locked template). The cost is higher than v0.1.7's Risk 1 because the prose-only design space is now exhausted and v0.1.9 budget is committed to a structurally different mechanism. **Mitigation:** ship policy mirrors E05.S2's three-outcome rule per epic L110–113 — FULL PASS on T2 re-run (both scenarios verbatim) closes Risk 1; PARTIAL PASS (partial-success still passes, all-fail still misfires) ships with documented result and promotes the programmatic-mechanism story to v0.1.9 must-do; FULL FAIL (both scenarios regress — extremely unlikely since partial-success holds in v0.1.7) ships with documented result and same v0.1.9 promotion. Test fidelity hardened per E05 audit reproduction notes: macOS `chflags uchg` (not `chmod 444` — Edit tool bypasses chmod 444 via write-temp + rename); Linux equivalent `sudo chattr +i`. Closes on T2 FULL PASS at v0.1.8 ship.
+
+2. **Cap-relief trim may degrade existing AC coverage in `agents/doc-writer.md`.** doc-writer at 649/650 — E06.S1 adds ~30–50 words of new anchoring prose and must trim equivalent words from existing prose to land net-≤650. The trim surface overlaps with semantic coverage from E04.S8.AC1 (a)–(f) failure-mode enumeration, E05.S2.AC2 three-form anchoring, E05.S2.AC3 empty-error fallback, and E05.S2.AC4 all-fail branch — each shipped under explicit AC contract. A trim that hits load-bearing prose could silently degrade a shipped AC. **Mitigation:** E06.S1 trim sub-AC must explicitly preserve (a) all six failure-mode coverage points from E04.S8.AC1 (read-fail; CLAUDE.md absent; missing parent directory; near-cap target file; Edit error empty/missing; all writes failed), (b) the partial-success template + branch-selection rule + post-emit self-check from E05.S2.AC2, (c) the `(no error output)` fallback from E05.S2.AC3, and (d) the existing all-fail template + emission rule from E05.S2.AC4 (which E06.S1 amends, not replaces). Trim candidates identified at plan-write must name word count + semantic role per trim; review-plan AC verifies trim doesn't touch the AC-anchored prose blocks. Closes when E06.S1 ships with (a)–(d) preserved per direct inspection AND `wc -w agents/doc-writer.md` ≤650 post-merge AND T2 re-run completes without runtime degradation of the partial-success scenario (which already FULL PASSed in v0.1.7).
+
+3. **Negative-path CI fixture authoring may surface harness fragility specific to NEEDS REVISION recovery and max-cycles abort dispatch shapes.** E06.S3 adds two negative-path scenarios that exercise dispatch states E03.S11b-2's happy-path harness has never exercised: (a) build Stage 6 max-cycles abort — requires synthetic code that triggers cubic to surface findings the implementer cannot fix within the cycle cap; (b) build NEEDS REVISION recovery — requires a synthetic plan that triggers `/roughly:review-plan` to emit NEEDS REVISION on first pass, then PASS after applied revisions. Both require fixture state the harness has never authored; fixture authoring may surface harness limitations (input format, output capture, exit code propagation, transcript parsing) that don't manifest on the happy path. **Mitigation:** E06.S3 ships fixtures incrementally with per-fixture subagent dispatch validation before final assertion. Per E05.S3 fixture-triple discipline (PASS + NEEDS REVISION + BORDERLINE-PASS), each negative-path scenario carries a paired control case — a near-miss happy-path that verifies the negative trigger isn't false-positive. Harness modifications discovered during fixture authoring are in-scope for E06.S3 (do not defer); the fix is bundled with the scenario it surfaces from. Closes when E06.S3 ships with both scenarios passing 3 consecutive runs on `main` without harness modification post-merge.
+
+4. **Cross-epic AC re-amendment trail (E04.S8 → E05.S2 → E06.S1) breaks linear readability under the v0.1.7 convention.** E05.S3 codified the `## Cross-epic AC amendments` convention in CONTRIBUTING.md with a single-hop assumption — original epic gets a back-pointer to the amender. E06.S1 is the first multi-hop case: E04.S8.AC2/AC4/AC5 were amended in E05.S2; E05.S2.AC4 is now re-amended in E06.S1. Under the current convention, the back-pointer at E04.S8.AC5 still points to E05.S2 (the original amender), but E05.S2.AC4 now also needs a "re-amended in E06.S1" annotation, and the trail spans three epic files. If the convention isn't extended explicitly, future contributors reading E04.S8.AC5 → follow back-pointer to E05.S2 → see the AC text but not know it was re-amended, and read a stale contract. **Mitigation:** E06.S1 includes an in-story addition to CONTRIBUTING.md `## Cross-epic AC amendments`: when an amended AC is itself re-amended, the new amender's epic remains the canonical source; the original epic's existing back-pointer is **preserved unchanged** (preserves the trail's intermediate hop for discoverability); a new forward-pointer line is added **immediately below** the existing back-pointer in the form `**Re-amended in <new-id> — see <new-id> for the latest contract.**`; intermediate amenders also gain a forward-pointer line below their amended-here entry's AC prose in the form `**Re-amended in <new-id> — see <new-id> for the latest contract; this entry preserved as historical record.**`. Intermediate-amender entries' AC prose MUST NOT be edited in-place; additive adjacent forward-pointer lines are explicitly permitted and required. **Recursive application** (3+ hop chains): every prior amender's pointers are preserved; only the new latest-amender forward-pointer is added (e.g., a v0.1.9 E07.Sn re-amending again would land a third line under E04.S8.AC5 and additional forward-pointer lines under E05.S2.AC4 and E06.S1's canonical entry — the chain remains fully discoverable through preserved hops). E06.S1 applies the convention extension to its own amendment artifacts: E04.S8.AC5's existing `Amended in E05.S2` back-pointer is preserved unchanged AND a new `Re-amended in E06.S1` forward-pointer line is added below it; E05.S2.AC4 entry gains the `Re-amended in E06.S1` forward-pointer with historical-record-preserved annotation below its AC prose. Closes when E06.S1 ships with the convention extension AND all four trail artifacts (E04.S8.AC5 preserved back-pointer + new forward-pointer + E05.S2.AC4 forward-pointer + E06.S1 canonical entry) consistent.
+
+---
+
+## Line-cap budget contract
+
+Carried forward from E05 with refreshed starting state.
+
+**Starting state (post-v0.1.7, verified 2026-06-02 against HEAD):** build/SKILL.md 268/300, fix/SKILL.md 269/300, setup 287/300 (unchanged from E05), help 163/300, upgrade 172/300, review-plan/SKILL.md 117/300 (post-E05.S3 +21 lines), audit-epic 141/300, review 88/300, review-epic 64/300, verify-all/SKILL.md 80/300. `agents/doc-writer.md` 649/650 — **1-word headroom, hard cap binding**. `.claude/hooks/verify-all.sh` 148/150 soft — **2-line headroom, soft cap binding**.
+
+**Cap-pressure constraints binding for v0.1.8:**
+
+- Any v0.1.8 story touching `agents/doc-writer.md` MUST either include a cap-relief trim sub-task OR carry explicit carve-out fallback in its ACs. E06.S1 (the only doc-writer-touching story) bundles cap-relief trim — see E06.S1.AC2 for net-zero word delta requirement.
+- Any v0.1.8 story adding a new drift check to `.claude/hooks/verify-all.sh` MUST invoke the off-ramp (extract per-check helpers to a sourced `.sh` library, OR per-check separate hook files invoked from a dispatcher). **No E06 story adds a new verify-all.sh check**, so the off-ramp stays prepared-but-unused; v0.1.9 inherits the cap-pressure with first forcing function. Documented as Out-of-scope in epic header.
+
+**Projected net delta by story:**
+
+- **E06.S1:** net-zero on `agents/doc-writer.md` (additions ~71–98 words per locked AC1 word-budget breakdown; trim ~71–98 words matching; design constraint — revised from prior ~30–50 estimate per epic-reviewer Blocker 2 budget-reconciliation).
+- **E06.S2** (fix-side `--ci`): **~+5–8 lines** on `skills/fix/SKILL.md` — projected ~274–277 (tightened from ~5–10 per Observation 7).
+- **E06.S3** (negative-path CI): no skill body line-cost impact — fixture authoring + `scripts/ci-dogfood.sh` modifications.
+- **E06.S4** (AC quoted-wording marker): ~+5–6 lines on `skills/review-plan/SKILL.md` (projected ~123/300); ~+5 lines on CONTRIBUTING.md.
+- **E06.S5** (Stage 6 SFH third-disposition): **~+5–6 lines** each on `skills/build/SKILL.md` and `skills/fix/SKILL.md` Stage 6 (build projected ≤274; fix projected ≤283 including S2 cumulative at tightened upper bounds — tightened from ~5–7 per Observation 7).
+- **E06.S6** (help install-marker schema): ~+5–10 lines on `skills/help/SKILL.md` (projected ≤173/300).
+- **E06.S7** (audit-table-in-PR-body convention): ~+5–8 lines on CONTRIBUTING.md only.
+
+This contract supersedes any inherited E05 cap framing. Off-ramp invocation contract for verify-all.sh stays prepared, not invoked.
+
+---
+
+## Stories
+
+Stories are grouped by cluster. Sequencing — which is by dependency, not cluster order — appears in the final [Sequencing](#sequencing) section.
+
+### Cluster C1 — Risk 1 substantive close
+
+#### E06.S1: doc-writer AC4 all-fail-branch anchoring tightening + cap-relief trim + cross-epic re-amendment convention extension
+
+**Maps to v0.1.8 candidates** (substantive promotion from v0.1.7 docs):
+
+- "Risk 1 substantive: AC4 all-fail-branch anchoring tightening + T2 re-run" (E05 audit "Post-audit follow-up" section + CHANGELOG L31 → L53 candidate promoted from documentation to substantive)
+- "Cross-epic AC re-amendment convention extension" (new, surfaced this PM round per Risk 4 mitigation — multi-hop case not covered by E05.S3 single-hop codification)
+
+**Files touched:**
+
+- `agents/doc-writer.md` — multi-edit: (1) add strengthening MUST + post-emit self-check pair for the branch-selection rule below L41 per audit hypothesis (a) — L41 itself preserved byte-identical; (2) three-form reinforcement applied to L52 all-fail template per audit hypothesis (b) — own all-fail-specific MUST line above the code fence; (3) all-fail-specific post-emit self-check appended below existing L57 self-check per audit hypothesis (c); (4) compensating trim of ~71–98 words from existing prose to land net-≤650
+- `docs/planning/epics/complete/E04-path-consolidation-and-process-codification.md` — E04.S8.AC5's existing `Amended in E05.S2` back-pointer preserved unchanged; new forward-pointer line `**Re-amended in E06.S1 — see E06.S1 for the latest contract.**` added immediately below it (preserve-hops convention from AC4 below; preserves the discovery trail's intermediate hop)
+- `docs/planning/epics/complete/E05-doc-writer-hardening-and-spec-quality-gates.md` — E05.S2.AC4 entry gains forward-pointer line `**Re-amended in E06.S1 — see E06.S1 for the latest contract; this entry preserved as historical record.**` immediately below the AC4 prose (AC4 prose itself preserved byte-identical per AC4's no-edit-in-place rule)
+- `CONTRIBUTING.md` — `## Cross-epic AC amendments` subsection extended with multi-hop re-amendment annotation rule (4-artifact requirement; first multi-hop instance documented)
+- `CHANGELOG.md` — `### Changed` documenting the re-amendment chain, cap-relief trim, T2 re-run outcome, and convention extension
+
+**Acceptance criteria:**
+
+- **AC1 — Three-form layered anchoring tightening for the all-fail branch.** Three concurrent reinforcements per the E05 audit's three hypotheses, all layered:
+
+  - **(a) Add a strengthening MUST + post-emit self-check pair for the branch-selection rule.** The L41 MUST sentence currently conjoins TWO distinct discipline statements: (i) the **universal first-line discipline** ("Your return summary MUST literally begin with one of the three templates below"), and (ii) the **branch-selection rule** ("Pick template by outcome: 0 failed → all-success; ≥1 failed and ≥1 succeeded → partial-success; 0 succeeded → all-fail"). **The L41 sentence is preserved byte-identical** — the strengthening is additive, not relocational (resolves epic-reviewer Blocker 1: the L41 MUST is universal, not partial-success-specific; lifting the branch-selection clause OUT of L41 would either edit the universal MUST or duplicate it). Add a **new standalone MUST sentence below the L41 paragraph** re-stating the branch-selection rule as its own discipline: "Your branch selection MUST pick the all-fail template when 0 writes succeeded; the partial-success template when ≥1 succeeded and ≥1 failed; no template when 0 failed (free-form summary allowed)." Pair with a **new post-emit self-check** added below the existing L57 self-check: "Before returning, confirm you selected the template matching your observed outcome (0 succeeded → all-fail; ≥1 succeeded and ≥1 failed → partial-success)." The strengthening pair re-states the branch-selection rule as its own discipline (MUST-citing-it form) — parallel to E05.S2.AC2's three-form anchoring for partial-success. Verify: `grep -Fn "MUST pick the all-fail template when 0 writes succeeded" agents/doc-writer.md` returns 1 match positioned below L41; `grep -Fn "confirm you selected the template matching your observed outcome" agents/doc-writer.md` returns 1 match positioned below L57; `grep -Fn "Pick template by outcome: 0 failed" agents/doc-writer.md` still returns 1 match at L41 (the original branch-selection rule preserved byte-identical in its universal MUST context).
+
+  - **(b) Three-form reinforcement applied to the L52 all-fail template** — currently anchored only by the universal L41 MUST (which cites all three template selections in branch-selection form) and the L52 code fence, with no all-fail-specific MUST line above the code fence parallel to how the partial-success template gains its anchoring from the L48 code fence following from the L41 universal MUST. Add **own all-fail-specific MUST line** above the L52 code fence: "Your return summary MUST literally begin with `` `doc-writer: all writes failed —` `` when 0 writes succeeded." The code fence at L52 is already present from E05.S2; the new MUST line strengthens the all-fail anchoring specifically (the L41 universal MUST cites all three templates in branch-selection-rule form; the new MUST is all-fail-specific in form-anchoring form — MUST-citing-it form). Verify: `grep -Fn "MUST literally begin with \`doc-writer: all writes failed —\`" agents/doc-writer.md` returns 1 match positioned immediately above the L52 all-fail code fence.
+
+  - **(c) All-fail-specific post-emit self-check appended below the existing L57 self-check** (or as a paired second self-check line). Text: "If you observed 0 successful writes, confirm your first line begins with `` `doc-writer: all writes failed —` ``, NOT `` `doc-writer: partial success — wrote to: (none); …` `` (the v0.1.7 misfire pattern)." Verify: `grep -Fn "NOT \`doc-writer: partial success — wrote to: (none)" agents/doc-writer.md` returns 1 match in the self-check region.
+
+- **AC2 — Cap-relief trim with semantic-coverage preservation.** Trim existing prose in `agents/doc-writer.md` by **~71–98 words** (matching AC1's cumulative additive total — see word-budget breakdown below) to absorb AC1's additions and land at `wc -w agents/doc-writer.md` ≤650 post-merge (net-zero word delta target; design constraint).
+
+  **AC1 word-budget breakdown** (locked at epic level per epic-reviewer Blocker 2 — escalated from `OQ-S1-word-budget` plan-write deferral):
+  - AC1(a) standalone branch-selection MUST (~22–31 words) + paired post-emit self-check (~11–21 words) = ~33–52 words.
+  - AC1(b) own all-fail-specific MUST line above L52 = ~14–18 words.
+  - AC1(c) all-fail-specific post-emit self-check = ~24–28 words.
+  - **Cumulative AC1 additions: ~71–98 words.** AC2 trim target locked at the matching range to maintain net-zero ≤650. The expanded trim envelope (vs original ~30–50 estimate that the PM session under-estimated) increases the importance of the 4-coverage-group preservation rationale below — plan-write must enumerate trim candidates AGAINST the coverage-group invariant with named line ranges, not against arbitrary slack-prose targets.
+  
+  Trim sites identified at plan-write must explicitly name (i) word count per trim, (ii) semantic role of the trimmed prose, (iii) why removal does not degrade any of:
+  - (1) E04.S8.AC1's (a)–(f) failure-mode coverage: read-fail, CLAUDE.md absent, missing parent directory, near-cap target file, Edit error empty/missing, all writes failed.
+  - (2) E05.S2.AC2's partial-success three-form anchoring at L41 (MUST), L48 (code fence), L57 (post-emit self-check).
+  - (3) E05.S2.AC3's `(no error output)` fallback at L55.
+  - (4) E05.S2.AC4's all-fail template at L52 + branch-selection rule (the latter is re-amended by AC1.a above, not deleted — the rule's content is preserved, only its placement and anchoring strength change).
+  
+  Plan-write must produce a 4-column trim table: `<line range> | <words removed> | <semantic role> | <preserved-elsewhere rationale>`. Verify: post-edit `wc -w agents/doc-writer.md` ≤650; the four coverage groups above are present per direct inspection at named line ranges (the plan enumerates the expected post-edit line ranges for each).
+
+- **AC3 — T2 synthetic re-run with three-outcome ship policy.** Re-run T2 synthetic test using the E05 audit's reproduction setup at `docs/planning/epics/complete/E05-doc-writer-hardening-and-spec-quality-gates-audit.md` L221–248. Sandboxed `roughly:doc-writer` dispatch in `/tmp/doc-writer-t2-sandbox/` with stand-in `pitfalls-stub.md` and `claude-stub.md`. Writes blocked via `chflags uchg` (macOS) or `sudo chattr +i` (Linux) — `chmod 444` is bypassed by Edit's write-temp + rename pattern per audit pitfall. Two scenarios both required:
+  - **Scenario 1 — partial-success (1 Edit succeeds, 1 fails):** required outcome FULL PASS (verbatim partial-success template at first line). Regression check — partial-success already FULL PASSed in v0.1.7 audit, so this verifies the AC2 trim hasn't degraded the existing anchoring.
+  - **Scenario 2 — all-fail (0 Edits succeed, 2 fail):** primary outcome under test. Required outcome FULL PASS (verbatim all-fail template at first line: `doc-writer: all writes failed — <comma-separated list of failed paths with EPERM reasons>`).
+  
+  Three-outcome classification per E05 epic L110–113:
+  - **FULL PASS** — both scenarios emit the verbatim template. **Risk 1 closes.** CHANGELOG `### Changed` records FULL PASS; v0.1.8 ships with Risk 1 closure documented.
+  - **PARTIAL PASS** — partial-success passes (regression check OK), all-fail still misfires. **Risk 1 does NOT close.** Promote v0.1.9 candidate "programmatic mechanism for runtime LLM template adherence" to v0.1.9 must-do (response-validation subagent that asserts output-shape post-emission, OR programmatic template parser that re-formats free-form output to the locked template). Ship E06.S1 with documented partial result — do not block release.
+  - **FULL FAIL** — both scenarios regress. Same v0.1.9 promotion; ship with documented failure. Extremely unlikely; partial-success is anchored in v0.1.7-shipped prose unchanged at L41/L48/L57 (only the trim from AC2 could plausibly degrade it; trim sites must avoid that prose per AC2.ii).
+  
+  T2 transcripts (both scenarios) appended to `CHANGELOG.md` `### Changed` entry, mirroring the v0.1.7 audit-report follow-up format.
+
+- **AC4 — Cross-epic re-amendment convention extension to CONTRIBUTING.md.** `CONTRIBUTING.md` `## Cross-epic AC amendments` subsection (codified in E05.S3 — currently single-hop) extended with a multi-hop / re-amendment annotation rule. Convention text:
+
+  > "When an already-amended AC is itself re-amended from a later epic, four artifacts must land together: (1) the latest amender's epic entry remains the canonical source of the corrected AC text; (2) the original epic entry's existing back-pointer is **preserved unchanged** (preserves the trail's intermediate hop for discovery) AND a **new forward-pointer line** is added **immediately below** the existing back-pointer in the form `**Re-amended in <new-id> — see <new-id> for the latest contract.**`; (3) intermediate amenders also gain a forward-pointer line below their amended-here entry's AC prose in the form `**Re-amended in <new-id> — see <new-id> for the latest contract; this entry preserved as historical record.**` — intermediate-amender entries' AC prose MUST NOT be edited in-place; additive forward-pointer lines placed adjacent to the AC prose are explicitly permitted and required by this rule; (4) the CHANGELOG `### Changed` entry documents the full re-amendment chain (original → intermediate → latest) and references all four trail artifacts by file path and section anchor (original epic's preserved back-pointer + new forward-pointer, intermediate amender's forward-pointer, latest amender's canonical entry). **Recursive application:** for chains of 3+ hops, every prior amender's pointers are preserved; only the new latest-amender forward-pointer is added (the chain remains fully discoverable through preserved hops). First multi-hop instance: E04.S8.AC5 (original) → E05.S2.AC4 (intermediate) → E06.S1 (latest amender)."
+  
+  Convention text above is tagged `verbatim:` for E06.S4 sequencing — the text must land in CONTRIBUTING.md byte-for-byte modulo whitespace and link formatting (resolves epic-reviewer Polish 10).
+  
+  Verify: `grep -Fn "Re-amended in" CONTRIBUTING.md` returns ≥1 match in the `## Cross-epic AC amendments` subsection; `grep -Fn "preserved unchanged" CONTRIBUTING.md` returns ≥1 match in the same subsection (preserve-hops convention codified); convention text contains the four-artifact requirement, the recursive-application rule, and the named first-instance trail.
+
+- **AC5 — Re-amendment convention applied to the E04.S8.AC5 → E05.S2.AC4 → E06.S1 trail artifacts.** Three artifacts updated per AC4 above:
+  
+  - **(a) `docs/planning/epics/complete/E04-path-consolidation-and-process-codification.md`** — the existing `**Amended in E05.S2 — see E05.S2 for the corrected contract.**` back-pointer at E04.S8.AC5 (per E05 audit L40, located at L452 per E05.S2.AC6a verification) is **preserved unchanged**; a **new forward-pointer line** is added **immediately below** it in the form `**Re-amended in E06.S1 — see E06.S1 for the latest contract.**` (preserve-hops per AC4's revised convention — resolves epic-reviewer Observation 4: discovery trail from E04.S8.AC5 → E05.S2 intermediate → E06.S1 latest remains intact). Note: AC2 and AC4 back-pointers in E04.S8 (at L442 and L448 per E05 audit) remain unchanged because they are not re-amended in E06.S1 — only AC5's location gains the additional re-amendment forward-pointer; E06.S1 re-amends AC5's downstream descendant E05.S2.AC4, not AC2 or AC4 of E04.S8 (resolves epic-reviewer Observation 5: scope-clarification sentence). Verify: `grep -Fc "Amended in E05.S2" docs/planning/epics/complete/E04-path-consolidation-and-process-codification.md` returns exactly 3 matches (unchanged — all three preserved hops); `grep -Fc "Re-amended in E06.S1" docs/planning/epics/complete/E04-path-consolidation-and-process-codification.md` returns exactly 1 match (new forward-pointer at E04.S8.AC5 location only).
+  
+  - **(b) `docs/planning/epics/complete/E05-doc-writer-hardening-and-spec-quality-gates.md`** — E05.S2.AC4 entry gains forward-pointer line **immediately below** the AC4 prose: `**Re-amended in E06.S1 — see E06.S1 for the latest contract; this entry preserved as historical record.**`. The AC4 prose itself MUST NOT be edited in-place per AC4's no-edit-in-place rule — the forward-pointer is additive and adjacent (the rule explicitly permits adjacent additive lines per AC4's clarified scope; resolves epic-reviewer Blocker 3). The "historical record" claim in the forward-pointer is preserved by the mechanism: although the E05.S2 epic file is additively modified (one new line added below AC4), the AC4 prose text itself remains byte-identical to its E05.S2-ship state, so the historical record of the AC4 contract as it stood at E05.S2 ship is preserved verbatim in its original surrounding context (resolves epic-reviewer Polish 11). Verify: `grep -Fn "Re-amended in E06.S1" docs/planning/epics/complete/E05-doc-writer-hardening-and-spec-quality-gates.md` returns ≥1 match positioned below E05.S2.AC4 prose.
+  
+  - **(c) E06.S1's own canonical entry** (this story) is the corrected contract — AC1 above is the canonical source. No separate artifact required beyond AC1's prose in the v0.1.8 epic file.
+
+- **AC6 — CHANGELOG `### Changed` documents the re-amendment chain + T2 outcome + cap-relief trim.** Single CHANGELOG entry under v0.1.8 `### Changed` documenting: (1) the all-fail-branch anchoring tightening per AC1 (three forms layered with named files at line ranges); (2) the cap-relief trim per AC2 (named trim sites with word counts; named preserved coverage points; net-zero word delta confirmation `wc -w agents/doc-writer.md` = <N> ≤650); (3) the T2 re-run outcome per AC3 (FULL / PARTIAL / FULL FAIL classification with both transcripts appended); (4) the cross-epic re-amendment convention extension per AC4 (one-line summary + pointer to CONTRIBUTING.md section); (5) the trail artifact updates per AC5 (named files at line ranges for E04.S8.AC5 **preserved back-pointer + new forward-pointer** + E05.S2.AC4 forward-pointer per preserve-hops convention). Cross-references all four trail artifacts (per AC4's preserve-hops form). Verify: entry exists; all five items present per inspection.
+
+- **AC7 — No regression to v0.1.7-shipped contracts beyond the named AC re-amendment.** AC1's additions and AC2's trim do NOT modify any of: E04.S8.AC1 (a)–(f) coverage; E05.S2.AC1 (clause relocation to `## Failure handling` section); **E05.S2.AC2's three-form anchoring** — L41 **universal** MUST (citing all three template selections including partial-success via the branch-selection rule), L48 partial-success-specific code fence, L57 **universal** first-line post-emit self-check — all three forms preserved byte-identical; AC1(a)'s strengthening pair is additive below L41 and L57 (not a relocation) and the universal nature of L41/L57 is preserved per epic-reviewer Blocker 1 resolution; E05.S2.AC3 (`(no error output)` fallback); E05.S2.AC4 partial-success template (the all-fail template at L52 is re-amended via the additive own-MUST line from AC1(b); the partial-success template at L48 is untouched); E05.S2.AC5 (word cap ≤650 — re-verified by AC2 above); E05.S2.AC7 (no Process renumber). `grep -Fn "6. **Deduplicate" agents/doc-writer.md` returns 1 match (step 6 unchanged in number and label); `grep -Fn "## Failure handling" agents/doc-writer.md` returns 1 match at top-level heading position (per E05.S2.AC1); `grep -Fn "(no error output)" agents/doc-writer.md` returns 1 match (per E05.S2.AC3). T2 Scenario 1 (partial-success) FULL PASS in AC3 is the runtime confirmation that partial-success anchoring + empty-error fallback are untouched.
+
+**Verification:**
+
+- **Synthetic test (T2 re-run, mandatory):** per AC3 — both scenarios executed against post-merge `agents/doc-writer.md`; outcomes classified per three-outcome rule; transcripts captured.
+- **Dogfood:** Stop hook runs against this repo's worktree post-edit; confirms `agents/doc-writer.md` ≤650 (per E05.S1 cap + this story's AC2 trim).
+- **CI dogfood:** S11b-2 happy-path unchanged — this story doesn't touch CI surface; `--max-budget-usd 1.50` unchanged.
+- **Cross-epic amendment record:** verify each AC5 artifact landed by direct inspection (back-pointer updated in E04 epic at AC5 location; forward-pointer present in E05 epic below E05.S2.AC4; CHANGELOG entry references both per AC6).
+- **Self-validation via review-plan (post-E05.S3 checks):** E06.S1's plan is reviewed by `/roughly:review-plan` with the post-E05.S3 checks active. Specifically, AC2's trim table must satisfy E05.S3.AC4 (behavior-divergence doc-coverage check — the trim removes prose that may have documented some behavior; named carve-out is the trim's preserved-coverage rationale per AC2.iii).
+
+**Dependencies on other E06 stories:** None — anchor for the epic. E06.S5 (Stage 6 SFH third-disposition codifier bundle) has a soft sequencing dependency on E06.S1 because E06.S5's CHANGELOG entries may cross-reference E06.S1's CONTRIBUTING.md `## Cross-epic AC amendments` extension — S5 should ship after S1 to avoid edit-window conflicts. Documented in sequencing section.
+
+**Out of scope:**
+
+- Programmatic template parser / response-validation subagent (Risk 1 v0.1.9 fallback — only promotes if AC3 returns PARTIAL or FULL FAIL).
+- Per-agent word caps (deferred per OQ4 resolution; option c from E04.S8 v0.1.7 candidate stays deferred without forcing function).
+- Lifting doc-writer failure-handling clauses into `agents/agent-preamble.md` (deferred per OQ4; option d from E05.S2 out-of-scope stays deferred — failure-handling stays in `agents/doc-writer.md`).
+- Project-wide cap revision 650 → 700+ (deferred per OQ4 + E05 epic L456 third-bump normalization-precedent risk).
+- Other-agents failure-handling audit — investigator, discovery, code-reviewer, silent-failure-hunter, static-analysis, epic-reviewer (E05.S2 candidate #2; no forcing function).
+- AC4 PASS verdict persistent-artifact convention (E05.S5 candidate #6; deferred to v0.1.9 candidates).
+- Stage 8 step 6 doc-writer dispatch-side escalation on `doc-writer: all writes failed —` returns (E05.S4.5 candidate #2; deferred to v0.1.9 — downstream of this story's AC4 tightening but out of scope here).
+- Retroactively amending E04.S8 or E05.S2.AC4 prose in-place rather than back-/forward-pointer annotation (the annotation pattern preserves historical record — amendment-in-place would corrupt it; AC4.iii explicitly forbids).
+
+---
+
+### Cluster C2 — CI coverage
+
+#### E06.S2: fix-side `--ci` flag (structural mirror of E03.S11b-2 build-side)
+
+**Maps to v0.1.8 candidate:** E04 v0.1.7 candidates L559 — "Negative-path CI scenarios + fix-side `--ci` flag" cluster, **fix-side flag portion**. Carried via E05 OQ4 deferral; now unblocked by E05.S4's off-ramp recovering `skills/fix/SKILL.md` from 300/300 to 269/300.
+
+**Files touched:**
+
+- `skills/fix/SKILL.md` — add `--ci` flag handling mirror of E03.S11b-2's build-side implementation: standalone-token detection per `.roughly/known-pitfalls.md` L70 (whitespace-or-string-bounded; not substring of `--ci-cd`); `CI_MODE=true` variable propagation; non-interactive defaults at each currently-interactive gate (Stage 4 plan-review auto-PASS if review-plan returns PASS, structured NEEDS REVISION emit + non-zero exit otherwise; Stage 5 cap-escalation defaults to structured-log escalation, not prompt; Stage 8 wrap-up auto-progresses through both commits with no human gate)
+- `scripts/ci-dogfood.sh` — new test function for fix happy-path; mirrors existing build happy-path test structure (auth-failure guard, `--max-budget-usd 1.50` cap, `... && OUT_EXIT=0 || OUT_EXIT=$?` ladder per `.roughly/known-pitfalls.md` L28 — no `OUT="$(...)"` direct assignment under `set -e`)
+- `.github/workflows/dogfood.yml` — add CI step invoking fix happy-path, OR extend existing dogfood step (implementer chooses based on existing step organization)
+- `tests/fixtures/<new-fixture>/` — new fix happy-path fixture (synthetic bug + paired fix; mirror shape of `tests/fixtures/hello-roughly/` for build); naming TBD at plan-write (suggested: `tests/fixtures/hello-roughly-bug/`)
+- `CHANGELOG.md` — `### Added`
+
+**Acceptance criteria:**
+
+- **AC1 — fix-side `--ci` flag handling in `skills/fix/SKILL.md`.** Mirror E03.S11b-2's build-side implementation (final form in commit `2e6548d` per the standalone-token `$ARGUMENTS` flag-detection pitfall in `.roughly/known-pitfalls.md` — section `## Skill & Agent Authoring`; line number subject to known-pitfalls churn per known-pitfalls doc-citation-rot pitfall, so the citation is by topic, not line): standalone-token detection ("preceded by whitespace or string start, followed by whitespace or string end — not as substring of `--ci-cd` or similar"); `CI_MODE=true` propagated through stages; non-interactive defaults applied at every currently-interactive gate. Specifically:
+  - Stage 4 (plan-review): if `/roughly:review-plan` returns PASS, auto-progress to Stage 5; if NEEDS REVISION, emit structured `FAIL — plan-review NEEDS REVISION: <verdict block>` and exit non-zero.
+  - Stage 5 (cap-escalation): default escalations to structured log emission rather than prompt; preserve cap behaviors per E03.S10 unchanged.
+  - Stage 8 (wrap-up): auto-progress both commits per E04.S3 2-commit pattern; no human gate.
+  
+  Out of scope: Stage 6 cycle-count handling — Stage 6 already has `--ci`-safe behavior via E05.S6.AC3's termination criteria; only the cycle-count emit format needs CI-safe (structured) output, which mirrors build's existing approach.
+  
+  Verify: `grep -Fn "CI_MODE" skills/fix/SKILL.md` returns ≥1 match in flag-detection block; flag-detection prose uses standalone-token language verbatim from build-side reference; no substring-match form (`grep -Fn "contains \`--ci\`" skills/fix/SKILL.md` returns 0 matches — substring trap precluded per known-pitfalls L70).
+
+- **AC2 — fix happy-path fixture authored.** New fixture under `tests/fixtures/<name>/` (suggested `hello-roughly-bug/` — final name decided at plan-write) containing: (i) synthetic project state (CLAUDE.md + minimal source file with reproducible bug); (ii) bug description matching `/roughly:fix` input format; (iii) expected fix matching the bug. Bug construction must be reproducible-and-fixable via fix happy-path: single Task, no Stage 6 cycles required (cubic returns clean on first pass), no plan-review NEEDS REVISION required. Fixture README enumerates the expected stage transitions and exit signature. Verify: `ls tests/fixtures/<new-fixture>/` returns the file set named in the fixture README; manual dispatch `/roughly:fix tests/fixtures/<new-fixture>/ --ci` completes Stages 1–8 in one pass without escalation.
+
+- **AC3 — `scripts/ci-dogfood.sh` extended with fix happy-path test function.** Mirrors existing build happy-path test structure: auth-failure guard (re-uses pattern from `.github/workflows/dogfood.yml` auth-failure step); `--max-budget-usd 1.50` envelope; `out=$(timeout N cmd 2>&1) && OUT_EXIT=0 || OUT_EXIT=$?` pattern (NOT `OUT="$(...)"` direct assignment, per known-pitfalls L28 — distinct failure diagnostics required); explicit `case "$OUT_EXIT" in 124) … ;; 0) <assertions> ;; *) <other-non-zero diagnostic> ;; esac` ladder; assertion against fix-completion marker in transcript; structured PASS/FAIL emit. Verify: `bash scripts/ci-dogfood.sh` runs all extant tests (smoke, build happy-path) + new fix happy-path without harness modification; fix test PASSes against the AC2 fixture; aggregate exit 0 when all green.
+
+- **AC4 — `.github/workflows/dogfood.yml` invokes the new fix happy-path.** Extends existing dogfood step (preferred if step organization allows) or adds new step. Budget cap held — fix happy-path completes within the existing `--max-budget-usd 1.50` envelope OR with explicit per-test budget documented in CHANGELOG. CI wall-time within existing tolerance (no new timeout overruns introduced). Verify: GH Actions run on the merge PR completes green; transcript shows both build and fix steps PASS per `scripts/ci-dogfood.sh` assertions.
+
+- **AC5 — `skills/fix/SKILL.md` line cap held.** Current 269/300 post-E05.S4. AC1 additions estimated **~5–8 lines** (flag-detection block + non-interactive default branches at three interactive gates; tightened from ~5–10 estimate per epic-reviewer Observation 7 — cumulative-cap pressure with E06.S5 requires tighter upper bounds across both stories). Post-edit projected ≤277/300 — comfortable under cap; no off-ramp invocation needed (verify-all.sh stays at 148/150 unchanged). Verify: `wc -l skills/fix/SKILL.md` ≤277 post-merge.
+
+- **AC6 — CHANGELOG `### Added` entry.** Documents the fix-side `--ci` flag with cross-reference to E03.S11b-2 (build-side precedent), known-pitfalls L70 (standalone-token detection convention), and the v0.1.6 CI-coverage cluster carry-forward at E04 v0.1.7 candidates L559. Entry enumerates: flag-handling form, non-interactive default behavior at each of Stage 4 / Stage 5 / Stage 8 gates, new fix-happy-path fixture name, new CI test function name. Verify: entry exists under `## [Unreleased] — v0.1.8` `### Added`; cross-references present.
+
+**Verification:**
+
+- **CI dogfood (mandatory):** both build and fix happy-paths green on `main` after merge; 3 consecutive runs without harness modification.
+- **Synthetic exercise (pre-merge):** manual dispatch `/roughly:fix <fixture> --ci` from local CLI; required outcome PASS through Stages 1–8.
+- **Flag-detection negative test (pre-merge):** manual dispatch `/roughly:fix <fixture> --ci-cd` (substring trap from known-pitfalls L70); required outcome the flag is NOT detected; dispatch proceeds in interactive mode (or fails with "unknown flag" diagnostic — implementer chooses per build-side precedent).
+- **Cap regression check:** `wc -l skills/fix/SKILL.md` ≤279; `wc -l .claude/hooks/verify-all.sh` unchanged at 148.
+
+**Dependencies on other E06 stories:** None — anchor for C2. **E06.S3 has a hard dependency on E06.S2 only IF E06.S3's scope expands to fix-side negative-path scenarios** (currently out-of-scope per E06.S3 below — build-side only); under current draft, E06.S3 is independent and can ship in parallel.
+
+**Out of scope:**
+
+- Fix-side negative-path scenarios (Stage 6 max-cycles abort, NEEDS REVISION recovery on fix's review-plan dispatch) — defer to v0.1.9; build-side coverage in E06.S3 is the first negative-path instance, fix-side comes after first signal.
+- `/roughly:setup` CI scenario (E03 candidate per E04 v0.1.7 candidates L566 "CI coverage for `/roughly:fix`, `/roughly:setup`, `/roughly:upgrade`"); only fix gets CI coverage in v0.1.8; setup and upgrade defer.
+- `/roughly:upgrade` CI scenario — same.
+- Reorganization of `tests/fixtures/` directory layout (additive only — new fixture, no existing fixture moves).
+- Cross-platform CI (macOS runners) — current dogfood is Linux-only; flagged for v0.1.9+ if forcing function arises.
+- Dogfood-self template-sync mechanism (E04 v0.1.7 candidate L581; deferred per OQ6).
+- AC quoted-wording marker convention (E06.S4 territory).
+
+---
+
+#### E06.S3: build-side negative-path CI scenarios (Stage 6 max-cycles abort + NEEDS REVISION recovery)
+
+**Maps to v0.1.8 candidate:** E04 v0.1.7 candidates L559 — "Negative-path CI scenarios + fix-side `--ci` flag" cluster, **negative-path portion**. Carried via E05 OQ4 deferral; build-side first instance, fix-side deferred to v0.1.9.
+
+**Files touched:**
+
+- `scripts/ci-dogfood.sh` — two new test functions (Stage 6 max-cycles abort + NEEDS REVISION recovery) + their paired control-case assertions (4 new dispatches total per E05.S3 triple-discipline mitigation of Risk 3)
+- `.github/workflows/dogfood.yml` — extend or add steps for the negative-path tests; budget cap audit per AC5
+- `tests/fixtures/<scenario-1>/` — new fixture for Stage 6 max-cycles abort scenario
+- `tests/fixtures/<scenario-1>-control/` — paired control fixture (near-miss happy-path)
+- `tests/fixtures/<scenario-2>/` — new fixture for NEEDS REVISION recovery scenario
+- `tests/fixtures/<scenario-2>-control/` — paired control fixture (plan PASSes on first pass)
+- `skills/build/SKILL.md` — possibly minor `--ci` mode adjustment if the negative-path exit-code emit format needs refinement (audit at plan-write; if no change required, document the audit outcome in CHANGELOG as "no skill-body change required")
+- `CHANGELOG.md` — `### Added`
+
+**Acceptance criteria:**
+
+- **AC1 — Stage 6 max-cycles abort fixture authored.** New fixture (e.g., `tests/fixtures/hello-roughly-cubic-loop/`) containing a synthetic project + Task whose post-Stage-5 cubic review surfaces findings that cannot be cleanly resolved within Stage 6's 5-cycle cap (per E05.S6.AC3 termination criteria). Construction options (implementer chooses):
+  - (i) A Task with a structurally unsatisfiable assertion (e.g., implement X such that `grep -c "<literal>" file` equals N, where N is impossible given the prose constraints).
+  - (ii) A Task where cubic surfaces a new finding each iteration via progressively narrower findings that don't converge cleanly to `{"issues": []}`.
+  
+  Required behavior under `--ci`: `/roughly:build <fixture> --ci` reaches Stage 6 cycle 5, the abort-and-escalate path executes per `skills/shared/abort-handling.md` Stage 6 entry, dispatch exits non-zero with the abort transcript marker present. Fixture README enumerates expected cycle count and abort signature. Verify: dispatch exits non-zero with the Stage 6 max-cycles abort marker in transcript; cycle count ≥5; diminishing-returns evidence emitted per E05.S6.AC3(b) honor-system contract (issue count per iteration logged).
+
+- **AC2 — Build NEEDS REVISION recovery fixture authored.** New fixture (e.g., `tests/fixtures/hello-roughly-plan-revision/`) containing a synthetic project + Task whose plan triggers `/roughly:review-plan` NEEDS REVISION on first pass, with a structurally clear revision path that PASSes on second pass. Construction approach: plan with one of E05.S3's new check triggers (e.g., AC2 `grep -Fc` against same-line co-located sites) + a clear fix (`grep -Fo … | wc -l`). Required behavior under `--ci`: first plan-review returns NEEDS REVISION with the relevant AC cited; orchestrator applies the revision per revised plan-revision flow; second plan-review returns PASS; build completes Stages 5–8; dispatch exits 0. Fixture README enumerates expected plan-review iteration count and the cited AC. Verify: dispatch exit 0; transcript shows ≥2 plan-review dispatches; first dispatch verdict NEEDS REVISION with AC# cited; second dispatch verdict PASS; structured marker indicates revision-recovery path was taken.
+
+- **AC3 — Paired control-case fixtures per E05.S3 triple discipline (Risk 3 mitigation).** For each negative-path scenario above, a near-miss happy-path control fixture verifies the negative trigger isn't false-positive:
+  - **(a) Stage 6 max-cycles abort control** (e.g., `tests/fixtures/hello-roughly-cubic-recoverable/`): a fixture nearly identical to AC1's but with structurally-satisfiable assertions — cubic surfaces 1–3 findings on first pass, all of which are fixable in 1–2 cycles. Required outcome: BUILD PASS in <5 cycles, exit 0. Confirms the AC1 trigger isn't a brittle "every build with cubic findings hits max-cycles."
+  - **(b) NEEDS REVISION recovery control** (e.g., `tests/fixtures/hello-roughly-plan-clean/`): a fixture nearly identical to AC2's but with a plan that PASSes `/roughly:review-plan` on first pass (no E05.S3 AC triggers fire). Required outcome: BUILD PASS in one plan-review iteration, exit 0. Confirms the AC2 trigger isn't a brittle "every plan triggers NEEDS REVISION."
+  
+  Verify: both control fixtures dispatch with `--ci` and produce PASS in the expected single-iteration path; transcript markers confirm the negative paths were NOT taken (no Stage 6 abort marker for (a); no second plan-review dispatch for (b)).
+
+- **AC4 — `scripts/ci-dogfood.sh` extended with all 4 negative-path scenarios.** Each test follows the existing `OUT_EXIT=$?` ladder pattern per known-pitfalls L28; assertion ladder distinguishes:
+  - For AC1: PASS = non-zero exit code matching Stage 6 max-cycles abort code + transcript marker present. FAIL = unexpected exit code OR wrong/missing marker. **This is the inverted-success pattern** — the assertion considers non-zero a success when the marker is present.
+  - For AC2: PASS = exit 0 + ≥2 plan-review markers + first NEEDS REVISION + second PASS.
+  - For AC3(a) + AC3(b): PASS = exit 0 + happy-path single-iteration markers.
+  
+  Explicit `case` ladder for 124-timeout / other-non-zero / EXIT=0 with assertion match per scenario. **124-timeout MUST classify as FAIL across ALL scenarios, including inverted-success scenarios where non-zero is expected** — timeout indicates the scenario didn't complete (process killed by `timeout` wrapper), not that the expected abort fired (resolves epic-reviewer Polish 8). Verify: all 4 scenarios run; assertion ladder correctly classifies each outcome; aggregate harness exits 0 only when all 4 negative-path + happy-path-control PASS.
+
+- **AC5 — `.github/workflows/dogfood.yml` extended with budget audit.** New negative-path scenarios + controls run on CI. Budget cap held — either fits within existing `--max-budget-usd 1.50` envelope across the now-7-test suite (3 existing: smoke, build happy-path, fix happy-path from E06.S2 + 4 new) OR explicit per-test budget documented in CHANGELOG with rationale (max-cycles scenario in particular consumes 5 cubic dispatches, which may push budget). Implementer audits at plan-write and proposes envelope. CI wall-time within existing tolerance (≤ existing ceiling + N min, N documented). Verify: GH Actions run on merge PR completes green; all 4 new assertions PASS; budget cap report in transcript matches the documented envelope.
+
+- **AC6 — CHANGELOG `### Added` entry.** Documents the two negative-path scenarios + 2 controls with named fixtures, cross-references to E04 v0.1.7 candidate L559 (CI-coverage cluster origin), E05 OQ4 (deferral path), E05.S3.AC2 (the `grep -Fc` trigger used in AC2 NEEDS REVISION recovery fixture), and E05.S6.AC3 (Stage 6 termination criteria used in AC1). Entry enumerates: scenario names + paired control names; assertion-ladder pattern note (inverted-success for AC1); budget-envelope outcome (held vs increased). Verify: entry exists; all four scenarios named; cross-references present.
+
+**Verification:**
+
+- **CI dogfood (mandatory):** all 4 new scenarios green on `main` post-merge; **3 consecutive runs without harness modification per Risk 3 close criterion**.
+- **Per-fixture subagent dispatch validation (pre-merge, per Risk 3 mitigation):** each of the 4 fixtures exercised independently via subagent dispatch before final assertion authoring. Surfaces harness fragility (input format, transcript parsing, exit code propagation) early; any harness modification needed is bundled into this story (do not defer).
+- **Regression check:** build happy-path (E03.S11b-2) and fix happy-path (E06.S2 — if shipped first) still PASS; no regression to existing CI surface.
+- **CI wall-time check:** total CI run within tolerance (documented baseline + per-scenario timing report in CHANGELOG).
+
+**Dependencies on other E06 stories:** None for build-side scope. Soft sequencing: if E06.S2 ships first, the `--ci` flag harness pattern is twice-precedented (build + fix), which slightly reduces this story's harness-authoring risk; but the scenarios in E06.S3 are all build-side and don't require E06.S2's fix-side plumbing. **Can land in parallel with E06.S2.**
+
+**Out of scope:**
+
+- Fix-side negative-path scenarios (Stage 6 max-cycles abort and NEEDS REVISION recovery on fix's review-plan dispatch) — defer to v0.1.9; build-side first instance, fix-side after signal.
+- `/roughly:review-plan` standalone CI scenario — different verification surface (subagent-dispatch, not pipeline-orchestrated).
+- `/roughly:audit-epic` CI scenario — same.
+- Cross-platform CI (macOS runners) — defer per E06.S2 out-of-scope.
+- Cubic-readable known-issues mechanism integration with the max-cycles abort scenario (deferred per OQ6 — cubic-deferral mechanism stays a v0.1.9+ candidate).
+- E04 Risk 5 synthetic CI-test for doc-writer multi-file invocation (separate concern; different agent; defers to v0.1.9 retrospective on dogfood evidence).
+- Runtime enforcement of cubic-termination evidence-artifact contracts (E05.S6 candidate; honor-system stays honor-system in v0.1.8).
+
+---
+
+### Cluster C3 — Small codifier closures
+
+#### E06.S4: AC quoted-wording marker convention — `verbatim:` vs `form:` markers
+
+**Maps to v0.1.8 candidate:** E05.S2 candidate #5 (CHANGELOG L33) — "AC quoted-wording marker convention (spec-authoring) — when an AC quotes example wording containing metasyntactic notation (angle-bracketed placeholders, ellipses, XXX), explicitly mark whether the wording is verbatim-required or illustrative-only. Suggested convention: `verbatim: TEXT` vs `form: TEXT (adapt for clarity)`. Would have prevented both E05.S2 post-merge deferrals (AC2(c) anchoring wording + AC4 binary-vs-three-way rule)."
+
+**Files touched:**
+
+- `skills/review-plan/SKILL.md` — new check entry under existing Completeness or Assumptions dimension (implementer chooses per E04.S6 + E05.S3 organizational precedent)
+- `CONTRIBUTING.md` — `## Skill authoring conventions` section extended with the marker convention; OR adjacent new `## AC authoring conventions` subsection if cleaner per implementer audit
+- `tests/fixtures/review-plan/` — new fixture triple (PASS + NEEDS REVISION + BORDERLINE-PASS) per E05.S3 + E05.S7c discipline; fixtures README inventory extended
+- `CHANGELOG.md` — `### Added`
+
+**Acceptance criteria:**
+
+- **AC1 — Review-plan check entry added to `skills/review-plan/SKILL.md`.** Check text: "When an AC quotes example wording that contains metasyntactic notation (angle-bracketed placeholders like `<placeholder>`, ellipses `…`, or sample-text tokens like `XXX`/`<list>`), the AC must explicitly mark whether the wording is verbatim-required or illustrative-only. Recognized markers: `verbatim: <text>` (text must match literally byte-for-byte at implementation) and `form: <text> (adapt for clarity)` (text is illustrative of structure; implementer chooses concrete wording within the structural form). ACs that quote metasyntactic-containing example wording WITHOUT a marker are flagged for clarification before approving the plan." **Bright-line carve-out:** ACs whose quoted wording contains NO metasyntactic notation (plain literal text only — fixed strings used in `grep -Fn` patterns, exact section headings, etc.) pass without requiring a marker. Canonical positive example: E05.S2.AC2(c) self-check wording `"confirm your summary's first line is `prefix — …`"` would have been flagged + required `form:` marker (the `…` is metasyntactic per `.roughly/known-pitfalls.md` L80). Canonical negative example: an AC saying `grep -Fn "Cross-epic AC amendments" CONTRIBUTING.md returns ≥1 match` — quoted text is verbatim search literal with no metasyntactic notation; no marker required (passes).
+
+- **AC2 — CONTRIBUTING.md convention codified.** `CONTRIBUTING.md` `## Skill authoring conventions` (or chosen alternative location) gains a paragraph documenting the convention: named recognized markers (`verbatim:` and `form:`); examples of each (positive case with `verbatim:`; positive case with `form:`); the bright-line carve-out for plain-literal quoted wording (no marker required when no metasyntactic notation present); cross-reference to E05.S2 deferral cases as the precipitating evidence. Verify: `grep -Fn "verbatim:" CONTRIBUTING.md` returns ≥1 match in the convention section; `grep -Fn "form:" CONTRIBUTING.md` returns ≥1 match in the same section; bright-line carve-out language ("no metasyntactic notation" or equivalent) present.
+
+- **AC3 — Fixture triple authored under `tests/fixtures/review-plan/` per E05.S3 + E05.S7c discipline.** Three new fixtures (naming TBD at plan-write — suggested `ac-marker-pass.md`, `ac-marker-needs-revision.md`, `ac-marker-borderline-pass.md`):
+  - **PASS:** a plan AC quoting metasyntactic wording WITH the appropriate marker (e.g., AC text including `form: "<verbatim path>: <reason from Edit error output>"`); review-plan returns PASS.
+  - **NEEDS REVISION:** a plan AC quoting metasyntactic wording WITHOUT any marker (e.g., AC text including `"<path>: …"` with no `verbatim:` or `form:` prefix); review-plan returns NEEDS REVISION citing this story's AC1.
+  - **BORDERLINE-PASS:** a plan AC quoting metasyntactic wording with a marker phrasing close to but not identical to the enumerated `verbatim:` / `form:` (e.g., `literal:` or `template: ... (illustrative)`); per the carve-out, marker intent supersedes literal-name match when intent is unambiguous — review-plan returns PASS with the boundary acknowledged in the verdict block.
+  
+  All three fixtures must contain the trigger condition (metasyntactic notation in a quoted AC) per `.roughly/known-pitfalls.md` L138 (PASS-fixtures-must-fire-trigger discipline). BORDERLINE-PASS carries exactly one rationale acknowledgment per known-pitfalls L143.
+
+- **AC4 — Skill body + fixtures inventory updated.** `skills/review-plan/SKILL.md` post-merge ≤300 lines (current 117; projected ~123 with new check entry — comfortable). `tests/fixtures/review-plan/README.md` inventory extended with the new 3 fixtures + Path A desk-check line-number references for the new check per E05.S3 AC7c convention. Verify: `wc -l skills/review-plan/SKILL.md` ≤300; README inventory contains all 3 new fixture rows.
+
+- **AC5 — CHANGELOG `### Added` entry.** Documents the new convention + new check + new fixtures with cross-reference to E05.S2 candidate #5, the two prevented deferral cases (AC2(c) anchoring wording + AC4 binary-vs-three-way rule), and `.roughly/known-pitfalls.md` L80 (LLM self-check ellipsis pitfall — the underlying anti-pattern this convention forecloses at spec-time).
+
+**Verification:**
+
+- **Synthetic fixture verification (pre-merge):** AC3 fixtures dispatched via `/roughly:review-plan`; verdicts confirmed (PASS, NEEDS REVISION citing AC1, BORDERLINE-PASS = PASS).
+- **Regression check against E05.S3's AC1-AC5:** existing 15 review-plan fixtures (5 triples) still PASS / NEEDS REVISION / BORDERLINE-PASS as originally specified — new check from this story doesn't reflag.
+- **Self-validation via post-E05.S3 review-plan:** E06.S4's own plan reviewed by `/roughly:review-plan` with post-E05.S3 + post-this-story checks active; plan body's quoted ACs marked per the new convention or fall under the bright-line carve-out.
+- **CI dogfood:** S11b-2 happy-path unchanged.
+
+**Dependencies on other E06 stories:** None — independent. Can land in parallel with C1, C2.
+
+**Out of scope:**
+
+- Retroactively marking existing v0.1.7 ACs (E04.S8, E05.S2 etc.) with `verbatim:` / `form:` markers — they're shipped contracts; retroactive editing would corrupt cubic-readability and violate the no-edit-in-place rule from E05.S3's `## Cross-epic AC amendments` convention.
+- Runtime enforcement (review-plan pre-implementation only; no verify-all.sh check).
+- Codifying other spec-authoring conventions surfaced from v0.1.7 (e.g., the L29 numbered-list-count-without-section-scoping pitfall — different verification surface; defer to v0.1.9 if surfaced).
+- AC mutual-satisfiability re-check beyond E05.S6 Dimension #7 (already shipped).
+- A 6th review-plan check entry beyond AC1 here — single check per story matches E05.S3's discipline of one-check-per-AC.
+
+---
+
+#### E06.S5: Stage 6 SFH third-disposition gate — `fix` / `defer` / `spec-revision-candidate`
+
+**Maps to v0.1.8 candidate:** E05.S2 candidate #6 (CHANGELOG L33) — "Stage 6 SFH third-disposition gate. Today's Stage 6 gate has `fix` vs `defer`. A third option — `spec-revision candidate, not a code defect` — would have surfaced both E05.S2 deferrals correctly at build-time. Touches build/fix Stage 6 prose (stayed inline post-E05.S4 off-ramp per OQ11; not in shared file)."
+
+**Files touched:**
+
+- `skills/build/SKILL.md` Stage 6 — extend the existing SFH-finding disposition gate (`fix` / `defer`) with a third option
+- `skills/fix/SKILL.md` Stage 6 — same edit; byte-identical structure per build/fix parity precedent (E05.S6.AC3 cubic-termination criteria established the byte-identical-Stage-6-additions pattern)
+- `CHANGELOG.md` — `### Added`
+
+**Acceptance criteria:**
+
+- **AC1 — Third disposition added to `skills/build/SKILL.md` Stage 6.** Extend the existing two-option SFH-finding disposition gate with: "**spec-revision-candidate — not a code defect.** When SFH (or any Stage 6 reviewer) flags a finding that cannot be addressed by a code change within the current task's scope but indicates a spec gap (AC contradiction, missing failure-mode coverage, prose ambiguity, anchoring weakness), classify the disposition as a spec-revision candidate. Escalate via the active epic's v0.1.X candidates section as a documented candidate; do NOT silently accept (which leaves the finding unaddressed) and do NOT attempt to fix (which expands scope beyond the task and may collide with shipped AC contracts). The spec-revision-candidate disposition is the correct response when the finding is real and substantive but the fix requires AC amendment or a future story." Approximately 5–7 lines of prose. Placed adjacent to the existing `fix` / `defer` options at the SFH-finding disposition gate. Verify: `grep -Fn "spec-revision-candidate — not a code defect" skills/build/SKILL.md` returns 1 match in Stage 6 section.
+
+- **AC2 — Same disposition added to `skills/fix/SKILL.md` Stage 6, byte-identical to AC1 prose** (build/fix parity per E05.S6.AC3 precedent). Verify: `awk '/STAGE 6/,/STAGE 7/' skills/build/SKILL.md | grep -Fc "spec-revision-candidate"` equals `awk '/STAGE 6/,/STAGE 7/' skills/fix/SKILL.md | grep -Fc "spec-revision-candidate"` (both 1 — the new disposition appears in both files exactly once in the Stage 6 section). Additionally, `diff <(awk '/spec-revision-candidate/,/^$/' skills/build/SKILL.md) <(awk '/spec-revision-candidate/,/^$/' skills/fix/SKILL.md)` returns empty (the new prose blocks are byte-identical).
+
+- **AC3 — Build/fix line caps held.** `skills/build/SKILL.md` current 268/300; **+5–6 lines** projected 273–274/300 (tightened from ~5–7 per epic-reviewer Observation 7 cumulative-cap pressure). `skills/fix/SKILL.md` current 269/300; **+5–6 lines** projected 274–275/300 (or 279–283/300 if E06.S2's fix-side `--ci` lands first at upper bound: 269 + 8 (S2 tightened upper) + 6 (S5 tightened upper) = 283 with ≥17-line headroom under 300; tightened cumulative from prior ≤281). Verify: `wc -l skills/build/SKILL.md` ≤274; `wc -l skills/fix/SKILL.md` ≤283 (accommodating E06.S2 cumulative at tightened upper bounds).
+
+- **AC4 — CHANGELOG `### Added` entry.** Documents the Stage 6 disposition extension with cross-reference to E05.S2 candidate #6 (CHANGELOG L33), the two E05.S2 deferral cases (AC2(c) anchoring wording + AC4 binary-vs-three-way rule) that would have been correctly classified at build-time, and `.roughly/known-pitfalls.md` L78 + L82 (the LLM weak-anchoring + failure-handling-scoping pitfalls that exemplify spec-revision-candidate dispositions). Entry notes the by-design honor-system pattern (no runtime enforcement — matches E05.S6.AC3 cubic-termination evidence-artifact contracts).
+
+- **AC5 — Self-validation via post-E05.S3 + post-E06.S4 review-plan checks.** E06.S5's plan reviewed by `/roughly:review-plan`. The new third-disposition prose itself should NOT trigger E05.S3.AC4 (behavior-divergence doc-coverage) — it's a code addition, not a documentation revision; no previously-reachable behavior is now unreachable. The new prose mentions `v0.1.X candidates section` as a forward reference, not a literal verify target — should NOT trigger E05.S3.AC5 (self-defeating verify pattern). Required outcome PASS.
+
+**Verification:**
+
+- **Static inspection:** per AC1 and AC2 verify commands.
+- **No runtime dogfood exercise guaranteed** — unless a SFH finding actually surfaces during v0.1.8 build/fix cycles classifiable as spec-revision-candidate; opportunistic exercise expected but not required for ship.
+- **CI dogfood:** S11b-2 + E06.S2 happy-paths unchanged (Stage 6 in happy-path returns clean cubic; new disposition never fires). E06.S3 negative-path scenarios still PASS (their Stage 6 behavior is max-cycles abort, not SFH-finding-disposition — different gate).
+
+**Dependencies on other E06 stories:** None for correctness. Soft sequencing: **E06.S4 should ship first** if E06.S5's plan would benefit from the AC quoted-wording marker convention (the new prose in AC1 contains no metasyntactic notation in quoted ACs, but the plan itself may; review-plan with the post-E06.S4 check active provides a tighter review surface). **E06.S2 should ship first** for fix/SKILL.md cumulative-line-cap projection; AC3 already accommodates the cumulative case.
+
+**Out of scope:**
+
+- Runtime enforcement (no verify-all.sh check; honor-system pattern matches E05.S6.AC3 cubic-termination evidence-artifact contracts).
+- Extension to other Stage 6 reviewers (code-reviewer, static-analysis) — SFH is the explicit canonical reviewer where this disposition fits cleanly; other reviewers' disposition patterns are different surface (code-reviewer findings are generally `fix` or `accept`, not `defer to spec`; static-analysis findings are generally compile-or-not).
+- Moving Stage 6 prose to `skills/shared/` — per E05 OQ11 + L454, Stage 6 stays inline; off-ramp scope was ABORT HANDLING + Stage 8 only. Preamble + Stage 1 + Stage 6 extraction is a separate v0.1.9+ candidate.
+- Modifying existing `fix` / `defer` disposition prose (strictly additive).
+- E04 Risk 5 synthetic CI-test exercise of spec-revision-candidate disposition (defers per E06.S3 out-of-scope and the v0.1.8 retrospective close-or-promote rule).
+- Spec-revision-candidate as a `/roughly:review-plan` AC (E05.S3 + E06.S4 cover plan-level spec quality at plan-write time; this story covers Stage 6 build-time signal escalation — different stage).
+
+---
+
+#### E06.S6: `/roughly:help` install-marker schema fix — option (a) categorize separately
+
+**Maps to v0.1.8 candidate:** E04 v0.1.7 candidates L583 — "`/roughly:help` 'Unknown' categorization for non-maturity-check install markers." Recommended option (a): "`/roughly:help` learns to categorize install markers separately from maturity checks — non-breaking, small, but adds list-maintenance burden every time a new install marker ships."
+
+**Files touched:**
+
+- `skills/help/SKILL.md` — categorization branch updated; install-marker recognition list added; output section structure adjusted to surface install markers separately from maturity checks
+- `CHANGELOG.md` — `### Changed`
+
+**Acceptance criteria:**
+
+- **AC1 — Install-marker recognition list + new output section in `skills/help/SKILL.md`.** Currently `/roughly:help` categorizes any unrecognized marker as "Unknown" against a hardcoded list of known maturity-check IDs (`stop-hook-v1`, `test-verify-v1`, `pitfalls-organized-v1`). The actual marker entries in `.roughly/workflow-upgrades` use lifecycle-suffixed forms (`stop-hook-v1-added <date>`, `test-verify-v1-declined <date>`, etc.); the maturity-check categorization logic in `skills/help/SKILL.md` matches by **base ID prefix** (stripping the `-added` / `-declined` lifecycle suffix before comparison against the recognition list — implementer audits the existing prefix-match logic at plan-write to confirm form). Extend with a separate install-marker recognition list of **base IDs** (initially: `plan-mode-gate-v1` per E03.S1; **plus any others surfaced during plan-write audit** of `.roughly/workflow-upgrades` schema + grep of skill/setup install-marker write sites — implementer documents the discovered base-ID list in the plan). The same prefix-stripping match logic applies to install-marker IDs: a marker entry `plan-mode-gate-v1-added 2026-06-02` matches base ID `plan-mode-gate-v1` after suffix strip and categorizes under Installed components, not Unknown (resolves cubic P1: recognition list is base-ID form matching by prefix, not literal-marker-entry form). Install markers display under a new `## Installed components` section (or implementer-chosen equivalent heading per existing help organization). Verify: `grep -Fn "plan-mode-gate-v1" skills/help/SKILL.md` returns ≥1 match in the install-marker recognition list (base ID without lifecycle suffix); new heading (`## Installed components` or chosen alternative) appears in the help output structure; manual dispatch of `/roughly:help` against this repo correctly categorizes the `plan-mode-gate-v1-added <date>` marker entry under Installed components (verifies the prefix-match logic applies to install markers symmetrically with maturity checks).
+
+- **AC2 — Output format distinguishes three categories.** `/roughly:help` output emits three categorization sections in order: (i) **Maturity-check state** (existing — unchanged behavior); (ii) **Installed components** (new — install markers categorized correctly, no longer falling through to Unknown); (iii) **Unknown markers** (existing, now narrower — only truly-unknown IDs land here, neither maturity-check nor install-marker IDs). Verify: manual dispatch of `/roughly:help` against this repo (which has `plan-mode-gate-v1-added <date>` in `.roughly/workflow-upgrades`); output shows the marker under Installed components, NOT under Unknown.
+
+- **AC3 — Schema decision documented.** CHANGELOG `### Changed` entry explicitly documents that option (a) was chosen over options (b) `-installed` suffix migration and (c) per-entry `kind` field in `.roughly/workflow-upgrades` schema — per the v0.1.7 candidate framing at E04 epic L583. List-maintenance burden acknowledged as the explicit tradeoff: future install markers must be added to the help skill's install-marker list at the same time they're shipped; future v0.1.9+ candidate to address via convention or drift check if the list grows beyond ~5 entries.
+
+- **AC4 — Skill body line cap held.** `skills/help/SKILL.md` current 163/300. AC1 additions estimated ~5–10 lines (new section heading + recognition-list-vs-maturity-list branch + Unknown-narrowing). Post-edit projected ≤173/300 — comfortable. Verify: `wc -l skills/help/SKILL.md` ≤173.
+
+- **AC5 — CHANGELOG `### Changed` entry.** Documents the schema fix with named files; the option chosen (option a per E04 L583); the install-marker list as it stands at ship time (with note that the list is contributor-maintained per the codified convention — no current convention codification beyond this entry; defer to v0.1.9 if surface grows).
+
+**Verification:**
+
+- **Manual dispatch:** `/roughly:help` in this repo; required outcome the `plan-mode-gate-v1-added` marker appears under Installed components, not Unknown.
+- **Regression check:** maturity-check markers (`stop-hook-v1-added`, `test-verify-v1-declined`, etc.) still categorize correctly under Maturity-check state — no flow-through to Installed components or Unknown.
+- **Edge case:** craft a synthetic unknown marker in `.roughly/workflow-upgrades` (e.g., `xxx-fake-v1-added 2026-06-02`); dispatch `/roughly:help`; required outcome the synthetic marker appears under Unknown (verifies Unknown isn't silently empty).
+- **CI dogfood:** S11b-2 happy-path unchanged.
+
+**Dependencies on other E06 stories:** None — independent. Micro-story.
+
+**Out of scope:**
+
+- Options (b) suffix migration or (c) schema kind field — defer further (would require a `.roughly/workflow-upgrades` migration path with all the precedent surface that entails; deferred per E04 L583 framing as "more interesting once additional install markers accumulate").
+- Adding new install markers (additive only — this story is the categorization plumbing for existing markers).
+- `verify-all.sh` drift check for install-marker list maintenance — runtime enforcement out of scope; manual sync convention only.
+- Refactoring help skill's existing maturity-check categorization logic (strictly additive).
+- `/roughly:help` UX redesign (separate concern; defer).
+- Codifying the install-marker list as a CONTRIBUTING.md convention (defer to v0.1.9 if list grows beyond ~3 entries; current 1 marker doesn't justify the convention surface).
+
+---
+
+#### E06.S7: audit-table-in-PR-body CONTRIBUTING.md convention
+
+**Maps to v0.1.8 candidate:** E05 audit recommendation #4 (audit L156) — "Audit-table-in-PR-body convention. Future audit stories (analogous to E05.S4.5) should paste the audit table directly into the GitHub PR description, not rely on plan-appendix + commit-body discoverability. Codify in `CONTRIBUTING.md` `## Audit conventions` if a second instance arises." E05.S4.5.AC3 PARTIALLY MET finding is the first instance; codifying pre-emptively per OQ6 confirmation.
+
+**Files touched:**
+
+- `CONTRIBUTING.md` — new `## Audit conventions` section OR extension of `## Skill authoring conventions` (implementer chooses based on existing structure at plan-write)
+- `CHANGELOG.md` — `### Added`
+
+**Acceptance criteria:**
+
+- **AC1 — Audit-table-in-PR-body convention codified in `CONTRIBUTING.md`.** Convention text approximately: "When a story produces an audit-style output (audit table, scope enumeration, finding inventory — e.g., the per-site `mkdir -p` audit table in E05.S4.5; the per-AC table in `/roughly:audit-epic` outputs), the audit content MUST be pasted into the GitHub PR body at PR-creation time. The PR body is the canonical discoverable artifact for code reviewers; plan-appendix copies and commit-body copies are secondary records only. Use `gh pr create --body-file <file>` at creation time, or `gh api PATCH /repos/<owner>/<repo>/pulls/<pr>` for programmatic updates if the PR was created before the audit table was finalized. **Note:** `gh pr edit --body-file` silently no-ops in the after-PR-creation case per E05 audit pitfall (verified 2026-05-31); use `gh api PATCH` to ensure the update lands." Approximately 5–8 lines. Verify: `grep -Fn "audit table" CONTRIBUTING.md` returns ≥1 match in the new section; `grep -Fn "gh api PATCH" CONTRIBUTING.md` returns ≥1 match in the same section (gh pr edit no-op pitfall documented); section heading (`## Audit conventions` or chosen alternative) present.
+
+- **AC2 — CHANGELOG `### Added` entry.** Documents the convention with cross-reference to E05.S4.5.AC3 (first instance — PARTIALLY MET; backfilled via `gh api PATCH` external to the working tree), E05 audit recommendation #4 (the codification trigger), and the user's OQ6 confirmation to codify pre-emptively rather than waiting for a second instance.
+
+- **AC3 — Self-validation via post-E05.S3 + post-E06.S4 review-plan checks.** E06.S7's plan reviewed by `/roughly:review-plan`. New checks active: post-E05.S3's 5 ACs + post-E06.S4 quoted-wording marker. The convention text contains no metasyntactic notation in quoted ACs (it's prose, not AC-quoting), so AC quoted-wording marker should not fire. Required outcome PASS.
+
+**Verification:**
+
+- **Static inspection:** AC1 verify command.
+- **No runtime exercise possible** until a future audit story arises (opportunistic — would surface as v0.1.9+ if `/roughly:audit-epic` runs against another epic or another `.S<n>.5`-style audit story emerges).
+- **CI dogfood:** S11b-2 happy-path unchanged.
+
+**Dependencies on other E06 stories:** None — micro-story. Independent.
+
+**Out of scope:**
+
+- Retroactively updating PR #54 body — already done via `gh api PATCH` external to working tree per E05 audit; not in scope to re-touch.
+- Runtime enforcement (no verify-all.sh check; convention is contributor-facing per E05 audit recommendation #4 framing).
+- Audit-table format standardization beyond "paste into PR body" — first-instance format from E05.S4.5 not yet generalized structurally; defer to v0.1.9 if a second audit-table form arises with different shape.
+- Codifying other audit-related conventions (single concern per story).
+- Drift check between plan-appendix audit table + commit-body audit table + PR-body audit table (three-place sync would expand surface significantly; manual convention only).
+- Extension of the convention to non-audit PR descriptions (this story is audit-specific).
+
+---
+
+## Open questions
+
+Pre-locked decisions inherited from v0.1.6 and v0.1.7 PM rounds (per epic header) are not re-litigated.
+
+1. **Release shape (small / medium / larger).** **Resolved: medium, 7 stories** per user OQ1. C1 (1 story) + C2 (2 stories) + C3 (4 stories).
+2. **Risk 1 hypothesis selection (single primary / A-B / ship-all-three-layered).** **Resolved: ship all three layered** per user OQ2. All three additive; word-cost ~50 words combined; T2 re-run is binary gate per AC3 three-outcome ship policy.
+3. **CI-coverage cluster shape (1 bundle / 2 stories / ship-one-defer-one).** **Resolved: 2 stories** per user OQ3. E06.S2 (fix-side flag, structural plumbing) + E06.S3 (negative-path scenarios, fixture authoring) — different verification surfaces per prompt's bundling discipline.
+4. **Doc-writer cap-relief structural placement.** **Resolved: option (a) trim** per user OQ4. Cheapest blast radius; preserves cap-normalization signal from v0.1.7 ("no third bump"); doesn't restart per-agent-caps design conversation. Option (c) per-agent caps + option (d) `agent-preamble.md` lift stay deferred; option (b) cap revision 650 → 700+ explicitly avoided per v0.1.7 epic L456 normalization-precedent risk.
+5. **`.claude/hooks/verify-all.sh` off-ramp structural placement.** **Resolved: defer until forced (v0.1.9)** per user OQ5. No v0.1.8 story adds a new drift check. Off-ramp stays prepared-but-unused; first forcing-function story in v0.1.9 (or later) invokes the extraction pattern. verify-all.sh stays at 148/150.
+6. **Carry-forward selection (which items make v0.1.8, which defer to v0.1.9).** **Resolved per user OQ6: 4 carries + 11 defers.** Carries: AC quoted-wording marker convention → E06.S4; Stage 6 SFH third-disposition gate → E06.S5; `/roughly:help` install-marker schema fix → E06.S6; audit-table-in-PR-body convention → E06.S7. Defers: dogfood-self template-sync mechanism; cubic-readable known-issues mechanism; preamble + Stage 1 extraction; other-agents failure-handling audit; `set -uo pipefail` audit; PITFALLS_ORGANIZE_THRESHOLD single-source; AC4 PASS verdict persistent-artifact convention; Stage 8 step 6 doc-writer dispatch-side escalation on all-writes-failed; setup Step 5b/5e defensive-mkdir consistency; reverse-verify gap on Check 8; Risk 5 E04 synthetic CI-test promotion.
+7. **Cross-epic AC re-amendment convention extension placement.** **Resolved: in-story addition to E06.S1** per user OQ7. E06.S1.AC4 + AC5 carry the convention extension and first multi-hop application to the E04.S8.AC5 → E05.S2.AC4 → E06.S1 trail.
+
+**Carried for implementer discretion (not PM-blocking):**
+
+- **OQ-S1-trim-targets (E06.S1):** specific words to trim from `agents/doc-writer.md` to absorb AC1's ~30–50 word additions and land net-≤650. Plan-write produces a 4-column trim table (per E06.S1.AC2); review-plan approves at Stage 4.
+- **OQ-S1-AC-mapping (E06.S1):** confirm E05.S2.AC4 ↔ E04.S8.AC5 mapping at plan-write via direct read of E04.S8 ACs. PM-side inference is high-confidence from E04 epic L599 ("All-fail branch missing from AC5 template" candidate origin) but plan-write should re-verify against actual E04.S8.AC# labels before authoring AC5(a) back-pointer update.
+- **OQ-S1-word-budget (E06.S1):** if AC1 prose lands at upper-bound estimate (~70 words combined), AC2 trim target adjusts upward (~70 words, not 30–50). Reconcile at plan-write, not implementation.
+- **OQ-S2-fixture-name (E06.S2):** name of new fix happy-path fixture directory. Suggested `tests/fixtures/hello-roughly-bug/`; implementer picks.
+- **OQ-S3-fixture-construction (E06.S3):** specific construction approach for Stage 6 max-cycles abort fixture (structurally-unsatisfiable assertion vs convergent-but-non-terminating findings). Implementer picks at plan-write.
+- **OQ-S3-budget-envelope (E06.S3):** whether 4 new CI scenarios fit `--max-budget-usd 1.50` envelope or require explicit per-test budget. Audit at Stage 2 discovery.
+- **OQ-S4-convention-location (E06.S4):** CONTRIBUTING.md `## Skill authoring conventions` extension vs new `## AC authoring conventions` subsection.
+- **OQ-S6-install-marker-list (E06.S6):** initial install-marker list contents. Plan-write audits `.roughly/workflow-upgrades` schema + grep of skill/setup install-marker write sites.
+- **OQ-S7-section-location (E06.S7):** new `## Audit conventions` section vs extension of `## Skill authoring conventions`.
+
+---
+
+## v0.1.9 candidates
+
+Items deliberately out of v0.1.8 scope. Carry-forward from v0.1.7 still applies (per OQ6 defers). Pull from this list when scoping v0.1.9.
+
+**Carried forward from v0.1.7 (still applicable):**
+
+- Dogfood-self template-sync mechanism (recommended option (b) sync script — surfaced 2026-05-14).
+- Cubic-readable known-issues mechanism for accepted-violations (E04.S8 surfacing).
+- Preamble + Stage 1 extraction to `skills/shared/` (next forcing function).
+- Other-agents multi-file failure-handling audit (investigator, discovery, code-reviewer, silent-failure-hunter, static-analysis, epic-reviewer).
+- Single-source `PITFALLS_ORGANIZE_THRESHOLD` mechanism (bidirectional sync comments holding).
+- `set -uo pipefail` audit of `.claude/hooks/verify-all.sh`.
+- AC4 PASS verdict persistent-artifact convention (E05.S5 candidate #6).
+- Stage 8 step 6 doc-writer dispatch-side escalation on `doc-writer: all writes failed —` returns (E05.S4.5 candidate #2; downstream of E06.S1).
+- Setup Step 5b/5e defensive-`mkdir -p` consistency (E05.S4.5 candidate #1).
+- Reverse-verify gap on Check 8 (E05.S4 candidate #1; pending Risk 2 false-positive evidence).
+- E05.S5 AC2 awk degenerate-return-value semantics (cosmetic).
+- All other E05 candidates not addressed in v0.1.8 (see CHANGELOG `## [0.1.7]` and E05 epic `## v0.1.8 candidates` section).
+
+**Conditional from v0.1.8 retrospective:**
+
+- **Risk 1 programmatic-mechanism promotion** (response-validation subagent OR programmatic template parser). Promoted IF E06.S1.AC3 T2 re-run returns PARTIAL PASS or FULL FAIL.
+- **`.claude/hooks/verify-all.sh` off-ramp invocation.** Promoted IF the first forcing-function story arises requiring a new drift check.
+- **Risk 2 (E05) shared-reference drift mitigation tightening.** Promoted IF 30-day window assessment (~2026-06-27) accumulates false-positive evidence on Check 8.
+- **Risk 3 (E04) Stop hook drift mitigation tightening.** Promoted IF 30-day window assessment (~2026-06-19) accumulates false-positive evidence.
+- **Risk 5 (E04) synthetic CI-test for doc-writer real-dogfood multi-file exercise.** Promoted IF no real-dogfood multi-file invocation occurs in v0.1.8 timeline.
+
+**New from v0.1.8 PM work:**
+
+(Nothing surfaced this PM round beyond the carry-forward list — v0.1.8 PM session was candidate-driven, not new-surface-driven. New v0.1.9 candidates may surface during E06 implementation.)
+
+---
+
+## Sequencing
+
+Order is by dependency, not cluster number. Stories #1–5 are mutually independent and can land in any order or in parallel as the early window; stories #6–7 carry soft dependencies on early-window stories and land second.
+
+| # | Story | Cluster | Depends on | Why this position |
+|---|---|---|---|---|
+| 1 | **E06.S1** — doc-writer AC4 all-fail-branch anchoring + cap-relief trim + cross-epic re-amendment convention extension | C1 | None | Anchor for epic. Highest-priority risk close — Risk 1 substantive (E05's partial-close promoted to substantive by audit). T2 synthetic re-run is the binary verification gate per AC3 three-outcome ship policy. Bundles the cross-epic re-amendment convention extension that future re-amendment work will inherit. Should ship first or in early window for risk-closure visibility. |
+| 2 | **E06.S2** — fix-side `--ci` flag | C2 | None | Smallest-blast-radius CI plumbing. Structural mirror of E03.S11b-2's build-side. Adds ~5–10 lines to fix/SKILL.md (post-E05.S4 offramp: 269/300 → ≤279/300). Unblocks any future fix-side CI work. |
+| 3 | **E06.S4** — AC quoted-wording marker convention | C3 | None | Codifier story; lands early so downstream stories' plan-review cycles (E06.S3, E06.S5, E06.S6, E06.S7) inherit the new check at plan-review time. Self-validates against subsequent stories' plans. Independent of all other E06 stories. |
+| 4 | **E06.S6** — `/roughly:help` install-marker schema fix | C3 | None | Micro-story; independent. Lands in early window alongside S2/S4. Closes cosmetic carry-forward from E04 v0.1.7 candidates L583. |
+| 5 | **E06.S7** — audit-table-in-PR-body CONTRIBUTING.md convention | C3 | None | Micro-story; independent. Codifies E05 audit recommendation #4 pre-emptively (per OQ6 confirm rather than waiting for second instance). Lands in early window. |
+| 6 | **E06.S3** — build-side negative-path CI scenarios (Stage 6 max-cycles abort + NEEDS REVISION recovery) | C2 | S2 (soft) | Harness pattern twice-precedented after S2 lands (build-side `--ci` from E03.S11b-2 + new fix-side `--ci` from S2); Risk 3 mitigation tighter. Per-fixture subagent dispatch validation + 3 consecutive post-merge runs as close criteria. CI fixture authoring more complex than structural mirror; benefits from later position in cycle. |
+| 7 | **E06.S5** — Stage 6 SFH third-disposition gate (build/fix Stage 6 prose) | C3 | S4 (soft), S2 (soft) | Stage 6 prose addition; benefits from S4's AC quoted-wording marker check active at plan-review (tighter plan-review surface); benefits from S2 having landed first for fix/SKILL.md cumulative line-cap clarity (AC3 explicitly accommodates either order at ≤281/300, but documented-cumulative case is S2-first). Lands last as closing codifier. |
+
+**Critical path:** **E06.S1 alone** (Risk 1 substantive must close or promote; T2 synthetic re-run is the binary gate; epic does not ship without S1 result classified per three-outcome rule). Stories #2–7 are sequentially flexible.
+
+**Parallelism notes (if multi-stream development is feasible):**
+
+- Stories #1–5 are mutually independent. Can land in any order or in parallel.
+- Story #6 (E06.S3) soft-depends on #2 (E06.S2) for harness-pattern precedence; can ship before S2 if Risk 3 mitigation accepts harness-pattern-once-precedented + per-fixture pre-merge subagent validation as sufficient.
+- Story #7 (E06.S5) soft-depends on #3 (E06.S4) and #2 (E06.S2). Either soft dependency can be skipped if the implementer accepts the slightly looser plan-review surface (no AC quoted-wording marker active) or the line-cap-cumulative case as documented in AC3.
+
+**Minimum sequential PRs:** **3 PRs** (E06.S1 / parallel batch S2+S4+S6+S7 / parallel batch S3+S5) if multi-stream development is feasible. **7 PRs sequential** if not.
+
+---
+
+## Definition of done
+
+- [ ] **All 7 stories merged** (E06.S1 through E06.S7).
+- [ ] **v0.1.8 tag pushed:** `git tag v0.1.8 && git push origin v0.1.8` (operator step — destructive write to remote tag namespace; explicit authorization required).
+- [ ] **CHANGELOG entries** cover Added / Changed for each story under `## [0.1.8] — YYYY-MM-DD`.
+- [ ] **ROADMAP.md updated:** `**Current:**` v0.1.7 → v0.1.8; `**Updated:**` → release date; new v0.1.8 row added to release map between v0.1.7 and v0.2.0; new v0.1.8 detail section with epic pointer + v0.1.9 carry-forward summary.
+- [ ] **CI dogfood passing on `main` post-merge:** both build and fix happy-paths green (E03.S11b-2 + E06.S2); both negative-path scenarios PASS per E06.S3.AC4 inverted-success assertion ladder; **3 consecutive runs without harness modification per E06.S3 Risk 3 close criterion**.
+- [ ] **After every merge,** `wc -l` and `wc -w` recorded in PR description for: `agents/doc-writer.md` (post-S1; target ≤650 words / current 80 lines, expected +1–2 lines from AC1(a) MUST insertion; net-zero word delta — resolves epic-reviewer Polish 12); `skills/build/SKILL.md` (post-S5; target ≤274 — tightened from ≤275 per epic-reviewer Observation 7); `skills/fix/SKILL.md` (post-S2 + S5 cumulative; target ≤283 — tightened from ≤286; assumes both S2 and S5 land at their tightened upper bounds, cumulative tightens proportionally if either lands lower — resolves epic-reviewer second-pass NO-2); `skills/review-plan/SKILL.md` (post-S4; target ≤123); `skills/help/SKILL.md` (post-S6; target ≤173); `.claude/hooks/verify-all.sh` (unchanged at 148/150; off-ramp prepared, not invoked).
+- [ ] **Risk 1 (E05 inherited) assessment:** T2 synthetic test re-run completes per E06.S1.AC3 using the E05 audit reproduction setup. **FULL PASS** → Risk 1 closes; CHANGELOG records closure. **PARTIAL PASS** → Risk 1 does NOT close; promote v0.1.9 programmatic-mechanism story (response-validation subagent OR programmatic template parser) to v0.1.9 must-do. **FULL FAIL** → same v0.1.9 promotion; ship with documented result. Outcome + transcripts documented in CHANGELOG `### Changed` per AC6.
+- [ ] **Risk 2 (E05 inherited, off-ramp shared-reference drift) assessment:** 30-day window opened 2026-05-28 at E05.S4 ship; closes ~2026-06-27. Window assessment at v0.1.8 retrospective. Zero false-positive accumulation on Check 8 closes Risk 2; otherwise promote to v0.1.9 candidate (tighten Check 8 mechanic OR add per-skill carve-out).
+- [ ] **Risk 3 (E04 inherited, Stop hook drift) assessment:** 30-day window opened 2026-05-20 at E04.S5 ship; closes ~2026-06-19 (within v0.1.8 timeline). Window assessment at v0.1.8 retrospective. Zero false-positive accumulation closes Risk 3 (E04); otherwise promote.
+- [ ] **Risk 5 (E04 inherited, doc-writer real-dogfood multi-file exercise) assessment:** if v0.1.8 also passes without real-dogfood multi-file invocations exercising the AC4 all-fail-branch guard (no `.roughly/known-pitfalls.md` + `CLAUDE.md` simultaneous write with both failing), promote to v0.1.9 synthetic CI-test story per the original E04 risk register opportunistic-close-or-promote rule. E06.S1 T2 synthetic re-run does NOT count as real-dogfood exercise.
+- [ ] **v0.1.9 candidates list reviewed** and prep next epic PM prompt.
+- [ ] **Plugin version bump:** `.claude-plugin/plugin.json` `version` field → `0.1.8`.
+- [ ] **CHANGELOG heading rename:** `## [Unreleased] — v0.1.8` → `## [0.1.8] — YYYY-MM-DD` at tag time.
+- [ ] **Audit `.roughly/workflow-upgrades` for retired-check markers before tag** (per E04 + E05 DoD precedent). If audit returns zero stale markers, record "no stale markers found" in v0.1.8 release notes or PR description.
+- [ ] **Pre-implementation epic review via `/roughly:review-epic`** on the v0.1.8 draft **before any story dispatch** — strongly recommended per v0.1.7 retrospective evidence (caught 6 high-confidence blockers + 6 lower-confidence observations in E05 epic review).
