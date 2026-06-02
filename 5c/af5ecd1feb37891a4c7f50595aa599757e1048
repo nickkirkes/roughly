@@ -1,0 +1,39 @@
+docs/planning/epics/E06-anchoring-closure-and-ci-coverage.md
+  s_5ac377140ee651::t_475698577be12e 129
+  s_5ac377140ee651::t_dc95c8e5eb5ba1 191
+  s_5ac377140ee651::t_97e6dc63d9fb48 47-48,51
+  s_5ac377140ee651::t_3a841cbdbc2c89 133
+  s_5ac377140ee651::t_9401b69a138793 74-76
+  s_5ac377140ee651::t_2ea8c29875f0d7 84
+  s_5ac377140ee651::t_cc02b75b6d3c8b 91-98
+  s_5ac377140ee651::t_4c0d70d5691202 90
+  s_5ac377140ee651::t_c8dc686a1e2de3 252
+  s_5ac377140ee651::t_f77bb343262b0c 538
+  s_5ac377140ee651::t_403e5c438419b8 127
+  s_5ac377140ee651::t_1900caca5d5663 30
+  s_5ac377140ee651::t_c5d33e8c34fb30 119,121-123
+  s_5ac377140ee651::t_02160a7e91de7f 1-29,31-46,49-50,52-73,77-83,85,87-89,99-118,120,124-126,128,130-132,134,136-175,177-190,192-251,253-343,345-379,381-537,539-547
+  s_5ac377140ee651::t_e778f15a8de249 135
+  s_5ac377140ee651::t_34606191ac5aec 86
+  s_5ac377140ee651::t_78978a49ea836d 380
+  s_5ac377140ee651::t_0cbeeb8e48d2ff 176
+  s_5ac377140ee651::t_00a303e0c851ba 344
+.roughly/plans/E06.0-epic-write-plan.md
+  s_5ac377140ee651::t_1e47ce4d49954a 1-125
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "5caf5ecd1feb37891a4c7f50595aa599757e1048",
+  "prompts": {},
+  "sessions": {
+    "s_5ac377140ee651": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "abfcdf78-b0dd-4e7e-aa3b-4ef3ed674039",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
