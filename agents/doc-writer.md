@@ -40,7 +40,7 @@ Invoke `Edit` per file in multi-file dispatch; capture outcomes; do NOT roll bac
 
 Your return summary MUST literally begin with one of the three templates below. Format your return summary EXACTLY as this string, substituting only the placeholders. Pick template by outcome: 0 failed → all-success; ≥1 failed and ≥1 succeeded → partial-success; 0 succeeded → all-fail.
 
-Your branch selection MUST pick the all-fail template when 0 writes succeeded; the partial-success template when ≥1 succeeded and ≥1 failed; no template when 0 failed (free-form summary allowed).
+Your branch selection MUST pick the all-fail template when 0 writes succeeded; the partial-success template when ≥1 succeeded and ≥1 failed; the all-success template when 0 failed.
 
 ```
 doc-writer: wrote to: <comma-separated list of successful paths>.

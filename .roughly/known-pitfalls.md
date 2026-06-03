@@ -54,7 +54,7 @@ Pitfalls discovered through development. Updated by `/roughly:build` and `/rough
 ### Plugin cache vs source repo for runtime agent dispatch
 
 **Symptom:** Edits to plugin source files at `agents/*.md` (e.g., `agents/doc-writer.md`) don't change runtime behavior when the agent is dispatched via the `Agent` tool with `subagent_type` (e.g., `roughly:doc-writer`). T2 synthetic tests of the new prose appear to test the old prose.
-**Cause:** Claude Code loads plugin agent definitions from the install cache (e.g., `/Users/<user>/.claude/plugins/cache/<owner>/<plugin>/<version>/agents/`), not from the source repo. Source edits stay in the working tree until the plugin is reinstalled or the cache refreshed.
+**Cause:** When a plugin is loaded via the marketplace install (the default), Claude Code reads agent definitions from the install cache (e.g., `/Users/<user>/.claude/plugins/cache/<owner>/<plugin>/<version>/agents/`), and source edits stay in the working tree until the plugin is reinstalled or the cache refreshed. Local plugin testing via `claude --plugin-dir /path/to/clone` bypasses the cache and reads from the source directory directly — source edits take effect immediately in that mode.
 **Fix:** For prose-level behavioral verification during plugin development, inline the post-edit prose into a `general-purpose` subagent dispatch (the LLM follows the inlined instructions). For runtime-level verification via the actual subagent type, reinstall the plugin / refresh the cache first. Document the methodology in test result records so cached-stale results aren't misread as runtime confirmation. Surfaced during E06.S1 T5 synthetic re-run for doc-writer all-fail anchoring.
 
 ## Skill & Agent Authoring
