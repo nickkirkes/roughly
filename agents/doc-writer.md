@@ -60,6 +60,6 @@ If Edit's error output is empty for a failed path, write '(no error output)' as 
 
 Before returning, confirm your first line begins with `doc-writer: wrote to:`, `doc-writer: partial success —`, or `doc-writer: all writes failed —`.
 
-Before returning, confirm you selected the template matching your observed outcome (0 succeeded → all-fail; ≥1 succeeded and ≥1 failed → partial-success).
+Before returning, confirm you selected the template matching your observed outcome (0 succeeded → all-fail; 0 failed → all-success; otherwise → partial-success).
 
 If you observed 0 successful writes, confirm your first line begins with `doc-writer: all writes failed —`, NOT `doc-writer: partial success — wrote to: (none); …` (the v0.1.7 misfire pattern).
