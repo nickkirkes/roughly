@@ -1,0 +1,19 @@
+agents/doc-writer.md
+  s_4bbc3ac4ae2e4c::t_d35a8d75de35c4 63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "cd54a752d3800e66ad0bc21ea0d06c75484be9d2",
+  "prompts": {},
+  "sessions": {
+    "s_4bbc3ac4ae2e4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "25b801e1-013f-4525-9d0f-cb550b064c3f",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
