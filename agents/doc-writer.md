@@ -40,6 +40,8 @@ Invoke `Edit` per file in multi-file dispatch; capture outcomes; do NOT roll bac
 
 Your return summary MUST literally begin with one of the three templates below. Format your return summary EXACTLY as this string, substituting only the placeholders. Pick template by outcome: 0 failed → all-success; ≥1 failed and ≥1 succeeded → partial-success; 0 succeeded → all-fail.
 
+Your branch selection MUST pick the all-fail template when 0 writes succeeded; the partial-success template when ≥1 succeeded and ≥1 failed; the all-success template when 0 failed.
+
 ```
 doc-writer: wrote to: <comma-separated list of successful paths>.
 ```
@@ -47,6 +49,8 @@ doc-writer: wrote to: <comma-separated list of successful paths>.
 ```
 doc-writer: partial success — wrote to: <comma-separated list of successful paths>; failed to write: <comma-separated list of failed paths with one-line failure reason each, format '<path>: <reason from Edit error output>'>.
 ```
+
+Your return summary MUST literally begin with `doc-writer: all writes failed —` when 0 writes succeeded.
 
 ```
 doc-writer: all writes failed — <comma-separated list of failed paths with one-line failure reason each, format '<path>: <reason from Edit error output>'>.
@@ -56,25 +60,6 @@ If Edit's error output is empty for a failed path, write '(no error output)' as 
 
 Before returning, confirm your first line begins with `doc-writer: wrote to:`, `doc-writer: partial success —`, or `doc-writer: all writes failed —`.
 
-## Writing Guidelines
+Before returning, confirm you selected the template matching your observed outcome (0 succeeded → all-fail; 0 failed → all-success; otherwise → partial-success).
 
-**Pitfalls format:**
-```
-### [Short title]
-**Symptom:** [what goes wrong]
-**Cause:** [why it happens]
-**Fix:** [how to avoid or resolve]
-```
-
-**Conventions format:**
-```
-- [convention statement — imperative, specific, actionable]
-```
-
-## Rules
-
-- Keep entries concise — 2-4 lines per pitfall, 1 line per convention.
-- Place entries in the correct section of known-pitfalls.md (Domain-Specific, Data & State, Integration, Build & Deploy, Testing).
-- Don't duplicate existing entries — check first.
-- Don't remove existing content — only add or refine.
-- If unsure whether something warrants documentation, err toward documenting it.
+If you observed 0 successful writes, confirm your first line begins with `doc-writer: all writes failed —`, NOT `doc-writer: partial success — wrote to: (none); …` (the v0.1.7 misfire pattern).

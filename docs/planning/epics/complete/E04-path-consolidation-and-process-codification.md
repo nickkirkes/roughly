@@ -450,6 +450,7 @@ The clause locks complete-what-you-can semantics: when one of N writes fails, do
 - **AC5 — Partial-success summary format specified, not free-form.** The summary template is locked: `"doc-writer: partial success — wrote to: <comma-separated list of successful paths>; failed to write: <comma-separated list of failed paths with one-line failure reason each, format '<path>: <reason from Edit error output>'>."` Implementation does not invent alternate formats.
 
   **Amended in E05.S2 — see E05.S2 for the corrected contract.**
+  **Re-amended in E06.S1 — see E06.S1 for the latest contract.**
 
 **Verification:**
 
