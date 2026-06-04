@@ -65,6 +65,21 @@ User-facing skill behavior changes are flags, not environment variables (see [AD
 
 **Runtime-shared procedural references (ADR-012).** Procedural prose duplicated across `skills/build/SKILL.md` and `skills/fix/SKILL.md` is extracted to authoritative files under `skills/shared/<name>.md` and referenced at the consumer section head via a single-line directive of the form `` Read `skills/shared/<file>.md` `` placed within 3 lines of the section heading. When editing Stage 8 or ABORT HANDLING prose, edit the shared file — inline copies do not exist in build/fix SKILL.md post-E05.S4. Pipeline-specific divergence in the shared file uses inline conditional prose ("When invoked from /roughly:build: X. When invoked from /roughly:fix: Y.") — no template engine, no out-of-band substitution. Drift is enforced by Check 8 in `.claude/hooks/verify-all.sh` (path-presence + content-duplication phrase scan). Distinct from the ADR-003 sync-reference pattern for static context (e.g., `agents/agent-preamble.md`) — that one is copy-and-sync; ADR-012 is runtime-loaded.
 
+## AC authoring conventions
+
+**Quoted-wording markers (`verbatim:` vs `form:`).** When an AC quotes example wording that contains metasyntactic notation — angle-bracketed placeholders like `<placeholder>`, ellipses `…`, or sample-text tokens like `XXX` or `<list>` — explicitly mark whether the wording is verbatim-required or illustrative-only. Recognized markers:
+
+- `verbatim: <text>` — the text must match literally byte-for-byte at implementation (used when the literal string is load-bearing for a `grep -Fn` verify, a regex anchor, or a user-visible contract).
+- `form: <text> (adapt for clarity)` — the text is illustrative of the structural form; the implementer chooses concrete wording that satisfies the form.
+
+**Bright-line carve-out:** ACs whose quoted wording contains NO metasyntactic notation (plain literal text only — fixed strings used in `grep -Fn` patterns, exact section headings, etc.) need no marker; verbatim-equality is implicit.
+
+**Marker-intent sub-carve-out:** a close-but-not-identical marker name (e.g., `literal:` instead of `verbatim:`, or `template:` instead of `form:`) with adjacent prose that unambiguously expresses the intent — "must match byte-for-byte at implementation" for verbatim, "adapt for clarity" for form — passes. The label is illustrative; the inline prose is normative. The convention fires on missing-intent (no marker AND no unambiguous prose), not on label-non-conformance alone.
+
+**Examples.** Positive — an AC quoting `` "confirm your summary's first line is `prefix — …`" `` contains the metasyntactic `…` and must carry a `form:` marker (or be rewritten without the ellipsis). Negative — an AC saying `` grep -Fn "Cross-epic AC amendments" CONTRIBUTING.md `` returns ≥1 match quotes only a verbatim search literal; no marker required.
+
+Precipitating evidence: both v0.1.7 E05.S2 deferrals (AC2(c) anchoring wording + AC4 binary-vs-three-way rule) traced back to ambiguity over whether quoted AC example wording was verbatim-required or illustrative. See [.roughly/known-pitfalls.md](.roughly/known-pitfalls.md) L86 (LLM self-check anchor pattern: prefer "begins with" over "is" + ellipsis) for the underlying spec-time anti-pattern this convention forecloses. Enforcement is at plan-review time via the corresponding check in [skills/review-plan/SKILL.md](skills/review-plan/SKILL.md); there is no runtime check.
+
 ## Cross-epic AC amendments
 
 When amending an already-shipped story's AC from a later epic, three artifacts must land together:
