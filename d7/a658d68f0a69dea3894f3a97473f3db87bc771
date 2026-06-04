@@ -1,0 +1,19 @@
+.roughly/plans/E06-S4-ac-quoted-wording-marker-plan.md
+  s_a8749b3e0968bd::t_8b4b64adca4ae2 414-416
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "d7a658d68f0a69dea3894f3a97473f3db87bc771",
+  "prompts": {},
+  "sessions": {
+    "s_a8749b3e0968bd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e40ab82d-e7e7-4657-a667-d1230602d541",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
