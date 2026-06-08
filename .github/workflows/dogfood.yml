@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  dogfood-build-cycle:
+  dogfood-build-fix-cycle:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -20,7 +20,7 @@ jobs:
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code@2 && claude --version
 
-      - name: Run dogfood scaffolding
+      - name: Run dogfood scaffolding (smoke + build + fix happy-path)
         run: bash scripts/ci-dogfood.sh
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

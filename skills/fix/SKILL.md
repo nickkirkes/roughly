@@ -1,6 +1,6 @@
 ---
 name: fix
-description: "Bug/issue fix pipeline: investigate → plan → review plan → implement (subagent-per-task with two-stage review) → review → verify build. Offers to create investigator agent when project reaches 50+ files."
+description: "Bug/issue fix pipeline: investigate → plan → review plan → implement (subagent-per-task with two-stage review) → review → verify build. Offers to create investigator agent when project reaches 50+ files. CI: pass `--ci` for non-interactive runs (runs review-plan and auto-acts on the verdict; CI-only)."
 disable-model-invocation: true
 ---
 
@@ -30,6 +30,8 @@ Parse `$ARGUMENTS`. Expected formats:
 If it references a file, read it. If an issue ID is provided, extract that specific issue's details.
 
 Display: issue summary, reproduction steps (if available), affected area.
+
+If `$ARGUMENTS` has `--ci` appearing as a standalone token (preceded by whitespace or string start, followed by whitespace or string end — not as a substring of `--ci-cd` or similar), set `CI_MODE=true`. When `CI_MODE=true`: every human gate in this pipeline auto-proceeds with its default (yes); each abort/cap-escalation condition (e.g. Stage 5c) emits its structured log message and exits non-zero instead of prompting; Stage 8 auto-progresses both commits with no approval gate; Stage 4 follows its `--ci` rule below. Never invoke `--ci` interactively. See ADR-011 (flags-not-env-vars) and known-pitfalls "standalone-token" detection.
 
 Ask: **"Is this the correct issue? (yes / adjust / abort)"** On abort: emit `Stage 1 intake aborted: [reason]. No files written. Recovery: re-run /roughly:fix with adjusted issue.`
 
@@ -110,7 +112,9 @@ Do NOT present the plan to the human yet — proceed directly to Stage 4.
 
 Dispatch `/roughly:review-plan` as a blocking subagent call. Use model `sonnet`. Pass the plan file path from Stage 3 as the input.
 
-**If NEEDS REVISION:** apply the suggested edits to the plan file, then re-dispatch the review-plan subagent against the updated plan. Repeat until PASS or until 2 total NEEDS REVISION verdicts — then escalate: emit `Stage 4 plan-review cannot proceed: 2 NEEDS REVISION verdicts. Plan at [path] needs human revision. Recovery: revise plan or override.` and present findings to the human.
+**`--ci` non-interactive Stage 4:** If `CI_MODE=true`: dispatch review-plan as above (do NOT skip it), then act on the verdict without a human gate — on PASS, auto-progress to Stage 5; on NEEDS REVISION, emit structured `FAIL — plan-review NEEDS REVISION: <verdict block>` and exit non-zero (no revision loop, no human gate). This intentionally differs from build's `--ci` skip-and-synthesize (build/SKILL.md Stage 4) — fix keeps the review running, so it does not puncture ADR-001's blocking-subagent enforcement.
+
+**If NEEDS REVISION (interactive mode only — the `CI_MODE=true` path exits non-zero above without entering this loop):** apply the suggested edits to the plan file, then re-dispatch the review-plan subagent against the updated plan. Repeat until PASS or until 2 total NEEDS REVISION verdicts — then escalate: emit `Stage 4 plan-review cannot proceed: 2 NEEDS REVISION verdicts. Plan at [path] needs human revision. Recovery: revise plan or override.` and present findings to the human.
 
 **After review completes:** NOW present the plan and review results to the human. Display the plan summary, task count, root cause, and the review verdict (PASS or outstanding concerns).
 

@@ -153,7 +153,7 @@ There is no automated test suite — this is pure markdown. To verify changes:
 
 ## CI
 
-**Workflow logs.** GitHub Actions tab → `dogfood` workflow → most recent run. Per-job logs live under `dogfood-build-cycle`.
+**Workflow logs.** GitHub Actions tab → `dogfood` workflow → most recent run. Per-job logs live under `dogfood-build-fix-cycle`.
 
 **Reproducing a failure locally.**
 
