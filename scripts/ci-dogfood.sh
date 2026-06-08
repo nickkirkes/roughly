@@ -341,7 +341,21 @@ if grep -q 'NMAE' "$WORKTREE/tests/fixtures/hello-roughly-bug/src/greeter.sh"; t
   exit 1
 fi
 
-echo "ci-dogfood: fix-scenario — all structural assertions passed"
+# Assertion F6: the fixture's own regression test now passes (behavioral proof
+# the fix produces the correct output — `hello world` — not merely plausible
+# structure). This test FAILS pre-fix and must PASS post-fix; the grep checks
+# above are necessary but not sufficient (e.g. `echo "goodbye $NAME"` satisfies
+# F5a/F5b but fails this test). Exit-capture idiom: a non-zero test under
+# set -e would otherwise kill the script before the diagnostic fires.
+FIX_TEST_OUT="$(bash "$WORKTREE/tests/fixtures/hello-roughly-bug/tests/greeter.test.sh" 2>&1)" \
+  && FIX_TEST_EXIT=0 || FIX_TEST_EXIT=$?
+if [ "$FIX_TEST_EXIT" != 0 ]; then
+  echo "ci-dogfood: FAIL — fixture regression test did not pass post-fix (exit $FIX_TEST_EXIT; fix did not produce correct behavior)" >&2
+  printf '%s\n' "$FIX_TEST_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+echo "ci-dogfood: fix-scenario — all structural + behavioral assertions passed"
 
 # Post-state check: confirm no source-tree pollution
 POST_STATE="$(git -C "$ROOT" status --porcelain)"
