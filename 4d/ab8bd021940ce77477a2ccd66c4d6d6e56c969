@@ -1,0 +1,21 @@
+.roughly/plans/E06-S2-fix-side-ci-flag-plan.md
+  s_2861e0ab7b2fb6::t_15c05416af2c8f 1-2
+  s_2861e0ab7b2fb6::t_3068614d78f56c 3-30,32-129
+  s_2861e0ab7b2fb6::t_78d9e690792a01 31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "4dab8bd021940ce77477a2ccd66c4d6d6e56c969",
+  "prompts": {},
+  "sessions": {
+    "s_2861e0ab7b2fb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b7862c29-3d7b-45a4-8055-49771a4db0c3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
