@@ -1,0 +1,42 @@
+skills/fix/SKILL.md
+  s_2861e0ab7b2fb6::t_082744cbe42e33 117
+  s_2861e0ab7b2fb6::t_64016acef32b00 34-35
+  s_2861e0ab7b2fb6::t_050f2e529926c3 115-116
+  s_2861e0ab7b2fb6::t_064dea85d8d118 3
+.github/workflows/dogfood.yml
+  s_2861e0ab7b2fb6::t_a1b3cbd25257d8 23
+  s_2861e0ab7b2fb6::t_329e3d00162ab0 10
+scripts/ci-dogfood.sh
+  s_2861e0ab7b2fb6::t_01b2da7091a85f 264-269
+  s_2861e0ab7b2fb6::t_27756ad0acfa79 294-297
+  s_2861e0ab7b2fb6::t_f4a873722022b3 298
+  s_2861e0ab7b2fb6::t_a6656e09a7dd5c 260-263,270-293,299-345
+tests/fixtures/hello-roughly-bug/README.md
+  s_2861e0ab7b2fb6::t_0307d79d071166 1-27
+tests/fixtures/hello-roughly-bug/src/greeter.sh
+  s_2861e0ab7b2fb6::t_43d4c3c5657f43 1-3
+tests/fixtures/hello-roughly-bug/tests/greeter.test.sh
+  s_2861e0ab7b2fb6::t_dcdf7c3f9e07bd 1-9
+CHANGELOG.md
+  s_2861e0ab7b2fb6::t_95b42daa63f40c 22-29
+CONTRIBUTING.md
+  s_2861e0ab7b2fb6::t_ee64986c49a9a1 156
+tests/fixtures/hello-roughly-bug/CLAUDE.md
+  s_2861e0ab7b2fb6::t_3f58922e64d2b4 1-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "cef56b5008e4a76c85a8b2d1a1578af62d3fc3d2",
+  "prompts": {},
+  "sessions": {
+    "s_2861e0ab7b2fb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b7862c29-3d7b-45a4-8055-49771a4db0c3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
