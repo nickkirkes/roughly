@@ -257,6 +257,106 @@ fi
 
 echo "ci-dogfood: full-scenario — all 7 structural assertions passed"
 
+# ──────────────────────────────────────────────────────────────────────
+# Fix scenario: /roughly:fix --ci against the hello-roughly-bug fixture
+# ──────────────────────────────────────────────────────────────────────
+
+# Fail loudly if the fixture is absent from the worktree (e.g. uncommitted or
+# renamed) — a bare `cd` under set -e would otherwise die with no diagnostic.
+if [ ! -d "$WORKTREE/tests/fixtures/hello-roughly-bug" ]; then
+  echo "ci-dogfood: FAIL — fix fixture directory missing from worktree at $WORKTREE/tests/fixtures/hello-roughly-bug (fixture may be untracked or the path changed)" >&2
+  exit 1
+fi
+cd "$WORKTREE/tests/fixtures/hello-roughly-bug"
+
+# Same budget envelope + exit-capture idiom as the build scenario (never
+# `OUT="$(...)"` direct-assign under set -e — distinct failure diagnostics
+# required; see known-pitfalls "set -e + command-substitution-in-assignment").
+FIX_OUT="$($TIMEOUT 270 claude --bare --plugin-dir "$WORKTREE" \
+  --no-session-persistence --max-budget-usd 1.50 \
+  -p "/roughly:fix --ci src/greeter.sh prints 'hello ' instead of 'hello world' — variable reference typo in the echo" 2>&1)" \
+  && FIX_EXIT=0 || FIX_EXIT=$?
+if [ "$FIX_EXIT" = 124 ]; then
+  echo "ci-dogfood: FAIL — fix-scenario step timed out (claude did not return within 270s)" >&2
+  printf '%s\n' "$FIX_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+if [ "$FIX_EXIT" != 0 ]; then
+  echo "ci-dogfood: FAIL — fix-scenario step claude exited $FIX_EXIT" >&2
+  printf '%s\n' "$FIX_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Fix asserts on completion artifacts, NOT the build synthetic-PASS marker:
+# fix's --ci RUNS review-plan and branches on its verdict (E06.S2 AC1), so no
+# `[--ci] plan review skipped` marker is emitted on this path.
+
+# Assertion F1: fix plan file exists (proves Stage 3+ ran). `ls -t` picks the
+# newest match so re-runs validate the current plan, not a stale prior one.
+# Exit-capture idiom required — a failing `ls` under pipefail would kill the
+# script before the guard.
+FIX_PLAN="$(ls -t "$WORKTREE/tests/fixtures/hello-roughly-bug/.roughly/plans/"*-plan.md 2>/dev/null | head -1)" \
+  && FIX_PLAN_EXIT=0 || FIX_PLAN_EXIT=$?
+if [ "$FIX_PLAN_EXIT" != 0 ] || [ -z "$FIX_PLAN" ] || [ ! -f "$FIX_PLAN" ]; then
+  echo "ci-dogfood: FAIL — no fix plan file found in $WORKTREE/tests/fixtures/hello-roughly-bug/.roughly/plans/" >&2
+  printf '%s\n' "$FIX_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Assertion F2: plan has '## Tasks' section (structural).
+if ! grep -q '^## Tasks' "$FIX_PLAN"; then
+  echo "ci-dogfood: FAIL — fix plan file at $FIX_PLAN has no '## Tasks' section" >&2
+  sed 's/^/    /' "$FIX_PLAN" >&2
+  exit 1
+fi
+
+# Assertion F3: plan has at least T1.
+if ! grep -qE '^### T1' "$FIX_PLAN"; then
+  echo "ci-dogfood: FAIL — fix plan file at $FIX_PLAN has no T1 task" >&2
+  sed 's/^/    /' "$FIX_PLAN" >&2
+  exit 1
+fi
+
+# Assertion F4: plan first line is the Status block marker (proves the Stage 8
+# plan-historical-marking step ran — the fix-completion proof through Stage 8).
+if ! head -1 "$FIX_PLAN" | grep -qE '^> \*\*Status:\*\* Historical'; then
+  echo "ci-dogfood: FAIL — fix plan file at $FIX_PLAN missing Status block on first line (Stage 8 plan-historical step may not have run)" >&2
+  sed 's/^/    /' "$FIX_PLAN" >&2
+  exit 1
+fi
+
+# Assertion F5a: the fix was applied — an echo line now references $NAME/${NAME}
+# (variable-name boundary guarded as in the build scenario: rejects $NAMESPACE etc.).
+if ! grep -qE '^[[:space:]]*echo[[:space:]].*(\$\{NAME\}|\$NAME([^A-Za-z0-9_]|$))' "$WORKTREE/tests/fixtures/hello-roughly-bug/src/greeter.sh"; then
+  echo "ci-dogfood: FAIL — src/greeter.sh has no echo line referencing \$NAME or \${NAME} (fix not applied)" >&2
+  sed 's/^/    /' "$WORKTREE/tests/fixtures/hello-roughly-bug/src/greeter.sh" >&2
+  exit 1
+fi
+
+# Assertion F5b: the original \$NMAE typo is gone (proves the bug was actually
+# fixed, not merely supplemented with a parallel correct statement).
+if grep -q 'NMAE' "$WORKTREE/tests/fixtures/hello-roughly-bug/src/greeter.sh"; then
+  echo "ci-dogfood: FAIL — src/greeter.sh still contains the \$NMAE typo (bug not fixed)" >&2
+  sed 's/^/    /' "$WORKTREE/tests/fixtures/hello-roughly-bug/src/greeter.sh" >&2
+  exit 1
+fi
+
+# Assertion F6: the fixture's own regression test now passes (behavioral proof
+# the fix produces the correct output — `hello world` — not merely plausible
+# structure). This test FAILS pre-fix and must PASS post-fix; the grep checks
+# above are necessary but not sufficient (e.g. `echo "goodbye $NAME"` satisfies
+# F5a/F5b but fails this test). Exit-capture idiom: a non-zero test under
+# set -e would otherwise kill the script before the diagnostic fires.
+FIX_TEST_OUT="$(bash "$WORKTREE/tests/fixtures/hello-roughly-bug/tests/greeter.test.sh" 2>&1)" \
+  && FIX_TEST_EXIT=0 || FIX_TEST_EXIT=$?
+if [ "$FIX_TEST_EXIT" != 0 ]; then
+  echo "ci-dogfood: FAIL — fixture regression test did not pass post-fix (exit $FIX_TEST_EXIT; fix did not produce correct behavior)" >&2
+  printf '%s\n' "$FIX_TEST_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+echo "ci-dogfood: fix-scenario — all structural + behavioral assertions passed"
+
 # Post-state check: confirm no source-tree pollution
 POST_STATE="$(git -C "$ROOT" status --porcelain)"
 if [ "$PRE_STATE" != "$POST_STATE" ]; then
