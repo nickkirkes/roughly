@@ -1,0 +1,19 @@
+.roughly/plans/E06.S5-stage-6-third-disposition-gate-plan.md
+  s_aada75d7c38de1::t_23aecf4b98d39a 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "0a353b647092b1fea16efec03c386afdc03b32df",
+  "prompts": {},
+  "sessions": {
+    "s_aada75d7c38de1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7a6b175-286b-41ad-a529-4e19d787e4e0",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
