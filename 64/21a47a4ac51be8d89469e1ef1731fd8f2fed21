@@ -1,0 +1,28 @@
+.roughly/plans/E06.S5-stage-6-third-disposition-gate-plan.md
+  s_aada75d7c38de1::t_e2c4b65959b4af 1-161
+skills/build/SKILL.md
+  s_aada75d7c38de1::t_d533755e88d4c2 205-206
+CHANGELOG.md
+  s_aada75d7c38de1::t_01d38548907ed9 16,18-21
+  s_aada75d7c38de1::t_d02d84657f2280 17
+docs/planning/epics/E06-anchoring-closure-and-ci-coverage.md
+  s_aada75d7c38de1::t_647f1b18c6ca94 531-538
+skills/fix/SKILL.md
+  s_aada75d7c38de1::t_ea398ce637e726 208-209
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "6421a47a4ac51be8d89469e1ef1731fd8f2fed21",
+  "prompts": {},
+  "sessions": {
+    "s_aada75d7c38de1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7a6b175-286b-41ad-a529-4e19d787e4e0",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
