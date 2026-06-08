@@ -1,0 +1,21 @@
+docs/planning/epics/E06-anchoring-closure-and-ci-coverage.md
+  s_5ac377140ee651::t_c03bf65e06e88a 525
+  s_5ac377140ee651::t_5733598d873f9b 543
+  s_5ac377140ee651::t_849b4d13b274a0 533-538
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "0d0a671131dcad369ac6da7437fc62f532c28ace",
+  "prompts": {},
+  "sessions": {
+    "s_5ac377140ee651": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "abfcdf78-b0dd-4e7e-aa3b-4ef3ed674039",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
