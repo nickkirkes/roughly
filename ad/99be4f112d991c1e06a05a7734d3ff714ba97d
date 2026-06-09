@@ -1,0 +1,76 @@
+docs/planning/epics/E06-anchoring-closure-and-ci-coverage.md
+  s_c835b2ec8b6925::t_2872f3fb5c09bd 582
+  s_c835b2ec8b6925::t_6440426bf20e30 249-250
+  s_c835b2ec8b6925::t_04772b38a84f7f 253-254
+  s_c835b2ec8b6925::t_bd33c8d1e56101 579-581,583
+  s_c835b2ec8b6925::t_cbc79770806c05 268-269
+tests/fixtures/hello-roughly-plan-revision/tests/greeter.test.sh
+  s_c835b2ec8b6925::t_f6e560bf6d8929 1-8
+tests/fixtures/hello-roughly-plan-clean/CLAUDE.md
+  s_c835b2ec8b6925::t_0a9cf2ea294de3 1-15
+.github/workflows/dogfood.yml
+  s_c835b2ec8b6925::t_ef207ea288d423 37
+  s_c835b2ec8b6925::t_441507a88f358e 23-36
+tests/fixtures/hello-roughly-build-abort/tests/greeter.test.sh
+  s_c835b2ec8b6925::t_49b7dc60ffd802 1-12
+skills/build/SKILL.md
+  s_c835b2ec8b6925::t_128a9c5077d25b 106,108
+  s_c835b2ec8b6925::t_bdbcef2cf4bbbe 3
+  s_c835b2ec8b6925::t_cd96f7ef2499f3 100
+  s_c835b2ec8b6925::t_2fbe517ddd115e 25
+tests/fixtures/hello-roughly-build-abort-control/CLAUDE.md
+  s_c835b2ec8b6925::t_885956c70d0a81 1-15
+tests/fixtures/hello-roughly-plan-clean/README.md
+  s_c835b2ec8b6925::t_1ed3de2e8ce6b6 1-27
+tests/fixtures/hello-roughly-plan-revision/src/greeter.sh
+  s_c835b2ec8b6925::t_37bf9625d23793 1-2
+tests/fixtures/hello-roughly-build-abort/CLAUDE.md
+  s_c835b2ec8b6925::t_9bc98a265cba7e 1-15
+tests/fixtures/hello-roughly-build-abort-control/tests/greeter.test.sh
+  s_c835b2ec8b6925::t_ff501c9efd08d6 1-11
+tests/fixtures/hello-roughly-build-abort/README.md
+  s_c835b2ec8b6925::t_c7196ca030b6aa 1-27
+tests/fixtures/hello-roughly-build-abort-control/src/greeter.sh
+  s_c835b2ec8b6925::t_64bd335d481b09 1-2
+CHANGELOG.md
+  s_c835b2ec8b6925::t_3ca774fdd2bd89 9-15
+tests/fixtures/hello-roughly-plan-revision/README.md
+  s_c835b2ec8b6925::t_5647d896916f76 1-32
+tests/fixtures/hello-roughly-build-abort-control/README.md
+  s_c835b2ec8b6925::t_456a7a574a6919 1-26
+tests/fixtures/hello-roughly-plan-clean/src/greeter.sh
+  s_c835b2ec8b6925::t_3525639e34cd77 1-2
+tests/fixtures/hello-roughly-build-abort/src/greeter.sh
+  s_c835b2ec8b6925::t_2a63393ee285ae 1-2
+tests/fixtures/hello-roughly-plan-revision/CLAUDE.md
+  s_c835b2ec8b6925::t_ee93509019bb99 1-15
+CLAUDE.md
+  s_c835b2ec8b6925::t_5c014019af43b1 18
+  s_c835b2ec8b6925::t_418ab9e8bf81a7 63
+tests/fixtures/hello-roughly-plan-clean/tests/greeter.test.sh
+  s_c835b2ec8b6925::t_8d167637059a4a 1-8
+scripts/ci-dogfood.sh
+  s_c835b2ec8b6925::t_546507545ce2e4 155-160
+  s_c835b2ec8b6925::t_d4dbce087932bd 360-401,418-477
+  s_c835b2ec8b6925::t_31ae91b167e6ed 478-635
+  s_c835b2ec8b6925::t_4c0100b599255d 402-417
+docs/adrs/ADR-013-build-ci-runs-review-plan.md
+  s_c835b2ec8b6925::t_f9eb6231acf3d1 1-2,4-28
+  s_c835b2ec8b6925::t_6f5b9df3556f0a 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "ad99be4f112d991c1e06a05a7734d3ff714ba97d",
+  "prompts": {},
+  "sessions": {
+    "s_c835b2ec8b6925": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "36bb82a8-1574-4a70-a19e-d4cb93cad15b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
