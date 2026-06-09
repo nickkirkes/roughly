@@ -1,0 +1,27 @@
+.roughly/workflow-upgrades
+  s_d4e32cb3483fea::t_3f5c0b96086568 4
+skills/help/SKILL.md
+  s_d4e32cb3483fea::t_c905adb4241989 54,66-67,69,71-73,75-76,78-82,84-86
+  s_d4e32cb3483fea::t_aebe1c6276c648 56,74
+  s_d4e32cb3483fea::t_c1f6f9074fd085 46
+  s_d4e32cb3483fea::t_7583a2a85b678f 9
+  s_d4e32cb3483fea::t_f8214d6e2b26d8 3
+CHANGELOG.md
+  s_d4e32cb3483fea::t_c5716bb4ba50a5 49-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "091e53bb3cefcbe1e87459e1cc81d02e01ed28a9",
+  "prompts": {},
+  "sessions": {
+    "s_d4e32cb3483fea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f9113894-0d98-4b81-a4e4-eb347ba3bc2d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
