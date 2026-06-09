@@ -20,7 +20,21 @@ jobs:
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code@2 && claude --version
 
-      - name: Run dogfood scaffolding (smoke + build + fix happy-path)
+      # Budget / wall-time envelope (E06.S3 AC5):
+      # - Each claude dispatch uses --max-budget-usd 1.50 (the AC2 plan-revision
+      #   recovery scenario may need 1.50→2.00 if per-fixture validation shows a
+      #   breach; final value tracked in CHANGELOG).
+      # - The suite now runs 5 review-plan-bearing build dispatches: the build
+      #   happy-path's newly-real review-plan dispatch (build --ci now runs
+      #   review-plan per ADR-013) + 4 new fixtures (build-abort,
+      #   build-abort-control, plan-revision, plan-clean).
+      # - Each build dispatch is capped at $TIMEOUT 270s; the build-abort
+      #   scenario aborts early (Stage 5c), so it typically returns well under
+      #   the cap.
+      # - Wall-time: added scenarios extend the run by roughly the sum of their
+      #   dispatch times; the negative-path Risk-3 close criterion requires 3
+      #   consecutive green runs on main.
+      - name: "Run dogfood scaffolding (smoke + build + fix + negative-path: build-abort + plan-revision + controls)"
         run: bash scripts/ci-dogfood.sh
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

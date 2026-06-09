@@ -152,12 +152,12 @@ if [ "$SCENARIO_EXIT" != 0 ]; then
   exit 1
 fi
 
-# Assertion 1: synthetic-PASS marker present (proves Stage 4 took the
-# --ci branch instead of attempting real review-plan dispatch; AC5).
-# Full-string match (-F) keeps this in lockstep with skills/build/SKILL.md
-# Stage 4's emit instruction — drift in either side fails CI loudly.
-if ! printf '%s\n' "$SCENARIO_OUT" | grep -qF '[--ci] plan review skipped — synthetic PASS'; then
-  echo "ci-dogfood: FAIL — synthetic-PASS marker missing (Stage 4 may have attempted real review-plan dispatch despite --ci)" >&2
+# Assertion 1: plan-review PASS marker present (proves Stage 4 dispatched
+# review-plan under --ci and it returned PASS — build's --ci now RUNS
+# review-plan rather than skipping it; see ADR-013). Full-string match (-F)
+# keeps this in lockstep with skills/build/SKILL.md Stage 4's verdict-marker emit.
+if ! printf '%s\n' "$SCENARIO_OUT" | grep -qF '[--ci] plan review verdict: PASS'; then
+  echo "ci-dogfood: FAIL — plan-review PASS marker missing (Stage 4 may not have dispatched review-plan under --ci; see ADR-013)" >&2
   printf '%s\n' "$SCENARIO_OUT" | sed 's/^/    /' >&2
   exit 1
 fi
@@ -356,6 +356,282 @@ if [ "$FIX_TEST_EXIT" != 0 ]; then
 fi
 
 echo "ci-dogfood: fix-scenario — all structural + behavioral assertions passed"
+
+# ──────────────────────────────────────────────────────────────────────
+# Build-abort scenario: /roughly:build --ci against an unsatisfiable-test fixture
+# (E06.S3 AC1 — Stage 5c auto-fix-cap abort; INVERTED-SUCCESS assertion)
+# ──────────────────────────────────────────────────────────────────────
+
+# Fail loudly if the fixture is absent from the worktree (e.g. uncommitted or
+# renamed) — a bare `cd` under set -e would otherwise die with no diagnostic.
+if [ ! -d "$WORKTREE/tests/fixtures/hello-roughly-build-abort" ]; then
+  echo "ci-dogfood: FAIL — build-abort fixture directory missing from worktree at $WORKTREE/tests/fixtures/hello-roughly-build-abort (fixture may be untracked or the path changed)" >&2
+  exit 1
+fi
+cd "$WORKTREE/tests/fixtures/hello-roughly-build-abort"
+
+# Same budget envelope + exit-capture idiom as the build scenario (never
+# `OUT="$(...)"` direct-assign under set -e — distinct failure diagnostics
+# required; see known-pitfalls "set -e + command-substitution-in-assignment").
+BUILD_ABORT_OUT="$($TIMEOUT 270 claude --bare --plugin-dir "$WORKTREE" \
+  --no-session-persistence --max-budget-usd 1.50 \
+  -p "/roughly:build --ci add a NAME constant to src/greeter.sh and update the echo to use it" 2>&1)" \
+  && BUILD_ABORT_EXIT=0 || BUILD_ABORT_EXIT=$?
+# Per epic AC4, 124 (timeout — process killed) is ALWAYS a hard FAIL: a killed
+# process is not the abort path, it is an infra failure masquerading as one.
+if [ "$BUILD_ABORT_EXIT" = 124 ]; then
+  echo "ci-dogfood: FAIL — build-abort step timed out — process killed, not the abort path (claude did not return within 270s)" >&2
+  printf '%s\n' "$BUILD_ABORT_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Marker-primary: the Stage 5c auto-fix-cap escalation marker is the proof the
+# abort fired. NOTE: claude -p may exit 0 even on a model-level abort (the model
+# cannot set a process exit code on normal turn completion), so we key on the
+# marker, not the exit code. The exit-code rung below is left permissive pending
+# empirical calibration (E06.S3 T11) — only 124 (timeout) is a hard FAIL.
+if ! printf '%s\n' "$BUILD_ABORT_OUT" | grep -qF 'cannot proceed: auto-fix cap reached on'; then
+  echo "ci-dogfood: FAIL — Stage 5c auto-fix-cap abort marker missing (the unsatisfiable-test fixture did not drive the build to the Stage 5c abort)" >&2
+  printf '%s\n' "$BUILD_ABORT_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+# T11-CALIBRATE: confirm during per-fixture validation whether this abort yields
+# process exit 0 (model emitted marker, CLI completed) or non-zero. If validation
+# shows a deterministic non-zero abort code, add a rung asserting it here. Until
+# then, marker-present is the PASS condition and only 124 is a hard FAIL.
+
+# Negative backstop: the abort fires at Stage 5c, so the build MUST NOT reach
+# Stage 8 (no plan-historical marking). If a plan file exists with the Stage 8
+# Status block on its first line, the build completed the full pipeline — the
+# abort was bypassed despite the marker appearing. Closes the one-directional
+# false-PASS gap (marker-present alone could otherwise co-occur with completion).
+ABORT_PLAN="$(ls -t "$WORKTREE/tests/fixtures/hello-roughly-build-abort/.roughly/plans/"*-plan.md 2>/dev/null | head -1)" \
+  && ABORT_PLAN_EXIT=0 || ABORT_PLAN_EXIT=$?
+if [ "$ABORT_PLAN_EXIT" = 0 ] && [ -n "$ABORT_PLAN" ] && [ -f "$ABORT_PLAN" ] \
+  && head -1 "$ABORT_PLAN" | grep -qE '^> \*\*Status:\*\* Historical'; then
+  echo "ci-dogfood: FAIL — build-abort fixture reached Stage 8 (plan carries a Historical Status block; the abort was bypassed despite the marker)" >&2
+  printf '%s\n' "$BUILD_ABORT_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+echo "ci-dogfood: build-abort scenario — Stage 5c auto-fix-cap abort marker present, no Stage 8 completion (exit ${BUILD_ABORT_EXIT})"
+
+# ──────────────────────────────────────────────────────────────────────
+# Build-abort CONTROL: satisfiable test — same task completes the full pipeline (E06.S3 AC1/AC3)
+# ──────────────────────────────────────────────────────────────────────
+
+# Fail loudly if the control fixture is absent from the worktree.
+if [ ! -d "$WORKTREE/tests/fixtures/hello-roughly-build-abort-control" ]; then
+  echo "ci-dogfood: FAIL — build-abort control fixture directory missing from worktree at $WORKTREE/tests/fixtures/hello-roughly-build-abort-control (fixture may be untracked or the path changed)" >&2
+  exit 1
+fi
+cd "$WORKTREE/tests/fixtures/hello-roughly-build-abort-control"
+
+# Same task string + budget envelope as the abort scenario — the ONLY difference
+# is the fixture's test satisfiability, isolating the abort trigger to the rig.
+BUILD_ABORT_CTRL_OUT="$($TIMEOUT 270 claude --bare --plugin-dir "$WORKTREE" \
+  --no-session-persistence --max-budget-usd 1.50 \
+  -p "/roughly:build --ci add a NAME constant to src/greeter.sh and update the echo to use it" 2>&1)" \
+  && BUILD_ABORT_CTRL_EXIT=0 || BUILD_ABORT_CTRL_EXIT=$?
+if [ "$BUILD_ABORT_CTRL_EXIT" = 124 ]; then
+  echo "ci-dogfood: FAIL — build-abort control step timed out (claude did not return within 270s)" >&2
+  printf '%s\n' "$BUILD_ABORT_CTRL_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+# The control's satisfiable test means the build completes the full pipeline:
+# a non-zero exit here is a real failure, not the abort path.
+if [ "$BUILD_ABORT_CTRL_EXIT" != 0 ]; then
+  echo "ci-dogfood: FAIL — control build exited non-zero — expected full completion (exit $BUILD_ABORT_CTRL_EXIT)" >&2
+  printf '%s\n' "$BUILD_ABORT_CTRL_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Control assertion (a): the Stage 5c abort marker must be ABSENT (positive-guard
+# form — `if grep` matches → FAIL — proves the abort trigger is isolated to the
+# rigged fixture and does not fire on a satisfiable test).
+if printf '%s\n' "$BUILD_ABORT_CTRL_OUT" | grep -qF 'cannot proceed: auto-fix cap reached on'; then
+  echo "ci-dogfood: FAIL — build-abort control unexpectedly hit the Stage 5c abort (the abort trigger is not isolated to the rigged test)" >&2
+  printf '%s\n' "$BUILD_ABORT_CTRL_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Control assertion (b): plan file written with Status block on its first line
+# (proves the control completed the full pipeline through Stage 8's plan-
+# historical-marking step). Distinct CTRL_PLAN var avoids clobbering PLAN_FILE/
+# FIX_PLAN. Exit-capture idiom required — a failing `ls` under pipefail would
+# kill the script before the guard.
+CTRL_PLAN="$(ls -t "$WORKTREE/tests/fixtures/hello-roughly-build-abort-control/.roughly/plans/"*-plan.md 2>/dev/null | head -1)" \
+  && CTRL_PLAN_EXIT=0 || CTRL_PLAN_EXIT=$?
+if [ "$CTRL_PLAN_EXIT" != 0 ] || [ -z "$CTRL_PLAN" ] || [ ! -f "$CTRL_PLAN" ]; then
+  echo "ci-dogfood: FAIL — no control plan file found in $WORKTREE/tests/fixtures/hello-roughly-build-abort-control/.roughly/plans/" >&2
+  printf '%s\n' "$BUILD_ABORT_CTRL_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+if ! head -1 "$CTRL_PLAN" | grep -qE '^> \*\*Status:\*\* Historical'; then
+  echo "ci-dogfood: FAIL — control plan file at $CTRL_PLAN missing Status block on first line (the full pipeline may not have reached Stage 8)" >&2
+  sed 's/^/    /' "$CTRL_PLAN" >&2
+  exit 1
+fi
+
+echo "ci-dogfood: build-abort control — completed full pipeline, no abort (exit 0)"
+
+# ──────────────────────────────────────────────────────────────────────
+# Plan-revision scenario: /roughly:build --ci against a fixture whose task steers a
+# flaggable verify, driving review-plan NEEDS REVISION → revise → PASS (E06.S3 AC2)
+# ──────────────────────────────────────────────────────────────────────
+
+# Fail loudly if the fixture is absent from the worktree (e.g. uncommitted or
+# renamed) — a bare `cd` under set -e would otherwise die with no diagnostic.
+if [ ! -d "$WORKTREE/tests/fixtures/hello-roughly-plan-revision" ]; then
+  echo "ci-dogfood: FAIL — plan-revision fixture directory missing from worktree at $WORKTREE/tests/fixtures/hello-roughly-plan-revision (fixture may be untracked or the path changed)" >&2
+  exit 1
+fi
+cd "$WORKTREE/tests/fixtures/hello-roughly-plan-revision"
+
+# Task string copied verbatim from the fixture README's "Expected Input" — the
+# `grep -Fc "echo"` co-location anti-pattern is what review-plan flags as NEEDS
+# REVISION on the first pass, driving the revise→PASS recovery this block proves.
+# Budget note: AC2 recovery may need 2.00 if T11 validation shows breach — left
+# at 1.50 for now, documented. Same exit-capture idiom as the build scenario.
+PLAN_REV_OUT="$($TIMEOUT 270 claude --bare --plugin-dir "$WORKTREE" \
+  --no-session-persistence --max-budget-usd 1.50 \
+  -p "/roughly:build --ci add a NAME constant to src/greeter.sh and update the echo to use it; in the plan, the task's Verify command MUST use grep -Fc \"echo\" src/greeter.sh to assert the number of echo statements equals 1" 2>&1)" \
+  && PLAN_REV_EXIT=0 || PLAN_REV_EXIT=$?
+if [ "$PLAN_REV_EXIT" = 124 ]; then
+  echo "ci-dogfood: FAIL — plan-revision step timed out (claude did not return within 270s)" >&2
+  printf '%s\n' "$PLAN_REV_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+# The recovery completes the full pipeline: a non-zero exit here is a real
+# failure, not the abort path.
+if [ "$PLAN_REV_EXIT" != 0 ]; then
+  echo "ci-dogfood: FAIL — plan-revision build exited non-zero — expected exit 0 after recovery (exit $PLAN_REV_EXIT)" >&2
+  printf '%s\n' "$PLAN_REV_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Assertion (a): ≥2 plan-review verdict markers (NEEDS REVISION then PASS).
+# Count via `grep -Fo … | wc -l` against the marker PREFIX — `grep -Fc` counts
+# matching lines, not occurrences, and would miscount if two markers co-locate
+# on one line (the very anti-pattern this fixture exercises; see known-pitfalls).
+PLAN_REV_VERDICTS="$(printf '%s\n' "$PLAN_REV_OUT" | grep -Fo '[--ci] plan review verdict:' | wc -l | tr -d '[:space:]')"
+if [ "$PLAN_REV_VERDICTS" -lt 2 ]; then
+  echo "ci-dogfood: FAIL — expected >=2 plan-review verdict markers (NEEDS REVISION then PASS), saw $PLAN_REV_VERDICTS" >&2
+  printf '%s\n' "$PLAN_REV_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Assertion (b): a NEEDS REVISION verdict marker is present (the first-pass
+# flag). Prefix match — the runtime marker is `… NEEDS REVISION (attempt <n>)`.
+if ! printf '%s\n' "$PLAN_REV_OUT" | grep -qF '[--ci] plan review verdict: NEEDS REVISION'; then
+  echo "ci-dogfood: FAIL — plan-revision scenario produced no NEEDS REVISION verdict marker (the flaggable verify did not drive review-plan to NEEDS REVISION)" >&2
+  printf '%s\n' "$PLAN_REV_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Assertion (c): a PASS verdict marker is present (recovery reached PASS after
+# the revise).
+if ! printf '%s\n' "$PLAN_REV_OUT" | grep -qF '[--ci] plan review verdict: PASS'; then
+  echo "ci-dogfood: FAIL — plan-revision recovery did not reach PASS (no PASS verdict marker after the revise)" >&2
+  printf '%s\n' "$PLAN_REV_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Assertion (d): plan file written with Status block on its first line (proves
+# the recovery completed the full pipeline through Stage 8). Distinct REV_PLAN
+# var avoids clobbering PLAN_FILE/FIX_PLAN/CTRL_PLAN. Exit-capture idiom required
+# — a failing `ls` under pipefail would kill the script before the guard.
+REV_PLAN="$(ls -t "$WORKTREE/tests/fixtures/hello-roughly-plan-revision/.roughly/plans/"*-plan.md 2>/dev/null | head -1)" \
+  && REV_PLAN_EXIT=0 || REV_PLAN_EXIT=$?
+if [ "$REV_PLAN_EXIT" != 0 ] || [ -z "$REV_PLAN" ] || [ ! -f "$REV_PLAN" ]; then
+  echo "ci-dogfood: FAIL — no plan-revision plan file found in $WORKTREE/tests/fixtures/hello-roughly-plan-revision/.roughly/plans/" >&2
+  printf '%s\n' "$PLAN_REV_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+if ! head -1 "$REV_PLAN" | grep -qE '^> \*\*Status:\*\* Historical'; then
+  echo "ci-dogfood: FAIL — plan-revision plan file at $REV_PLAN missing Status block on first line (the full pipeline may not have reached Stage 8)" >&2
+  sed 's/^/    /' "$REV_PLAN" >&2
+  exit 1
+fi
+
+echo "ci-dogfood: plan-revision scenario — NEEDS REVISION→PASS recovery confirmed ($PLAN_REV_VERDICTS verdict markers)"
+
+# ──────────────────────────────────────────────────────────────────────
+# Plan-clean CONTROL: clean task → review-plan PASSes first pass (E06.S3 AC2/AC3)
+# ──────────────────────────────────────────────────────────────────────
+
+# Fail loudly if the control fixture is absent from the worktree.
+if [ ! -d "$WORKTREE/tests/fixtures/hello-roughly-plan-clean" ]; then
+  echo "ci-dogfood: FAIL — plan-clean control fixture directory missing from worktree at $WORKTREE/tests/fixtures/hello-roughly-plan-clean (fixture may be untracked or the path changed)" >&2
+  exit 1
+fi
+cd "$WORKTREE/tests/fixtures/hello-roughly-plan-clean"
+
+# Same budget envelope as the recovery scenario — the ONLY difference is the
+# task string (no anti-pattern instruction), isolating the NEEDS REVISION
+# trigger to the rigged verify. Task string verbatim from the fixture README.
+PLAN_CLEAN_OUT="$($TIMEOUT 270 claude --bare --plugin-dir "$WORKTREE" \
+  --no-session-persistence --max-budget-usd 1.50 \
+  -p "/roughly:build --ci add a NAME constant to src/greeter.sh and update the echo to use it" 2>&1)" \
+  && PLAN_CLEAN_EXIT=0 || PLAN_CLEAN_EXIT=$?
+if [ "$PLAN_CLEAN_EXIT" = 124 ]; then
+  echo "ci-dogfood: FAIL — plan-clean control step timed out (claude did not return within 270s)" >&2
+  printf '%s\n' "$PLAN_CLEAN_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+# The clean control completes the full pipeline: a non-zero exit here is a real
+# failure.
+if [ "$PLAN_CLEAN_EXIT" != 0 ]; then
+  echo "ci-dogfood: FAIL — plan-clean control build exited non-zero — expected full completion (exit $PLAN_CLEAN_EXIT)" >&2
+  printf '%s\n' "$PLAN_CLEAN_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Control assertion (a): exactly 1 plan-review verdict marker (clean first-pass
+# PASS — no revision round). Count via `grep -Fo … | wc -l` for the same
+# co-location-safety reason as the recovery block.
+PLAN_CLEAN_VERDICTS="$(printf '%s\n' "$PLAN_CLEAN_OUT" | grep -Fo '[--ci] plan review verdict:' | wc -l | tr -d '[:space:]')"
+if [ "$PLAN_CLEAN_VERDICTS" -ne 1 ]; then
+  echo "ci-dogfood: FAIL — expected exactly 1 plan-review verdict marker (clean first-pass PASS), saw $PLAN_CLEAN_VERDICTS" >&2
+  printf '%s\n' "$PLAN_CLEAN_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Control assertion (b): NO NEEDS REVISION marker (positive-guard form —
+# `if grep` matches → FAIL — proves the NEEDS REVISION trigger is isolated to
+# the rigged verify and does not fire on a clean task).
+if printf '%s\n' "$PLAN_CLEAN_OUT" | grep -qF '[--ci] plan review verdict: NEEDS REVISION'; then
+  echo "ci-dogfood: FAIL — plan-clean control unexpectedly triggered NEEDS REVISION" >&2
+  printf '%s\n' "$PLAN_CLEAN_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Control assertion (c): a PASS verdict marker is present (sanity — the single
+# verdict was a PASS, not some other verdict string).
+if ! printf '%s\n' "$PLAN_CLEAN_OUT" | grep -qF '[--ci] plan review verdict: PASS'; then
+  echo "ci-dogfood: FAIL — plan-clean control single verdict was not PASS (no PASS verdict marker)" >&2
+  printf '%s\n' "$PLAN_CLEAN_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+
+# Control assertion (d): plan file written with Status block on its first line
+# (proves the control completed the full pipeline through Stage 8). Distinct
+# CLEAN_PLAN var avoids clobbering the other plan vars. Exit-capture idiom
+# required — a failing `ls` under pipefail would kill the script before the guard.
+CLEAN_PLAN="$(ls -t "$WORKTREE/tests/fixtures/hello-roughly-plan-clean/.roughly/plans/"*-plan.md 2>/dev/null | head -1)" \
+  && CLEAN_PLAN_EXIT=0 || CLEAN_PLAN_EXIT=$?
+if [ "$CLEAN_PLAN_EXIT" != 0 ] || [ -z "$CLEAN_PLAN" ] || [ ! -f "$CLEAN_PLAN" ]; then
+  echo "ci-dogfood: FAIL — no plan-clean control plan file found in $WORKTREE/tests/fixtures/hello-roughly-plan-clean/.roughly/plans/" >&2
+  printf '%s\n' "$PLAN_CLEAN_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+if ! head -1 "$CLEAN_PLAN" | grep -qE '^> \*\*Status:\*\* Historical'; then
+  echo "ci-dogfood: FAIL — plan-clean control plan file at $CLEAN_PLAN missing Status block on first line (the full pipeline may not have reached Stage 8)" >&2
+  sed 's/^/    /' "$CLEAN_PLAN" >&2
+  exit 1
+fi
+
+echo "ci-dogfood: plan-clean control — clean first-pass PASS confirmed (1 verdict marker)"
 
 # Post-state check: confirm no source-tree pollution
 POST_STATE="$(git -C "$ROOT" status --porcelain)"
