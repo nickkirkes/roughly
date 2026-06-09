@@ -94,9 +94,9 @@ When an already-amended AC is itself re-amended from a later epic, four artifact
 
 ## Audit conventions
 
-When a story produces audit-style output — an audit table, scope enumeration, or finding inventory (for example, the per-site `mkdir -p` audit table in E05.S4.5, or the per-AC table in `/roughly:audit-epic` output) — the audit content MUST be pasted into the GitHub PR body at PR-creation time. The PR body is the canonical discoverable artifact for code reviewers; plan-appendix copies and commit-body copies are secondary records only. Use `gh pr create --body-file <file>` at creation time, or `gh api --method PATCH /repos/<owner>/<repo>/pulls/<pr> -F body=@<file>` for any after-the-fact update when the PR was created before the audit table was finalized.
+When a story produces audit-style output — an audit table, scope enumeration, or finding inventory (for example, the per-site `mkdir -p` audit table in E05.S4.5, or the per-AC table in `/roughly:audit-epic` output) — the audit content MUST be pasted into the GitHub PR body at PR-creation time. The PR body is the canonical discoverable artifact for code reviewers; plan-appendix copies and commit-body copies are secondary records only. Use `gh pr create --body-file <file>` at creation time. For an after-the-fact update (the PR already exists before the audit table is finalized), edit it with `gh pr edit <pr> --body-file <file>`, or use the lower-level `gh api --method PATCH /repos/<owner>/<repo>/pulls/<pr> -F body=@<file>`.
 
-**Pitfall:** `gh pr edit --body-file` silently no-ops when updating an already-created PR body (verified 2026-05-31) — use `gh api --method PATCH` (the HTTP method goes in the `--method`/`-X` flag, not as a positional argument) to ensure the update lands.
+**Pitfall:** confirm the PR body actually changed after an after-the-fact update — this class of failure is silent (exit 0, body unchanged, no error). A `gh api` PATCH no-ops if it omits the `-F body=…` field, or if the HTTP method is passed as a positional instead of through the `--method`/`-X` flag (`gh api PATCH …` is wrong; `gh api --method PATCH …` is correct). An E05 audit (2026-05-31) found PR #54's body missing its audit table.
 
 ## Tooling Pitfalls
 
