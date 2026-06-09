@@ -1,0 +1,21 @@
+.roughly/plans/E06-S6-help-install-marker-plan.md
+  s_d4e32cb3483fea::t_7ff137bf2da36e 1-2
+  s_d4e32cb3483fea::t_021afc4d00cdd1 3-30,32-109
+  s_d4e32cb3483fea::t_822e4158f7360f 31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "e7f44ee7401cece6b6571b433240c244cf7cdb5a",
+  "prompts": {},
+  "sessions": {
+    "s_d4e32cb3483fea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f9113894-0d98-4b81-a4e4-eb347ba3bc2d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
