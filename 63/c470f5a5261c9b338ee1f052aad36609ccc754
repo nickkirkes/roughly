@@ -1,0 +1,20 @@
+.roughly/plans/audit-table-in-pr-body-convention-plan.md
+  s_b9acc24a3c94ac::t_bec87b0847e369 1-2
+  s_b9acc24a3c94ac::t_bf51b167b3fbde 3-92
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "63c470f5a5261c9b338ee1f052aad36609ccc754",
+  "prompts": {},
+  "sessions": {
+    "s_b9acc24a3c94ac": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1f39b4c1-c432-4a92-8ca5-f20aec2a0706",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
