@@ -1,0 +1,23 @@
+tests/fixtures/hello-roughly-plan-revision/tests/greeter.test.sh
+  s_c835b2ec8b6925::t_5a575975bc9564 2-7,9,12
+tests/fixtures/hello-roughly-plan-revision/README.md
+  s_c835b2ec8b6925::t_2bb82d6ae46b59 7-9,13,15,20-21,30,34
+scripts/ci-dogfood.sh
+  s_c835b2ec8b6925::t_cf555607682442 491-498,503
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "43bd0430fc93e41a1da8faebf7a84fd6bbd4be7e",
+  "prompts": {},
+  "sessions": {
+    "s_c835b2ec8b6925": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "36bb82a8-1574-4a70-a19e-d4cb93cad15b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
