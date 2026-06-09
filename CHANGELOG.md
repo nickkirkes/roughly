@@ -27,6 +27,11 @@
   - **Maps to v0.1.8 candidate:** E04 v0.1.7 candidates "Negative-path CI scenarios + fix-side `--ci` flag" cluster (fix-side flag portion); carried via E05 OQ4 deferral.
   - **Line cap held:** `skills/fix/SKILL.md` 271 → 275/300 (AC5 ceiling ≤277). `.claude/hooks/verify-all.sh` unchanged at 148/150.
 
+- **Audit-table-in-PR-body convention — CONTRIBUTING.md codification (E06.S7).** New contributor-facing convention: when a story produces audit-style output (audit table, scope enumeration, finding inventory), the content MUST be pasted into the GitHub PR body at PR-creation time via `gh pr create --body-file <file>`, or backfilled via `gh api --method PATCH /repos/<owner>/<repo>/pulls/<pr> -F body=@<file>` if the PR predates the finalized table. The PR body is the canonical discoverable artifact for reviewers; plan-appendix and commit-body copies are secondary. Documents the silent-no-op pitfall for after-the-fact PR-body updates — an update that omits the body field or malforms the `gh api` call succeeds (exit 0) without changing the body — and gives the correct forms: `gh pr edit <pr> --body-file <file>`, or `gh api --method PATCH … -F body=@<file>` with the HTTP method in the `--method`/`-X` flag (not a positional). Codified in [CONTRIBUTING.md](CONTRIBUTING.md) `## Audit conventions` (new top-level subsection after `## Cross-epic AC amendments`, resolving OQ-S7-section-location toward the new-section option per the same authoring-convention-cluster rationale as E06.S4's `## AC authoring conventions`). Contributor-facing only — no runtime enforcement (no `.claude/hooks/verify-all.sh` check). Cross-references:
+  - **First instance:** E05.S4.5.AC3 PARTIALLY MET — the per-site `mkdir -p` audit table was discoverable only via plan-appendix + commit-body, backfilled into the PR #54 body via `gh api --method PATCH` external to the working tree.
+  - **Codification trigger:** E05 audit recommendation #4 (audit L156) — "codify in `CONTRIBUTING.md` `## Audit conventions` if a second instance arises."
+  - **Pre-emptive codification:** per user OQ6 confirmation to codify now rather than waiting for a second instance.
+
 ### Changed
 
 - **doc-writer all-fail-branch anchoring tightened (E06.S1.AC1).** Three concurrent forms layered on `agents/doc-writer.md` `## Failure handling` per the E05 audit's three hypotheses:
