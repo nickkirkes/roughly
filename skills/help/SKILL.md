@@ -1,12 +1,12 @@
 ---
 name: help
-description: "In-CLI overview of Roughly commands, maturity-check state, and any in-progress plan. Read-only and interactive — never aborts, never modifies files."
+description: "In-CLI overview of Roughly commands, marker state, and any in-progress plan. Read-only and interactive — never aborts, never modifies files."
 disable-model-invocation: false
 ---
 
 # Roughly Help
 
-In-CLI overview: commands by cluster, current maturity-check state, and any in-progress plan.
+In-CLI overview: commands by cluster, current marker state, and any in-progress plan.
 
 **Read-only.** This skill never modifies files, never aborts the session, and never blocks other work. It is itself a recovery path — like `/roughly:upgrade` — so it surfaces legacy state without halting.
 
@@ -43,7 +43,7 @@ Emit three labeled groups. For each command, give one short line of purpose. Use
 
 ---
 
-## STEP 2: MATURITY-CHECK STATE
+## STEP 2: MARKER STATE
 
 Read `.roughly/workflow-upgrades`. If the file does not exist, emit:
 > "No `.roughly/workflow-upgrades` file found. Run `/roughly:setup` to initialize, or `/roughly:upgrade` if a `.ruckus/` legacy file is present."
@@ -51,7 +51,9 @@ Skip the rest of Step 2.
 
 If the file exists, parse it:
 - **Line 1** is the version line: `roughly-version X.Y.Z YYYY-MM-DD`. Display as: `Plugin version: X.Y.Z (recorded YYYY-MM-DD)`. If line 1 does not match this format, display: `Plugin version: unrecorded (file may predate v0.1.2)`.
-- **Remaining lines** match the pattern `[check-id]-[added|declined] YYYY-MM-DD`. For each, classify by suffix:
+- **Remaining lines** match the pattern `[check-id]-[added|declined] YYYY-MM-DD`.
+
+**Parse rules.** Skip blank lines silently (trailing newlines and visual spacing are benign and present in normal installs). If a non-blank line does not match the `[check-id]-[added|declined] YYYY-MM-DD` shape (broken suffix, missing date, `#`-prefixed comment, stray text), emit `"! [raw line] — unparseable entry"` — do not silently skip non-blank malformed lines; surface them so the user can repair the file.
 
 Active check IDs (display under their natural label):
 - `investigator-v1` — bug-diagnosis subagent for `/roughly:fix`
@@ -61,22 +63,27 @@ Retired check IDs (display under "Retired — no longer offered"):
 - `pitfalls-organized-v1`
 - `test-verify-v1`
 
-For each ID found in the file, emit one line:
+Install-marker base IDs (record components installed into the project, not maturity checks):
+- `plan-mode-gate-v1` — UserPromptSubmit hook blocking `/roughly:build` and `/roughly:fix` in plan mode (ADR-009)
+
+**Match by base ID.** Strip the `-added`/`-declined` suffix from each parsed entry, then look the base ID up in the three lists above and partition into one of three buckets: maturity-check (active or retired list), installed-component (install-marker list), or unknown (in no list). Emit the buckets as three labeled sections, in this order:
+
+**Maturity-check state** — for each maturity-check entry, emit one line (behavior unchanged):
 > "✓ [id] — added YYYY-MM-DD" (for `-added` entries)
 > "✗ [id] — declined YYYY-MM-DD" (for `-declined` entries)
-
-If a check ID in the file does not match any known active or retired ID, emit:
-> "? [id] — unknown check (YYYY-MM-DD)"
-Do not crash or filter; display the unknown entry so the user can investigate.
-
-Skip blank lines silently (trailing newlines and visual spacing are benign and present in normal installs).
-
-If a non-blank line does not match the `[check-id]-[added|declined] YYYY-MM-DD` shape (broken suffix, missing date, `#`-prefixed comment, stray text), emit:
-> "! [raw line] — unparseable entry"
-Do not silently skip non-blank malformed lines — surface them so the user can repair the file.
-
-If no check entries are present beyond the version line, emit:
+Active-list IDs display under their natural label; group Retired-list IDs under a "Retired — no longer offered" sub-label.
+If no maturity-check entries are present, emit:
 > "No maturity checks recorded yet. Checks are offered during `/roughly:build` and `/roughly:fix` wrap-up."
+
+**Installed components** — for each installed-component entry, emit one line:
+> "✓ [id] — installed YYYY-MM-DD" (for `-added` entries)
+> "✗ [id] — removed YYYY-MM-DD" (for `-declined` entries)
+If no installed-component entries are present, emit:
+> "No install markers recorded."
+
+**Unknown markers** — for each unknown entry, emit:
+> "? [id] — unknown marker (YYYY-MM-DD)"
+Do not crash or filter; surface unknown entries so the user can investigate. If none are present, emit nothing.
 
 ---
 
