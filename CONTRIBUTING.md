@@ -94,9 +94,9 @@ When an already-amended AC is itself re-amended from a later epic, four artifact
 
 ## Audit conventions
 
-When a story produces audit-style output — an audit table, scope enumeration, or finding inventory (for example, the per-site `mkdir -p` audit table in E05.S4.5, or the per-AC table in `/roughly:audit-epic` output) — the audit content MUST be pasted into the GitHub PR body at PR-creation time. The PR body is the canonical discoverable artifact for code reviewers; plan-appendix copies and commit-body copies are secondary records only. Use `gh pr create --body-file <file>` at creation time, or `gh api PATCH /repos/<owner>/<repo>/pulls/<pr>` for any after-the-fact update when the PR was created before the audit table was finalized.
+When a story produces audit-style output — an audit table, scope enumeration, or finding inventory (for example, the per-site `mkdir -p` audit table in E05.S4.5, or the per-AC table in `/roughly:audit-epic` output) — the audit content MUST be pasted into the GitHub PR body at PR-creation time. The PR body is the canonical discoverable artifact for code reviewers; plan-appendix copies and commit-body copies are secondary records only. Use `gh pr create --body-file <file>` at creation time, or `gh api --method PATCH /repos/<owner>/<repo>/pulls/<pr> -F body=@<file>` for any after-the-fact update when the PR was created before the audit table was finalized.
 
-**Pitfall:** `gh pr edit --body-file` silently no-ops when updating an already-created PR body (verified 2026-05-31) — use `gh api PATCH` to ensure the update lands.
+**Pitfall:** `gh pr edit --body-file` silently no-ops when updating an already-created PR body (verified 2026-05-31) — use `gh api --method PATCH` (the HTTP method goes in the `--method`/`-X` flag, not as a positional argument) to ensure the update lands.
 
 ## Tooling Pitfalls
 
