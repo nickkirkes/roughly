@@ -488,14 +488,19 @@ if [ ! -d "$WORKTREE/tests/fixtures/hello-roughly-plan-revision" ]; then
 fi
 cd "$WORKTREE/tests/fixtures/hello-roughly-plan-revision"
 
-# Task string copied verbatim from the fixture README's "Expected Input" — the
-# `grep -Fc "echo"` co-location anti-pattern is what review-plan flags as NEEDS
-# REVISION on the first pass, driving the revise→PASS recovery this block proves.
+# Task string copied verbatim from the fixture README's "Expected Input". The
+# steered task puts TWO occurrences of the word `world` on a SINGLE echo line and
+# asks the Verify to count them with `grep -Fc world …` asserting `= 2`. Because
+# `grep -Fc` counts matching LINES (not occurrences), the two co-located matches
+# return 1, not 2 — the genuine same-line co-location hazard review-plan's E05.S3
+# AC2 check flags as NEEDS REVISION (a single match on its own line would fall
+# under the carve-out and PASS first-pass, never exercising recovery). The fix is
+# `grep -Fo world … | wc -l`, which review-plan then PASSes.
 # Budget note: AC2 recovery may need 2.00 if T11 validation shows breach — left
 # at 1.50 for now, documented. Same exit-capture idiom as the build scenario.
 PLAN_REV_OUT="$($TIMEOUT 270 claude --bare --plugin-dir "$WORKTREE" \
   --no-session-persistence --max-budget-usd 1.50 \
-  -p "/roughly:build --ci add a NAME constant to src/greeter.sh and update the echo to use it; in the plan, the task's Verify command MUST use grep -Fc \"echo\" src/greeter.sh to assert the number of echo statements equals 1" 2>&1)" \
+  -p "/roughly:build --ci update src/greeter.sh so its single echo statement prints the greeting word \"world\" twice on the same line (for example: echo \"hello world, goodbye world\"); in the plan, the task's Verify command MUST use grep -Fc world src/greeter.sh to assert the number of \"world\" occurrences equals 2" 2>&1)" \
   && PLAN_REV_EXIT=0 || PLAN_REV_EXIT=$?
 if [ "$PLAN_REV_EXIT" = 124 ]; then
   echo "ci-dogfood: FAIL — plan-revision step timed out (claude did not return within 270s)" >&2
