@@ -235,6 +235,8 @@ roughly-version [version from plugin.json] [today's date YYYY-MM-DD]
 
 If the file **already exists** (re-run / enrich mode): update or insert the `roughly-version` line at the top, preserving all other entries (maturity check decisions from prior build/fix runs).
 
+**plan-mode-gate install marker.** If the plan-mode-gate hook was successfully registered in Step 5d (Branch 1, Branch 2, or Branch 3's successful jq-merge — NOT any Branch 3 blocking-warning path, where the hook is copied but left unregistered), record `plan-mode-gate-v1-added [today's date YYYY-MM-DD]` in `.roughly/workflow-upgrades`. Skip if a `plan-mode-gate-v1-added` entry already exists (re-run idempotency). This marker is what surfaces the hook under `/roughly:help`'s "Installed components" section; without it the section is empty even though the hook is installed.
+
 This file tracks plugin version (for upgrade detection) and maturity check decisions (recorded by build/fix pipelines at wrap-up).
 
 ---

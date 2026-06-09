@@ -153,6 +153,8 @@ roughly-version [current version from plugin.json] [today's date]
 
 If the file doesn't exist, create it with the version line.
 
+**plan-mode-gate install-marker back-fill.** Back-fill the marker only when the hook is actually **active**, not merely present on disk (`setup` copies the hook file unconditionally but may leave it unregistered on a Branch 3 warning path). Active means: `.claude/hooks/plan-mode-gate.sh` exists AND `.claude/settings.json` registers it under `.hooks.UserPromptSubmit` with an entry whose `command` is `.claude/hooks/plan-mode-gate.sh`. Confirm registration with `jq` (e.g., `jq -e '[.hooks.UserPromptSubmit[]?.hooks[]? | select(.command == ".claude/hooks/plan-mode-gate.sh")] | length > 0' .claude/settings.json`, run only after `jq empty .claude/settings.json` parses cleanly). If `jq` is unavailable or the file does not parse, **skip the back-fill silently** — do not infer registration from a plain-text scan (a non-structural match risks a false marker); the marker can be written by the next `setup` run or a `jq`-equipped `upgrade`. If the hook is active AND `.roughly/workflow-upgrades` contains no `plan-mode-gate-v1-added` entry, append `plan-mode-gate-v1-added [today's date]`. This back-fills projects that installed the hook before `setup` recorded the marker, deriving it from the actual active-hook state (file present + registered) — a copied-but-unregistered hook is NOT back-filled, so the marker never overclaims. Silent; no prompt. (The marker drives `/roughly:help`'s "Installed components" section.)
+
 ---
 
 ## STEP 7: SUMMARY
