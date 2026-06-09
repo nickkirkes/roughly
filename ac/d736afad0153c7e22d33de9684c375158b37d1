@@ -1,0 +1,25 @@
+.roughly/plans/E06.S3-build-side-negative-path-plan.md
+  s_c835b2ec8b6925::t_12d6adefbab72a 135-143
+  s_c835b2ec8b6925::t_ce1bb9e643b4b7 164
+  s_c835b2ec8b6925::t_06dec8d74fb133 17-25
+  s_c835b2ec8b6925::t_ebc1af22fa896a 1-2
+  s_c835b2ec8b6925::t_5710844f17fa9b 116-124
+  s_c835b2ec8b6925::t_ba210ef481c5ca 3-16,26-115,125-134,144-160,162-163,165-199
+  s_c835b2ec8b6925::t_a5783c0d2c7397 161
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "acd736afad0153c7e22d33de9684c375158b37d1",
+  "prompts": {},
+  "sessions": {
+    "s_c835b2ec8b6925": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "36bb82a8-1574-4a70-a19e-d4cb93cad15b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
