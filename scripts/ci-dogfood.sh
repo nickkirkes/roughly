@@ -519,7 +519,13 @@ fi
 # Count via `grep -Fo … | wc -l` against the marker PREFIX — `grep -Fc` counts
 # matching lines, not occurrences, and would miscount if two markers co-locate
 # on one line (the very anti-pattern this fixture exercises; see known-pitfalls).
-PLAN_REV_VERDICTS="$(printf '%s\n' "$PLAN_REV_OUT" | grep -Fo '[--ci] plan review verdict:' | wc -l | tr -d '[:space:]')"
+# `{ grep || [ $? -eq 1 ]; }` is required: under set -euo pipefail a zero-match
+# grep exits 1, pipefail propagates that, and `set -e` would kill the script AT
+# THIS ASSIGNMENT — bypassing the `-lt 2` FAIL diagnostic below (a missing-marker
+# run is exactly what this assertion must report, not die silently on). The
+# `[ $? -eq 1 ]` swallows ONLY the no-match exit (1); a genuine grep error (exit
+# 2 — unreadable input, broken pipe) still propagates and fails the run loudly.
+PLAN_REV_VERDICTS="$(printf '%s\n' "$PLAN_REV_OUT" | { grep -Fo '[--ci] plan review verdict:' || [ $? -eq 1 ]; } | wc -l | tr -d '[:space:]')"
 if [ "$PLAN_REV_VERDICTS" -lt 2 ]; then
   echo "ci-dogfood: FAIL — expected >=2 plan-review verdict markers (NEEDS REVISION then PASS), saw $PLAN_REV_VERDICTS" >&2
   printf '%s\n' "$PLAN_REV_OUT" | sed 's/^/    /' >&2
@@ -595,7 +601,11 @@ fi
 # Control assertion (a): exactly 1 plan-review verdict marker (clean first-pass
 # PASS — no revision round). Count via `grep -Fo … | wc -l` for the same
 # co-location-safety reason as the recovery block.
-PLAN_CLEAN_VERDICTS="$(printf '%s\n' "$PLAN_CLEAN_OUT" | grep -Fo '[--ci] plan review verdict:' | wc -l | tr -d '[:space:]')"
+# `{ grep || [ $? -eq 1 ]; }` required for the same set -euo pipefail reason as
+# the recovery block above: a zero-match grep would otherwise kill the script at
+# this assignment, bypassing the `-ne 1` FAIL diagnostic (saw 0 must be reported).
+# `[ $? -eq 1 ]` swallows only the no-match exit; a genuine grep error propagates.
+PLAN_CLEAN_VERDICTS="$(printf '%s\n' "$PLAN_CLEAN_OUT" | { grep -Fo '[--ci] plan review verdict:' || [ $? -eq 1 ]; } | wc -l | tr -d '[:space:]')"
 if [ "$PLAN_CLEAN_VERDICTS" -ne 1 ]; then
   echo "ci-dogfood: FAIL — expected exactly 1 plan-review verdict marker (clean first-pass PASS), saw $PLAN_CLEAN_VERDICTS" >&2
   printf '%s\n' "$PLAN_CLEAN_OUT" | sed 's/^/    /' >&2
