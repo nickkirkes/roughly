@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased] — v0.1.8
+## [0.1.8] — 2026-06-10
 
 > doc-writer all-fail anchoring + cross-epic re-amendment convention extension. Scope per [docs/planning/epics/E06-anchoring-closure-and-ci-coverage.md](docs/planning/epics/E06-anchoring-closure-and-ci-coverage.md).
 

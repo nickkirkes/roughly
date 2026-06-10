@@ -1,6 +1,6 @@
 # Roughly Roadmap
 
-**Current:** v0.1.7 · **Updated:** 2026-06-01
+**Current:** v0.1.8 · **Updated:** 2026-06-10
 
 ## Thesis
 
@@ -15,6 +15,7 @@ Primary user through v1.0: solo dev first, teams second. Team adoption is downst
 | v0.1.5 | Trust hardening + ergonomics + CI | 6-7 wk |
 | v0.1.6 | Path consolidation + process codification | ~10 days |
 | v0.1.7 | Doc-writer hardening + review-plan codification + structural off-ramp | ~6 days |
+| v0.1.8 | Doc-writer all-fail anchoring + CI coverage + reviewer-brief codification | ~8 days |
 | v0.2.0 | Cost-aware pipeline (Haiku routing, plan format v2) | 4-5 wk |
 | v0.3.0 | Monorepo support | 6-8 wk |
 | v0.4.0 | Team governance | 4-6 wk |
@@ -111,6 +112,25 @@ Scope and per-story details: [docs/planning/epics/E05-doc-writer-hardening-and-s
 - **.claude/hooks/verify-all.sh cap relief** (now at 148/150 soft cap; next drift check addition needs the same off-ramp pattern E05.S4 invoked for build/fix)
 - **CI-coverage cluster** — negative-path CI + fix-side `--ci` (carried from E05 OQ4 resolution; unblocked now that fix/SKILL.md headroom is restored)
 - **Full v0.1.8 candidates list**: see CHANGELOG `## [0.1.7]` section + [E05 epic](planning/epics/E05-doc-writer-hardening-and-spec-quality-gates.md) + [E05 audit report](planning/epics/E05-doc-writer-hardening-and-spec-quality-gates-audit.md).
+
+---
+
+## v0.1.8 — Doc-writer all-fail anchoring + CI coverage + reviewer-brief codification
+
+**Effort:** ~8 days (medium release; 7 stories across 3 clusters) · **Status:** SHIPPED 2026-06-10.
+
+Scope and per-story details: [docs/planning/epics/E06-anchoring-closure-and-ci-coverage.md](planning/epics/E06-anchoring-closure-and-ci-coverage.md). Headline outcomes — 7/7 stories merged; post-implementation audit (PR #65) reported 35/37 ACs MET (2 PARTIAL — both evidence-artifact gaps, not functional defects; 0 NOT MET; 0 regressions). Risk 1 (AC4 all-fail anchoring) CLOSED at prose-level by E06.S1 — both T2 scenarios FULL PASS against source-tree state; runtime-cache confirmation deferred to v0.1.8 retrospective. Risk 2 (cap-relief trim coverage degradation) CLOSED via 4-coverage-group preservation enumeration. Risk 4 (cross-epic re-amendment trail readability) CLOSED via preserve-hops convention extension in CONTRIBUTING.md. Risk 3 (CI fixture harness fragility) OPEN with watch list — 3-consecutive-green-runs gate restarted against post-#65 main; AC2 plan-revision determinism under per-fixture validation. New artifacts: **ADR-013** (build `--ci` runs review-plan — reverses E03.S11b-2's skip-and-synthesize; unifies build/fix `--ci`; restores ADR-001 enforcement on the CI path). CONTRIBUTING.md gains `## AC authoring conventions` section (E06.S4 — `verbatim:` / `form:` markers + marker-intent sub-carve-out) and `## Audit conventions` section (E06.S7 — audit-table-in-PR-body convention). Line-cap state preserved across all 7 stories — agents/doc-writer.md at 647/650 (net −2 via cap-relief trim); skills/build/SKILL.md 270/300; skills/fix/SKILL.md 275/300; verify-all.sh unchanged at 148/150 (off-ramp prepared, not invoked). Cumulative intra-epic AC deviation catalog: 9 instances across all 7 stories spanning 6 distinct shapes — comprehensive enough to fully scope the v0.1.9 codifier story.
+
+### Out of scope (→ v0.1.9)
+
+- **Intra-epic AC amendment convention codifier** (back-annotation form + 6-shape catalog from E06 — must-do for v0.1.9 per E06 audit's main systemic finding).
+- **Verdict persistent-artifact convention** (E05.S5 candidate #6 raised to v0.1.9 must-do per E06 audit — three same-shape evidence gaps in E06 [S1.AC3 T2 transcripts; S7.AC3 review-plan verdict block; S5.AC5 self-attestation caveat] all rooted in attestation-vs-artifact gap).
+- **ADR-013 unification follow-ups** — decide whether to port the build-side NEEDS REVISION recovery loop to fix `--ci` (full unification) or codify the asymmetry as intentional. Fix-side negative-path scenarios (Stage 5c abort + NEEDS REVISION recovery) also unblocked.
+- **`--ci` "exits non-zero" aspirational-language reframing** — `claude -p` cannot set process exit code on model-level aborts; both build + fix `--ci` contracts need either marker-primary reframing or a marker→exit wrapper.
+- **Risk 1 runtime-cache confirmation** — runtime-level T2 re-run against installed plugin cache (not source tree). Promoted from v0.1.7 retrospective.
+- **`.roughly/known-pitfalls.md` organization sweep** — 174 lines vs 80 threshold; recurring advisory across all v0.1.8 stories.
+- **Install-marker producer generalization** — apply E06.S6 write-on-install + back-fill pattern to other always-installed components (formatter PostToolUse hook, settings entries beyond hook registrations).
+- **Full v0.1.9 candidates list**: see CHANGELOG `## [0.1.8]` section + [E06 epic](planning/epics/E06-anchoring-closure-and-ci-coverage.md) `## v0.1.9 candidates` section + [E06 audit report](planning/epics/E06-anchoring-closure-and-ci-coverage-audit.md).
 
 ---
 
