@@ -1,0 +1,32 @@
+skills/fix/SKILL.md
+  s_a7dc98436f4b4c::t_a744c8e2effd10 115
+docs/planning/epics/E06-anchoring-closure-and-ci-coverage.md
+  s_a7dc98436f4b4c::t_c887018993e610 518
+  s_a7dc98436f4b4c::t_4d54d222e81ac4 577
+  s_a7dc98436f4b4c::t_36af8624f09616 583
+CHANGELOG.md
+  s_a7dc98436f4b4c::t_2d2aa2726a2181 3
+  s_a7dc98436f4b4c::t_46bbca72d1a1bf 68-73
+  s_a7dc98436f4b4c::t_0b1cf309efcd0f 30
+  s_a7dc98436f4b4c::t_4f052d5620064b 64
+  s_a7dc98436f4b4c::t_1a0706b3d738ef 49
+docs/planning/epics/E06-anchoring-closure-and-ci-coverage-audit.md
+  s_a7dc98436f4b4c::t_53897155060640 1-111
+  s_a7dc98436f4b4c::t_74a9e10952f123 112-122
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "44c6dc4f13d080ab54c232098f05eda83f6f3e93",
+  "prompts": {},
+  "sessions": {
+    "s_a7dc98436f4b4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c10b531d-1fd6-4f84-b076-e5a4b388ff48",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
