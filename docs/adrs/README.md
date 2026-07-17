@@ -37,3 +37,5 @@ Bug fixes, template improvements, documentation changes, and new agent definitio
 - ADR-010 — Reserved for v0.2.0 plan-format-v2 (not yet written)
 - [ADR-011](ADR-011-skill-flags-as-public-api.md) — User-facing skill behavior changes are flags, not env vars
 - [ADR-012](ADR-012-runtime-shared-procedural-references.md) — Procedural prose duplicated across build/fix SKILL.md extracted to `skills/shared/` and referenced via runtime `Read` directive
+- [ADR-013](ADR-013-build-ci-runs-review-plan.md) — Build `--ci` runs review-plan (unifies with fix `--ci`)
+- [ADR-014](ADR-014-local-only-gate-instrumentation.md) — Local-only gate instrumentation; re-scopes the telemetry deferral

@@ -16,6 +16,8 @@ Primary user through v1.0: solo dev first, teams second. Team adoption is downst
 | v0.1.6 | Path consolidation + process codification | ~10 days |
 | v0.1.7 | Doc-writer hardening + review-plan codification + structural off-ramp | ~6 days |
 | v0.1.8 | Doc-writer all-fail anchoring + CI coverage + reviewer-brief codification | ~8 days |
+| v0.1.9 | E06 codification close-out + consumer-project intake hardening | ~8-10 days |
+| v0.1.10 | External issue-tracker intake (live fetch) | ~1-1.5 wk |
 | v0.2.0 | Cost-aware pipeline (Haiku routing, plan format v2) | 4-5 wk |
 | v0.3.0 | Monorepo support | 6-8 wk |
 | v0.4.0 | Team governance | 4-6 wk |
@@ -134,6 +136,69 @@ Scope and per-story details: [docs/planning/epics/E06-anchoring-closure-and-ci-c
 
 ---
 
+## v0.1.9 — E06 codification close-out + consumer-project intake hardening
+
+**Effort:** ~8-10 days (medium release) · **Status:** SCOPING (draft — not yet frozen; Cluster B intake items PROPOSED pending confirmation).
+
+Two themes. (1) Close E06's systemic findings — the codification carry-forward above. (2) Harden intake and escalation for consumer projects that manage stories in a SaaS PM tool (Linear / Jira / Shortcut) instead of local epic files — surfaced running `/roughly:setup` on a real external-PM project. Intake-item claims are grounded against build/fix/setup/agents at v0.1.8, cited inline.
+
+### Cluster A — E06 codification carry-forward
+
+The seven priorities in the v0.1.8 "Out of scope (→ v0.1.9)" list above. Two are must-do per the E06 audit: the **intra-epic AC amendment convention codifier** and the **verdict persistent-artifact convention**. The verdict-artifact item overlaps Cluster B's B1 (both answer "where does a deferred finding/verdict get persisted") — scope them together.
+
+### Cluster B — Consumer-project intake hardening (new)
+
+Prioritized by certainty × readiness, not raw impact. B1 is the cheap, high-certainty bug fix; B3 is the strategically most important ("the main gap") but is spike-first — a new capability blocked on MCP auth.
+
+**B1 — De-dogfood and redirect the Stage 6 spec-revision-candidate escalation** *(must-do; prose fix)*. Grounded: `skills/build/SKILL.md` L205/L207 and `skills/fix/SKILL.md` L212/L214 instruct the orchestrator to append the candidate to "the active epic's v0.1.X candidates section" / "the epic file" — a target that exists in no project without local epic files. This is already broken for **every** consumer project, not just external-PM ones; the "v0.1.X candidates" vocabulary is Roughly's own dogfooding leaking into consumer runtime prose. Fix: (a) strip the epic-file / "v0.1.X candidates" language from runtime prose; (b) redirect to a **tool-neutral target** defaulting to a local `.roughly/spec-candidates.md` ledger (always works, no MCP dependency; composes with the `.roughly/` artifact pattern from ADR-014 gate-log and ADR-015 verify-rules); (c) optional "also post a comment to the source issue" when an issue-tracker is configured (see B3); (d) projects that DO use epic files (Roughly itself) point the target at their epic via config, preserving dogfood continuity. Extract the duplicated build/fix escalation prose to `skills/shared/spec-candidate-escalation.md` per ADR-012 — one fix, both pipelines, frees line budget (build 270/300, fix 275/300). Subsumes Cluster A's verdict-artifact must-do.
+
+**B2 — Epic-vs-story granularity guard** *(should-do; low-effort)*. Grounded: build/fix process a single story's scope; no epic→story decomposition loop exists anywhere (build L25, fix L25-30). Feeding an epic ID today silently treats the whole epic as one monolithic feature. Fix: Stage 1 detects epic-shaped input (an epic ID/URL, or a file enumerating multiple child stories), warns, and asks the human to narrow to one story or confirm monolithic treatment. No decomposition loop — deferred (below). Codify the rule-of-thumb in `/roughly:help` + docs: feed story IDs, not epic IDs.
+
+**B3 — External issue-tracker intake: spike + tool-neutral scaffolding** *(v0.1.9; live fetch → v0.1.10)*. Grounded: Stage 1 resolves local files + inline text only — no ID/URL→content path (build L25, fix L25-30); discovery/investigator agents carry only `Glob, Grep, Read, Bash`, so the fetch must happen at **orchestrator** level (Stage 1) and pass fetched content to the agents, not inside the subagents; setup has no PM-tool/MCP detection. This is "the main gap" for external-PM projects. v0.1.9 builds everything that does **not** need a live MCP, so the plumbing is functional the moment v0.1.9 ships; the live fetch follows in v0.1.10.
+
+- **Fetch-contract survey + ADR.** Survey the fetch contract across configured issue-tracker MCPs (Shortcut, Linear, Jira); ADR the **tool-agnostic** intake-resolution decision (new ADR ≥019). Roughly ships the mechanism + config, never a specific tool (mirrors the verify-rules "ship format + engine, not opinions" decision).
+- **Config surface — setup is the target step for _configuration_, not validation.** Setup runs once; MCP auth state drifts independently, so setup captures intent and the pipeline checks liveness at use. Three touch-points: **STEP 4** adds an issue-source declaration question (Linear / Jira / Shortcut / GitHub Issues / none) with best-effort MCP detection (advisory — record the declaration even if the connector isn't authorized yet; never block setup); a new **5f** writes the intake block into `.roughly/config`; **STEP 6** re-offers it to existing installs as a versioned `issue-intake-v1` maturity check (also surfaced via build/fix Stage 8, like `stop-hook-v1` / `investigator-v1`). Config lives in `.roughly/`, not CLAUDE.md — avoids the governed/clobbered-CLAUDE.md pitfall and matches gate-log / verify-rules placement. Split: **operational toggles** (intake source, B1 escalation target, ADR-014 instrumentation opt-in) unify in `.roughly/config`; **content/artifacts** (known-pitfalls.md, verify-rules.md, spec-candidates.md, gate-log.jsonl) stay separate files. Intake block fields: source name, MCP tool/server id, ID/URL match patterns, field mapping (title / description / acceptance-criteria), fallback behavior.
+- **Stage-1 classifier + fallback (MCP-independent).** Intake resolution order: (a) path to an existing local file → read it (today's behavior); (b) matches the configured issue-source pattern → resolve via MCP [live fetch = v0.1.10]; (c) else → inline description (today's behavior). No config → branch (b) is skipped and behavior is exactly today's (purely additive, degrades cleanly). In v0.1.9 branch (b) recognizes the external ref and routes to the graceful inline-fallback prompt; so after v0.1.9 the classifier, config, and fallback all work — only the live fetch is pending.
+- **Exit criterion:** PM-tool MCP auth resolved and a working fetch tool confirmed (non-interactive sessions cannot run OAuth). This gates v0.1.10.
+
+### Out of scope for v0.1.9 (sequenced, not shelved)
+
+- **Live external-issue fetch** — the actual MCP fetch call + field mapping + availability validation. Not deferred indefinitely: it lands in **v0.1.10** (below), depending on B3's scaffolding + the MCP-auth confirmation.
+- **review-epic / audit-epic external-fetch wiring.** Both are strictly file-based (`$ARGUMENTS` = epic file path; audit-epic maps stories→files via `git log --grep` + `.roughly/plans/`). Accepting a Shortcut/Linear epic needs its own fetch layer — v0.1.10 stretch or later; not required for build/fix intake.
+- **Real epic→story decomposition loop.** Depends on live intake + the epic-fetch wiring above.
+
+### Reconciliation / boundaries
+
+- **Scheduler-agnostic holds:** ID/URL→content fetch is in-session intake, not scheduling.
+- **Human-gate unchanged:** B1 relocates *where a deferred finding is written*, not the human's role; B2 adds a human prompt.
+- **Tool-agnostic (hard):** never hardcode Shortcut/Linear/Jira; ship the intake mechanism + a project-declared issue-source config.
+- **MCP auth is a hard external dependency for B3.** Non-interactive sessions cannot run OAuth; the PM-tool MCP must be authorized (claude.ai connector settings, or `claude mcp` / `/mcp` interactively) before B3's fetch is testable.
+- **`.roughly/` artifact consistency:** `.roughly/spec-candidates.md` (B1) and any B3 intake config live under `.roughly/`, consistent with gate-log (ADR-014) and verify-rules (ADR-015).
+- **New ADRs:** B1 escalation-target → new ADR; B3 intake-resolution → new ADR (spike output). Both need numbers **≥ADR-019** (ADR-014–018 are claimed by the differential-gate spec set). Fold in the standing ADR-009 / ADR-010 stale-reference cleanup while renumbering.
+- **Setup budget:** setup is at 289/300 lines. B3's STEP 4 question is one line, but the 5f write logic + `.roughly/config` schema go in `skills/setup/templates/` + a shared reference (ADR-012), not inline.
+
+---
+
+## v0.1.10 — External issue-tracker intake (live fetch)
+
+**Effort:** ~1-1.5 wk (small release) · **Status:** SCOPING (PROPOSED) · **Depends on:** v0.1.9 B3 scaffolding + PM-tool MCP auth confirmed.
+
+Lights up the live fetch on top of v0.1.9's tool-neutral scaffolding, so external-PM projects (Linear / Jira / Shortcut) get real ID/URL→story intake. **Sequencing note:** placed before v0.2.0 by explicit priority — this pushes the cost-aware release out by ~this release's duration. Justified as dogfood-driven ergonomics for existing-project adoption (Nick's own external-PM setup surfaced it), and it fits the roadmap's "solo trust + ergonomics through v0.2.x" window. Boundaries from B3 carry forward: tool-agnostic (config-driven, never hardcode a tracker), scheduler-agnostic (in-session intake), human-gate preserved (fallback keeps a human in the loop), Roughly never runs OAuth.
+
+1. **Live MCP fetch at Stage 1.** Resolution branch (b) from B3 now calls the configured issue-source MCP, applies the field mapping (title / description / acceptance-criteria), and hands the resulting story content to discovery (build S2) / investigator (fix S2) — fetch at the orchestrator, not inside the subagents.
+2. **Lazy availability validation — the contract.** Validate *only* when Stage 1 classifies the input as an external reference (local-file and inline paths never touch the MCP or pay any cost). Validate by attempting the actual fetch — one call, no separate health-check probe. Treat tool-absent / not-found / auth-error identically: fall back to the inline-description prompt with a directional message ("<tracker> MCP unavailable or unauthorized — paste the story's title/description/ACs, or authorize the connector and re-run"). Resolve once per run (Stages 2+ never re-fetch); no cross-run caching of availability (auth can lapse between runs; the check is free because it is the fetch you needed anyway).
+3. **`/roughly:upgrade` handling.** Pre-v0.1.10 installs gain the intake config via the `issue-intake-v1` maturity re-offer (STEP 6 / Stage 8) or an upgrade step; strictly additive.
+4. **Docs.** Intake setup walkthrough; "feed story IDs, not epic IDs" (shared with B2); supported-tracker notes and the field-mapping format.
+5. **Dogfood gate.** Validate end-to-end against at least one live tracker (Nick's project) once auth resolves — no promotion of the fetch path on an unauthorized connector.
+
+### Out of scope
+
+- review-epic / audit-epic external-fetch wiring (unless cheap to fold in) — see v0.1.9 deferred list.
+- Epic→story decomposition loop.
+- Any non-issue-tracker MCP source.
+
+---
+
 ## v0.2.0 — Cost-aware pipeline
 
 **Effort:** 4-5 wk · **Depends on:** v0.1.5 (CI before format changes).
@@ -222,4 +287,4 @@ Surfaced during planning, consciously not on the roadmap:
 - **Edit `replace_all` code-level defense.** Prose-only in v0.1.5; code defense waits for a second occurrence.
 - **`docs/planning/**` gitignore policy.** Unresolved; default gitignored.
 - **Stop hook enforcing mode (exit-1).** Breaking change for contributors. No scheduled release.
-- **Telemetry.** Trust + complexity cost too high at current scale.
+- **Telemetry — egress/server only.** Egress/server telemetry and usage analytics remain deferred — trust + complexity cost too high at current scale. **Re-scoped 2026-06-28 (ADR-014):** local-only, opt-in, in-repo decision logging is now permitted, bounded by ADR-014's conditions (off by default; log artifacts gitignored by default; no network egress; no server component; fail-open writes). The absolute claim "Roughly never transmits any data off your machine" stays literally true. See [docs/adrs/ADR-014-local-only-gate-instrumentation.md](adrs/ADR-014-local-only-gate-instrumentation.md).
