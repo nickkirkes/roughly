@@ -23,6 +23,7 @@ On 2026-06-28, Nick signed off on **local-only gate instrumentation**. Three par
 ## Re-scopes the telemetry deferral
 
 - **Still deferred:** egress/server telemetry and usage analytics — anything that transmits off the machine or requires a server component. The original rationale ("trust + complexity cost too high at current scale") is intact for that class and remains the v0.4.0 "nothing requiring a server component" boundary.
+- **The no-egress posture also covers version control.** The absolute claim is not limited to telemetry: the build/fix pipelines never push commits, open pull requests, or contact any git remote — the largest egress a pipeline could otherwise perform. Pushing/PR creation is an explicit, separate human action taken outside the pipeline, never a pipeline step under any gate answer. See ADR-015 for the local-commit boundary that enforces this.
 - **Now permitted (as of this ADR):** local-only, opt-in, in-repo decision logging, bounded by the conditions below. These conditions *are* the boundary of what was admitted; anything outside them is still deferred.
 
 ## Conditions (the admitted boundary — enforced as Spec 1 blocking ACs)

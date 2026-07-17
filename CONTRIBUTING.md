@@ -94,7 +94,7 @@ When an already-amended AC is itself re-amended from a later epic, four artifact
 
 ## Audit conventions
 
-When a story produces audit-style output — an audit table, scope enumeration, or finding inventory (for example, the per-site `mkdir -p` audit table in E05.S4.5, or the per-AC table in `/roughly:audit-epic` output) — the audit content MUST be pasted into the GitHub PR body at PR-creation time. The PR body is the canonical discoverable artifact for code reviewers; plan-appendix copies and commit-body copies are secondary records only. Use `gh pr create --body-file <file>` at creation time. For an after-the-fact update (the PR already exists before the audit table is finalized), edit it with `gh pr edit <pr> --body-file <file>`, or use the lower-level `gh api --method PATCH /repos/<owner>/<repo>/pulls/<pr> -F body=@<file>`.
+When a story produces audit-style output — an audit table, scope enumeration, or finding inventory (for example, the per-site `mkdir -p` audit table in E05.S4.5, or the per-AC table in `/roughly:audit-epic` output) — the audit content MUST be pasted into the GitHub PR body at PR-creation time. The PR body is the canonical discoverable artifact for code reviewers; plan-appendix copies and commit-body copies are secondary records only. Use `gh pr create --body-file <file>` at creation time. **This is a human action performed when the operator opens the PR — it is never a step of the `/roughly:build` or `/roughly:fix` pipeline, which ends at local commits and never pushes or opens PRs (ADR-015). The pipeline may prepare the audit content; the operator pastes it at PR-creation time.** For an after-the-fact update (the PR already exists before the audit table is finalized), edit it with `gh pr edit <pr> --body-file <file>`, or use the lower-level `gh api --method PATCH /repos/<owner>/<repo>/pulls/<pr> -F body=@<file>`.
 
 **Pitfall:** confirm the PR body actually changed after an after-the-fact update — this class of failure is silent (exit 0, body unchanged, no error). A `gh api` PATCH no-ops if it omits the `-F body=…` field, or if the HTTP method is passed as a positional instead of through the `--method`/`-X` flag (`gh api PATCH …` is wrong; `gh api --method PATCH …` is correct). An E05 audit (2026-05-31) found PR #54's body missing its audit table.
 
@@ -130,7 +130,7 @@ Plan files in `.roughly/plans/` are build/fix pipeline artifacts. Once the pipel
 At Stage 8 of every successful build/fix run, the orchestrator prepends a Status block to the plan file in a second wrap-up commit:
 
 ```
-> **Status:** Historical — implemented and merged in commit <SHA> on <YYYY-MM-DD>. This plan was an active build/fix artifact; treat as historical reference only.
+> **Status:** Historical — implemented and committed in commit <SHA> on <YYYY-MM-DD>. This plan was an active build/fix artifact; treat as historical reference only.
 ```
 
 The SHA is the implementation feat commit (parent of the wrap-up commit). The date is the wrap-up date. Format is fully specified — no LLM creative writing.
