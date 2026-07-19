@@ -1,24 +1,26 @@
 # Runbook: Cut a release
 
-> **⚠ DRAFT — verify before first use.** This was reconstructed from release signals in the repo (CHANGELOG structure, tags `v0.1.4`–`v0.1.8`, the `chore: release-prep for vX.Y.Z` commit convention), not from a maintainer's written process. Confirm each **[VERIFY]** point below against how you actually ship, then remove this banner.
-
-Roughly is distributed as a Claude Code **marketplace plugin** ([`.claude-plugin/marketplace.json`](../../.claude-plugin/marketplace.json), `source: ./`). A release is: bump the version, record the changes, and tag the commit. **[VERIFY]** there is no separate publish step (no npm package — consumers install via the marketplace git repo).
+Roughly is distributed as a Claude Code **marketplace plugin** ([`.claude-plugin/marketplace.json`](../../.claude-plugin/marketplace.json), `source: ./`). A release is: bump the version, record the changes in a review PR, merge to `main`, and tag. **There is no npm/registry publish step** — consumers install from the marketplace git repo.
 
 ## Version sources (what a release changes)
 
-- **`.claude-plugin/plugin.json`** → `"version"` — **the only version field.** `marketplace.json` carries no version and is not bumped.
+- **`.claude-plugin/plugin.json`** → `"version"` — **the only version field.** `marketplace.json` carries no version and is not touched.
 - **`CHANGELOG.md`** → a new `## [X.Y.Z] — YYYY-MM-DD` section.
-- **git tag** `vX.Y.Z` (lightweight, pointing at the release-prep commit).
+- **git tag** `vX.Y.Z` (lightweight, on the merged release commit).
 
 ## Preconditions
 
-- `main` is up to date, clean, and contains all intended changes.
+- `main` is up to date and contains all intended changes.
 - You've picked `X.Y.Z` (semver).
-- **Pre-ship behavioral gate is green** — run the paid dogfood (see [dogfood-ci.md](dogfood-ci.md)); this is the moment the `ci:dogfood` label exists for. **[VERIFY]** whether a green dogfood is a hard gate or advisory for you.
 
 ## Steps
 
-1. **Update `CHANGELOG.md`.** Add a new top section following the existing format:
+1. **Branch from `main`:**
+   ```bash
+   git checkout main && git pull
+   git checkout -b release/vX.Y.Z
+   ```
+2. **Update `CHANGELOG.md`** — add a new top section in the existing format:
    ```markdown
    ## [X.Y.Z] — YYYY-MM-DD
 
@@ -31,30 +33,36 @@ Roughly is distributed as a Claude Code **marketplace plugin** ([`.claude-plugin
    ### Fixed
    - …
    ```
-2. **Bump the version** in `.claude-plugin/plugin.json` (`"version": "X.Y.Z"`).
-3. **Run the dogfood** and confirm green (label a release PR with `ci:dogfood`, or dispatch it). See [dogfood-ci.md](dogfood-ci.md).
-4. **Commit** the prep:
+3. **Bump the version** in `.claude-plugin/plugin.json` (`"version": "X.Y.Z"`).
+4. **Align the docs to the new version.** Review [`README.md`](../../README.md) and [`docs/ROADMAP.md`](../ROADMAP.md) and update anything that references the old version, shipped/unshipped status, counts, or behavior that changed this release. Docs must match what `vX.Y.Z` actually is.
+5. **Commit:**
    ```bash
    git commit -am "chore: release-prep for vX.Y.Z"
    ```
-   **[VERIFY]** whether this lands directly on `main` or via a release PR (branch protection). History shows direct `chore: release-prep …` commits on `main`.
-5. **Tag and push:**
+6. **Open a PR to `main`** and **add the `ci:dogfood` label.** This triggers the paid dogfood, which is a **hard pre-ship gate** — the PR does not merge until the dogfood run is green (see [dogfood-ci.md](dogfood-ci.md)). Also get the normal review approval.
+7. **Merge the PR to `main`** once the dogfood is green and review is approved.
+8. **Tag and push the tag:**
    ```bash
-   git tag vX.Y.Z            # lightweight, matching existing tags
-   git push origin main --follow-tags
+   git checkout main && git pull
+   git tag vX.Y.Z          # lightweight, on the merged release commit
+   git push origin vX.Y.Z
    ```
-6. **GitHub Release (optional).** **[VERIFY / DECIDE]** — Releases were published through `v0.1.5` then lapsed (`v0.1.6`–`v0.1.8` have tags but no GitHub Release). If resuming:
+   Tagging is the release. (No GitHub Release object is created — the tag is the artifact; new work continues on branches off `main`.)
+9. **Post-release sanity — the consumer update path.** From a project that has the plugin installed:
    ```bash
-   gh release create vX.Y.Z --title "vX.Y.Z — <headline>" --notes-file <changelog-section>
+   claude plugin marketplace update nickkirkes   # refresh the marketplace from source
+   claude plugin update roughly                  # upgrade the plugin to the new version
    ```
-7. **Post-release sanity.** From a scratch project, install/update the plugin from the marketplace and confirm `/roughly:help` reports the new version. **[VERIFY]** the exact consumer install/update command.
+   Then confirm `/roughly:help` reports `vX.Y.Z`.
 
-## Assumptions to confirm and bake in
+## Checklist
 
-- [ ] No npm (or other registry) publish step — marketplace/git distribution only.
-- [ ] Release lands on `main` directly vs. via a PR.
-- [ ] Whether GitHub Releases resume from this version.
-- [ ] Whether the dogfood is a hard pre-ship gate.
-- [ ] Any `README.md` / `docs/ROADMAP.md` version references that need updating at release time.
+- [ ] `CHANGELOG.md` section added for `X.Y.Z`
+- [ ] `.claude-plugin/plugin.json` version bumped
+- [ ] `README.md` + `docs/ROADMAP.md` reviewed and aligned to the version
+- [ ] Release PR opened, `ci:dogfood` label added, **dogfood green**, review approved
+- [ ] Merged to `main`
+- [ ] `vX.Y.Z` tag pushed
+- [ ] Consumer update verified (`marketplace update` → `plugin update` → `/roughly:help` shows new version)
 
-Once confirmed, replace the **[VERIFY]** markers with the real steps and delete the DRAFT banner.
+_Last validated: 2026-07-19._
