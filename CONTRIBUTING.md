@@ -159,7 +159,7 @@ There is no automated test suite — this is pure markdown. To verify changes:
 
 ## CI
 
-**Triggering.** The dogfood is **not** run on every push or PR — it launches real Claude sessions and bills the `ANTHROPIC_API_KEY` secret (up to ~$10/run: 6 pipeline scenarios at $1.50 each + plugin-load + smoke). Run it deliberately, typically at a version-pin / pre-ship moment, one of two ways: (a) add the **`ci:dogfood`** label to a pull request — it runs when the label is added and re-runs on each subsequent push while the label is present; or (b) trigger it manually from the **Actions tab** (`workflow_dispatch`). The Claude Code version is pinned in `dogfood.yml` (not the floating `@2` tag) so a silent release can't change behavior between runs; bump it deliberately after re-validating the harness.
+**Triggering.** The dogfood runs real, **billed** Claude sessions, so it is **not** run on every push/PR — add the **`ci:dogfood`** label to a PR, or dispatch it manually from the Actions tab. The Claude Code version is pinned in `dogfood.yml` (not floating `@2`). Full procedure, cost breakdown, and the version-bump ritual: [docs/runbooks/dogfood-ci.md](docs/runbooks/dogfood-ci.md).
 
 **Workflow logs.** GitHub Actions tab → `dogfood` workflow → most recent run. Per-job logs live under `dogfood-build-cycle`.
 

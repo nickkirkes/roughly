@@ -29,7 +29,9 @@ There is no build step — this is pure markdown.
 
 **Test locally:** `claude --plugin-dir /path/to/your/roughly-clone` from a test project.
 
-**Verify structure:** Check frontmatter fields, cross-references between skills and agents, file counts, line/word limits.
+**Verify structure:** Check frontmatter fields, cross-references between skills and agents, file counts, line/word limits. Or run the Stop hook directly: `bash .claude/hooks/verify-all.sh`.
+
+**Runbooks:** operational procedures live in [`docs/runbooks/`](docs/runbooks/) — local dev, the dogfood CI, and releases. Note the end-to-end **dogfood is paid and label-gated** (real Claude sessions billed to `ANTHROPIC_API_KEY`); it does **not** run on every push/PR, so do not assume CI has behaviorally validated a change. See [`docs/runbooks/dogfood-ci.md`](docs/runbooks/dogfood-ci.md).
 
 ## Conventions
 
