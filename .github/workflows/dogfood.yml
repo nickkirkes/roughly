@@ -1,13 +1,23 @@
 name: dogfood
 
 on:
-  push:
-    branches:
-      - main
+  # Dogfood runs REAL Claude sessions (scripts/ci-dogfood.sh) and bills the
+  # ANTHROPIC_API_KEY secret — up to ~$10 per run (6 pipeline scenarios at
+  # $1.50 each + plugin-load + smoke). It is therefore NOT run on every push/PR.
+  # To run it: add the `ci:dogfood` label to a pull request (it re-runs on each
+  # new push while the label is present), or trigger it manually from the Actions
+  # tab. Typically run only at a version-pin / pre-ship moment.
   pull_request:
+    types: [labeled, synchronize, reopened]
+  workflow_dispatch:
 
 jobs:
   dogfood-build-cycle:
+    # Gate: run only when manually dispatched, or when the PR carries the
+    # ci:dogfood label. Keeps the paid dogfood off every PR/push.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'ci:dogfood')
     runs-on: ubuntu-latest
     permissions:
       contents: read

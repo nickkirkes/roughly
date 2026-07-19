@@ -159,6 +159,8 @@ There is no automated test suite — this is pure markdown. To verify changes:
 
 ## CI
 
+**Triggering.** The dogfood is **not** run on every push or PR — it launches real Claude sessions and bills the `ANTHROPIC_API_KEY` secret (up to ~$10/run: 6 pipeline scenarios at $1.50 each + plugin-load + smoke). Run it deliberately, typically at a version-pin / pre-ship moment, one of two ways: (a) add the **`ci:dogfood`** label to a pull request — it runs when the label is added and re-runs on each subsequent push while the label is present; or (b) trigger it manually from the **Actions tab** (`workflow_dispatch`). The Claude Code version is pinned in `dogfood.yml` (not the floating `@2` tag) so a silent release can't change behavior between runs; bump it deliberately after re-validating the harness.
+
 **Workflow logs.** GitHub Actions tab → `dogfood` workflow → most recent run. Per-job logs live under `dogfood-build-cycle`.
 
 **Reproducing a failure locally.**
@@ -188,7 +190,7 @@ Run from the plugin repo root, ideally from a clean working tree. The script ass
 - S11b-1: ~5K tokens per run
 - S11b-2: ≤150K Sonnet tokens per run
 
-CI cost is a non-trivial release-cost driver at high PR push frequency — flag for monitoring.
+CI cost is real (billed to the `ANTHROPIC_API_KEY` secret) — which is why the dogfood is label-gated and manually dispatchable rather than run on every push/PR (see **Triggering** above). Prefer a dedicated, budget-capped CI key over a personal one.
 
 **Auth.** Requires the `ANTHROPIC_API_KEY` repo secret (Settings → Secrets and variables → Actions). The smoke step consumes the secret via a step-scoped `env:` mapping on `Run dogfood scaffolding`; the auth-failure negative-test step uses a deliberately-invalid placeholder, also step-scoped. The real secret is never exposed at workflow-global scope.
 
