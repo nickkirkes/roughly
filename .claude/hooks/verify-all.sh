@@ -158,15 +158,46 @@ else
 fi
 
 emit_drift_json() {
-  local m="$1"
+  local m="$1" out=""
+  # Each encoder attempt captures stdout into $out via $(...) and only
+  # commits the output on exit-0. A runtime failure (jq OOM, python3
+  # broken install, etc.) falls through to the next encoder rather than
+  # silently emitting nothing — the prior structure ('if command -v jq;
+  # then jq ...; elif python3 ...') would produce no output when jq
+  # existed but failed at runtime, defeating the hook's enforcement
+  # purpose.
+
   if command -v jq >/dev/null 2>&1; then
-    jq -nc --arg m "$m" '{systemMessage: $m}'
-  elif command -v python3 >/dev/null 2>&1; then
-    python3 -c 'import json,sys; print(json.dumps({"systemMessage": sys.argv[1]}))' "$m"
+    if out=$(jq -nc --arg m "$m" '{systemMessage: $m}' 2>/dev/null); then
+      printf '%s\n' "$out"
+      return 0
+    fi
   fi
-  # If neither is available, drop the structured output rather than emit
-  # malformed JSON. The hook still exits 0 below; drift is detected on
-  # the next run when a JSON encoder is available.
+
+  if command -v python3 >/dev/null 2>&1; then
+    if out=$(python3 -c 'import json,sys; print(json.dumps({"systemMessage": sys.argv[1]}))' "$m" 2>/dev/null); then
+      printf '%s\n' "$out"
+      return 0
+    fi
+  fi
+
+  # Final fallback: hand-build minimal JSON via bash parameter expansion
+  # (bash 3+ syntax). Pre-strip all U+0000–U+001F control characters
+  # except tab/newline/CR (which we escape explicitly below) so strict
+  # JSON parsers accept the output even when input contains ANSI color
+  # codes (ESC = 0x1b), form feed, vertical tab, backspace, etc.
+  # Cosmetic residue from stripped ANSI sequences (e.g., '[31m'
+  # fragments) may remain in the message — the result is a well-formed
+  # `systemMessage` the model can always read; install jq or python3
+  # for full fidelity.
+  local cleaned
+  cleaned=$(printf '%s' "$m" | LC_ALL=C tr -d '\000-\010\013-\014\016-\037')
+  local escaped="${cleaned//\\/\\\\}"
+  escaped="${escaped//\"/\\\"}"
+  escaped="${escaped//$'\n'/\\n}"
+  escaped="${escaped//$'\t'/\\t}"
+  escaped="${escaped//$'\r'/\\r}"
+  printf '{"systemMessage":"%s"}\n' "$escaped"
 }
 
 if [ -n "$issues" ]; then
