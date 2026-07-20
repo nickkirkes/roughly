@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and committed in commit 3177b4c4ad8c1153b379d3dc7215ad2f514544a0 on 2026-07-20. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Fix Plan: #68 — verify-all.sh drift-report fallback when no jq/python3
 
 Plan-format-version: 1
