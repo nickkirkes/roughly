@@ -13,7 +13,7 @@ Two ways to trigger:
 1. **Label a PR** with **`ci:dogfood`** — the job runs when the label is added and re-runs on each subsequent push while the label is present.
 2. **Manual dispatch** — GitHub Actions tab → `dogfood` workflow → **Run workflow** (`workflow_dispatch`).
 
-(The mechanics — the `on:`/`if:` gate — are in [CONTRIBUTING.md](../../CONTRIBUTING.md) `## CI`.)
+(The mechanics — the `on:`/`if:` gate — are in CONTRIBUTING.md's [`## CI`](../../CONTRIBUTING.md#ci) section.)
 
 ## Cost
 

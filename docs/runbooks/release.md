@@ -51,9 +51,9 @@ Roughly is distributed as a Claude Code **marketplace plugin** ([`.claude-plugin
 9. **Post-release sanity — the consumer update path.** From a project that has the plugin installed:
    ```bash
    claude plugin marketplace update nickkirkes   # refresh the marketplace from source
-   claude plugin update roughly                  # upgrade the plugin to the new version
+   claude plugin update roughly                  # upgrade the installed plugin
    ```
-   Then confirm `/roughly:help` reports `vX.Y.Z`.
+   Confirm the installed plugin version deterministically with `claude plugin list` (shows `roughly` → `Version: X.Y.Z`). **Note:** `/roughly:help`'s "Plugin version" line does **not** reflect this yet — it reads the `roughly-version` marker in the project's `.roughly/workflow-upgrades`, which only `/roughly:setup` and `/roughly:upgrade` write (never `claude plugin update`). A consumer must run **`/roughly:upgrade`** in their project — it syncs installed files from the new templates and records the version — before `/roughly:help` reports `vX.Y.Z`.
 
 ## Checklist
 
@@ -63,6 +63,6 @@ Roughly is distributed as a Claude Code **marketplace plugin** ([`.claude-plugin
 - [ ] Release PR opened, `ci:dogfood` label added, **dogfood green**, review approved
 - [ ] Merged to `main`
 - [ ] `vX.Y.Z` tag pushed
-- [ ] Consumer update verified (`marketplace update` → `plugin update` → `/roughly:help` shows new version)
+- [ ] Consumer update verified (`marketplace update` → `plugin update` → `claude plugin list` shows `Version: X.Y.Z`; `/roughly:help` reflects it only after a project runs `/roughly:upgrade`)
 
 _Last validated: 2026-07-19._
