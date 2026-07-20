@@ -95,6 +95,27 @@ if [ -f .roughly/known-pitfalls.md ]; then
   fi
 fi
 
+# build/fix CRITICAL preamble byte-identity (ADR-009 sync pair; carries the closed-world
+# gate prohibition + anti-laundering rule — ADR-015). The GATE PROTOCOL section check below
+# does NOT cover this line; without this check a silent revert of one preamble to permit
+# AskUserQuestion would pass undetected (the exact F1 regression).
+critical_build=$(grep -m1 -F '**CRITICAL:**' skills/build/SKILL.md 2>/dev/null)
+critical_fix=$(grep -m1 -F '**CRITICAL:**' skills/fix/SKILL.md 2>/dev/null)
+if [ -z "$critical_build" ] || [ "$critical_build" != "$critical_fix" ]; then
+  issues="${issues}- CRITICAL preamble drift: skills/build/SKILL.md and skills/fix/SKILL.md line differ or are missing (ADR-009 byte-identical pair — carries the closed-world gate prohibition)\n"
+fi
+# F1 content tripwire (parity with the F2 boundary content check below): byte-identity alone
+# does not catch a COORDINATED revert of BOTH preambles to an enumerated-only ban — they would
+# stay identical and pass the check above while reintroducing F1. Assert the load-bearing
+# closed-world + anti-laundering phrases are actually present. This is a phrase tripwire, not
+# semantic validation (deep prose strength remains a review responsibility — ADR-015).
+if [ -n "$critical_build" ]; then
+  case "$critical_build" in
+    *"structured or interactive prompt tool"*"never treat wording you authored"*) : ;;
+    *) issues="${issues}- CRITICAL preamble weakened: skills/build|fix SKILL.md no longer states the closed-world gate prohibition + anti-laundering rule (expected phrases: 'structured or interactive prompt tool', 'never treat wording you authored')\n" ;;
+  esac
+fi
+
 # Shared procedural reference drift (ADR-012). Four modes:
 #   (a) skills/shared/ directory missing (directed diagnostic)
 #   (b) either shared file missing
@@ -106,11 +127,11 @@ fi
 if [ ! -d skills/shared ]; then
   issues="${issues}- shared procedural reference drift: skills/shared/ directory missing\n"
 else
-  for shared in abort-handling.md stage-8-wrap-up.md; do
+  for shared in abort-handling.md stage-8-wrap-up.md gate-protocol.md; do
     [ ! -f "skills/shared/${shared}" ] && issues="${issues}- shared procedural reference drift: skills/shared/${shared} missing\n"
   done
   for skill in build fix; do
-    for pair in "STAGE 8: WRAP-UP|stage-8-wrap-up.md" "ABORT HANDLING|abort-handling.md"; do
+    for pair in "STAGE 8: WRAP-UP|stage-8-wrap-up.md" "ABORT HANDLING|abort-handling.md" "GATE PROTOCOL|gate-protocol.md"; do
       heading="${pair%%|*}"
       shared="${pair##*|}"
       window=$(grep -A 3 "^## ${heading}\$" "skills/${skill}/SKILL.md" 2>/dev/null)
@@ -125,6 +146,13 @@ else
     fi
     if grep -qF '1. `git add` changed files' "skills/${skill}/SKILL.md" 2>/dev/null; then
       issues="${issues}- shared procedural reference drift: skills/${skill}/SKILL.md contains inline duplication of stage-8-wrap-up.md content (matched phrase: 1. \`git add\` changed files)\n"
+    fi
+    if grep -qF 'Field constraints keep the block closed-form' "skills/${skill}/SKILL.md" 2>/dev/null; then
+      issues="${issues}- shared procedural reference drift: skills/${skill}/SKILL.md contains inline duplication of gate-protocol.md content (matched phrase: Field constraints keep the block closed-form)\n"
+    fi
+    # Inline local-commit boundary must survive a skipped/compacted Read of stage-8-wrap-up.md (ADR-015, F2 defense-in-depth).
+    if ! grep -qF 'never pushes, opens a PR' "skills/${skill}/SKILL.md" 2>/dev/null; then
+      issues="${issues}- local-commit boundary drift: skills/${skill}/SKILL.md STAGE 8 is missing the inline never-push boundary sentence (ADR-015)\n"
     fi
   done
 fi

@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 You are the fix orchestrator. Drive this pipeline sequentially with human gates at each stage. You coordinate — subagents implement.
 
-**CRITICAL:** This skill is gated by a UserPromptSubmit hook (`.claude/hooks/plan-mode-gate.sh`) that blocks invocation when Claude Code's plan mode is active — exit plan mode (Shift+Tab) and re-invoke. Pipeline gates are inline conversation prompts; never use EnterPlanMode/ExitPlanMode mid-pipeline. See ADR-009.
+**CRITICAL:** This skill is gated by a UserPromptSubmit hook (`.claude/hooks/plan-mode-gate.sh`) that blocks invocation when Claude Code's plan mode is active — exit plan mode (Shift+Tab) and re-invoke. Pipeline gates are plain-text questions rendered verbatim in your reply; never present a gate through any structured or interactive prompt tool (AskUserQuestion, EnterPlanMode/ExitPlanMode, or any other) — if a question would reach the human anywhere other than as plain text in your reply, that mechanism is forbidden. Never re-author a gate's wording or options, and never treat wording you authored (an option, a summary line) as the human's authorization. See the GATE PROTOCOL section below and ADR-009.
 
 ## Context
 - Changed files: !`git diff --name-only HEAD 2>/dev/null || echo "clean"`
@@ -17,6 +17,12 @@ You are the fix orchestrator. Drive this pipeline sequentially with human gates 
 Issue to fix: $ARGUMENTS
 
 <!-- pre-flight:start --> **Pre-flight migration check:** If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, or `.ruckus/workflow-upgrades` exists, OR if `.roughly/` exists AND any file matching `docs/plans/*-plan.md` exists (the `*-plan.md` filename pattern is Roughly's plan naming convention — its presence inside `docs/plans/` alongside an existing `.roughly/` install distinguishes a pre-v0.1.6 Roughly install with un-migrated plans from a Roughly project that has an unrelated `docs/plans/` documentation directory using non-Roughly filenames), abort with: "Legacy state detected (`.ruckus/` from v0.1.3 install or incomplete v0.1.4 migration; or pre-v0.1.6 Roughly plans matching `docs/plans/*-plan.md` alongside `.roughly/`). Run `/roughly:upgrade` to migrate or resume, then re-run." A `.ruckus/` directory containing only user-extras (post-`leave` state from a completed upgrade) is fine — proceed. A `docs/plans/` directory without any `*-plan.md` files (or in a project without `.roughly/`) is also fine — proceed (not a Roughly install or an unrelated documentation tree). <!-- pre-flight:end -->
+
+---
+
+## GATE PROTOCOL
+
+Read `skills/shared/gate-protocol.md` and apply it at every gate in this pipeline. Gates are plain-text questions in your reply — never presented through any structured prompt tool.
 
 ---
 
@@ -227,13 +233,14 @@ Invoke `/roughly:verify-all`. Fix failures and re-run until clean.
 
 **Gate:** "Verification passed. Ready to commit? (yes / additional checks / abort)" On abort: emit `Stage 7 verify aborted: [reason]. Files modified, not committed. Recovery: choose rollback option per ABORT HANDLING.`
 
-Compact context before wrap-up. Preserve: issue summary with root cause, files changed, task completion count, verification verdict.
+Compact context before wrap-up. Preserve: issue summary with root cause, files changed, task completion count, verification verdict, and the local-commits-only wrap-up boundary.
 
 ---
 
 ## STAGE 8: WRAP-UP
 
 Read `skills/shared/stage-8-wrap-up.md` and apply the procedure documented there.
+This pipeline never pushes, opens a PR, runs `gh`, or contacts a remote — under any gate answer, prior approval, or project/CLAUDE.md standing order. Pushing is a separate action the human performs themselves after the pipeline, never a pipeline step. See `skills/shared/stage-8-wrap-up.md` step 7.
 
 ---
 

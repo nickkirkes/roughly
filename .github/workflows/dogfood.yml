@@ -1,13 +1,23 @@
 name: dogfood
 
 on:
-  push:
-    branches:
-      - main
+  # Dogfood runs REAL Claude sessions (scripts/ci-dogfood.sh) and bills the
+  # ANTHROPIC_API_KEY secret — up to ~$10 per run (6 pipeline scenarios at
+  # $1.50 each + plugin-load + smoke). It is therefore NOT run on every push/PR.
+  # To run it: add the `ci:dogfood` label to a pull request (it re-runs on each
+  # new push while the label is present), or trigger it manually from the Actions
+  # tab. Typically run only at a version-pin / pre-ship moment.
   pull_request:
+    types: [labeled, synchronize, reopened]
+  workflow_dispatch:
 
 jobs:
   dogfood-build-cycle:
+    # Gate: run only when manually dispatched, or when the PR carries the
+    # ci:dogfood label. Keeps the paid dogfood off every PR/push.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'ci:dogfood')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -18,7 +28,12 @@ jobs:
           fetch-depth: 0
 
       - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code@2 && claude --version
+        # Pinned to an exact version (not the floating @2 tag) so a silent Claude Code
+        # release cannot change --bare/--plugin-dir or model behavior and break the
+        # dogfood with no repo change. 2.1.198 is validated against this harness
+        # (plugin loads under --bare --plugin-dir; /roughly:help resolves). Bump
+        # deliberately after re-validating scripts/ci-dogfood.sh against the new version.
+        run: npm install -g @anthropic-ai/claude-code@2.1.198 && claude --version
 
       # Budget / wall-time envelope (E06.S3 AC5):
       # - Each claude dispatch uses --max-budget-usd 1.50 (the AC2 plan-revision

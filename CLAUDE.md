@@ -29,7 +29,9 @@ There is no build step — this is pure markdown.
 
 **Test locally:** `claude --plugin-dir /path/to/your/roughly-clone` from a test project.
 
-**Verify structure:** Check frontmatter fields, cross-references between skills and agents, file counts, line/word limits.
+**Verify structure:** Check frontmatter fields, cross-references between skills and agents, file counts, line/word limits. Or run the Stop hook directly: `bash .claude/hooks/verify-all.sh`.
+
+**Runbooks:** operational procedures live in [`docs/runbooks/`](docs/runbooks/) — local dev, the dogfood CI, and releases. Note the end-to-end **dogfood is paid and label-gated** (real Claude sessions billed to `ANTHROPIC_API_KEY`); it does **not** run on every push/PR, so do not assume CI has behaviorally validated a change. See [`docs/runbooks/dogfood-ci.md`](docs/runbooks/dogfood-ci.md).
 
 ## Conventions
 
@@ -67,5 +69,6 @@ See `docs/adrs/` for full reasoning. Summary:
 - **User context, not plugin context.** Skill content runs in the user's project — file paths must resolve relative to the user's repo, not the plugin source directory.
 - **`disable-model-invocation: true` is critical.** Without it on coordinator skills, Claude may answer conversationally instead of dispatching agents.
 - **Avoid ambiguous override language in gates.** LLMs interpret "you can skip this" as permission to skip. Stage 4 uses an explicit override protocol requiring the human to say "override" (see build/SKILL.md).
+- **Gates are verbatim text, never a UI tool.** LLMs will substitute a structured prompt tool (e.g. `AskUserQuestion`) for a plain-text gate and re-author its options, which becomes a scope-injection surface — the vector for the 2026-07-16 unauthorized-push incident. The prohibition must stay closed-world (any structured/interactive prompt tool, present or future), not an enumerated list (see `skills/shared/gate-protocol.md`, ADR-015). Relatedly, the pipeline ends at local commits — never push, open a PR, or contact a remote from a build/fix run.
 - **Template conditionals need explicit instructions.** `{{#IF_UI_TASK}}` blocks have no template engine — the orchestrator must be told to include or omit them based on the task's UI flag.
 - **Agent preamble sync is manual.** There is no auto-include. If you change `agent-preamble.md`, you must manually update every agent that inlines it.

@@ -92,16 +92,21 @@ if ! printf '%s\n' "$SMOKE_OUT" | grep -qx "ok"; then
   exit 1
 fi
 
-# NOTE: The slash-command listing relies on the model's compliance
-# with the prompt format. claude has no deterministic --list-commands
-# flag in -p mode, so this is the most reliable approximation. The
-# /roughly:setup anchor is the deterministic plugin-load proof:
-# if it appears in the response, --plugin-dir was honored.
-PLUGIN_OUT="$($TIMEOUT 25 claude --bare --plugin-dir "$WORKTREE" \
-  --no-session-persistence --max-budget-usd 0.05 \
-  -p "List each of your available slash commands on a separate line with the / prefix. Do not include any other text." 2>&1)" && PLUGIN_EXIT=0 || PLUGIN_EXIT=$?
+# Plugin-load proof: INVOKE the roughly help skill and require its output to
+# name /roughly:setup. Do NOT ask the model to "list your slash commands" — the
+# model enumerates only built-in CLI commands and omits plugin skills, so that
+# probe false-fails even when the plugin is loaded and fully functional
+# (confirmed 2026-07-17 by live repro; see .roughly/known-pitfalls.md). Invoking
+# /roughly:help instead forces the skill to actually resolve through the plugin:
+# if --plugin-dir were not honored, /roughly:help would be an unknown command
+# and its rendered command list (which always includes /roughly:setup) could not
+# appear. Budget/timeout are higher than the smoke step because this runs a real
+# skill (reads marker state) rather than returning a one-token reply.
+PLUGIN_OUT="$($TIMEOUT 90 claude --bare --plugin-dir "$WORKTREE" \
+  --no-session-persistence --max-budget-usd 1.00 \
+  -p "/roughly:help" 2>&1)" && PLUGIN_EXIT=0 || PLUGIN_EXIT=$?
 if [ "$PLUGIN_EXIT" = 124 ]; then
-  echo "ci-dogfood: FAIL — plugin-load step timed out (claude did not return within 25s)" >&2
+  echo "ci-dogfood: FAIL — plugin-load step timed out (claude did not return within 90s)" >&2
   printf '%s\n' "$PLUGIN_OUT" | sed 's/^/    /' >&2
   exit 1
 fi
@@ -122,7 +127,7 @@ fi
 # format the model might emit; strict enough to require evidence the model
 # treated this as a command listing, not as prose.
 if ! printf '%s\n' "$PLUGIN_OUT" | grep -qE "^[^A-Za-z]*/roughly:setup($|[^A-Za-z0-9_-])"; then
-  echo "ci-dogfood: FAIL — plugin loading not verified (no /roughly:setup list-item line in output)" >&2
+  echo "ci-dogfood: FAIL — plugin loading not verified (/roughly:help output did not list /roughly:setup — plugin skills did not resolve)" >&2
   printf '%s\n' "$PLUGIN_OUT" | sed 's/^/    /' >&2
   exit 1
 fi

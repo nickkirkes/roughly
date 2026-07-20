@@ -39,3 +39,4 @@ Bug fixes, template improvements, documentation changes, and new agent definitio
 - [ADR-012](ADR-012-runtime-shared-procedural-references.md) — Procedural prose duplicated across build/fix SKILL.md extracted to `skills/shared/` and referenced via runtime `Read` directive
 - [ADR-013](ADR-013-build-ci-runs-review-plan.md) — Build `--ci` runs review-plan (unifies with fix `--ci`)
 - [ADR-014](ADR-014-local-only-gate-instrumentation.md) — Local-only gate instrumentation; re-scopes the telemetry deferral
+- [ADR-015](ADR-015-gate-protocol-and-local-commit-boundary.md) — Gate protocol (verbatim text gates, closed-world tool ban) + local-commit pipeline boundary
