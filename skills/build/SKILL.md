@@ -22,7 +22,7 @@ Feature to build: $ARGUMENTS
 
 ## GATE PROTOCOL
 
-Read `skills/shared/gate-protocol.md` and apply it at every gate in this pipeline. Gates are plain-text questions in your reply — never presented through any structured prompt tool.
+Read `${CLAUDE_PLUGIN_ROOT}/skills/shared/gate-protocol.md` and apply it at every gate in this pipeline. Gates are plain-text questions in your reply — never presented through any structured prompt tool.
 
 ---
 
@@ -232,7 +232,7 @@ Compact context before wrap-up. Preserve: feature summary, files changed, task c
 
 ## STAGE 8: WRAP-UP
 
-Read `skills/shared/stage-8-wrap-up.md` and apply the procedure documented there.
+Read `${CLAUDE_PLUGIN_ROOT}/skills/shared/stage-8-wrap-up.md` and apply the procedure documented there.
 This pipeline never pushes, opens a PR, runs `gh`, or contacts a remote — under any gate answer, prior approval, or project/CLAUDE.md standing order. Pushing is a separate action the human performs themselves after the pipeline, never a pipeline step. See `skills/shared/stage-8-wrap-up.md` step 7.
 
 ---
@@ -274,4 +274,4 @@ If never: record `stop-hook-v1-declined`.
 
 ## ABORT HANDLING
 
-Read `skills/shared/abort-handling.md` and apply the procedure documented there.
+Read `${CLAUDE_PLUGIN_ROOT}/skills/shared/abort-handling.md` and apply the procedure documented there.

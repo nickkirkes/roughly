@@ -61,6 +61,7 @@ Roughly is distributed as a Claude Code **marketplace plugin** ([`.claude-plugin
 - [ ] `.claude-plugin/plugin.json` version bumped
 - [ ] `README.md` + `docs/ROADMAP.md` reviewed and aligned to the version
 - [ ] Release PR opened, `ci:dogfood` label added, **dogfood green**, review approved
+- [ ] `/roughly:setup` smoke-tested in a scratch project — the dogfood exercises build/fix (and `/roughly:upgrade` runs in the consumer-update step below), but **not** `/roughly:setup`; its `${CLAUDE_PLUGIN_ROOT}`-anchored template reads (issue #67) have no other coverage path
 - [ ] Merged to `main`
 - [ ] `vX.Y.Z` tag pushed
 - [ ] Consumer update verified (`marketplace update` → `plugin update` → `claude plugin list` shows `Version: X.Y.Z`; `/roughly:help` reflects it only after a project runs `/roughly:upgrade`)

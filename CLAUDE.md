@@ -66,7 +66,7 @@ See `docs/adrs/` for full reasoning. Summary:
 
 ## Known Pitfalls for Contributors
 
-- **User context, not plugin context.** Skill content runs in the user's project — file paths must resolve relative to the user's repo, not the plugin source directory.
+- **User context, not plugin context — except for plugin-bundled reads.** Skill content runs in the user's project: paths the model writes/reads *in the consumer's project* (`.roughly/…`, root `CLAUDE.md`, `.claude/settings.json`, `.claude/hooks/…`) stay repo-relative. But directives that load *plugin-bundled* files (`skills/shared/*`, `skills/setup/templates/*`, `.claude-plugin/plugin.json`) must use `${CLAUDE_PLUGIN_ROOT}` — those files don't exist in the consumer's cwd (see ADR-012).
 - **`disable-model-invocation: true` is critical.** Without it on coordinator skills, Claude may answer conversationally instead of dispatching agents.
 - **Avoid ambiguous override language in gates.** LLMs interpret "you can skip this" as permission to skip. Stage 4 uses an explicit override protocol requiring the human to say "override" (see build/SKILL.md).
 - **Gates are verbatim text, never a UI tool.** LLMs will substitute a structured prompt tool (e.g. `AskUserQuestion`) for a plain-text gate and re-author its options, which becomes a scope-injection surface — the vector for the 2026-07-16 unauthorized-push incident. The prohibition must stay closed-world (any structured/interactive prompt tool, present or future), not an enumerated list (see `skills/shared/gate-protocol.md`, ADR-015). Relatedly, the pipeline ends at local commits — never push, open a PR, or contact a remote from a build/fix run.
