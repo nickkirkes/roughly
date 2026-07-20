@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and committed in commit b2c15d8922d92d4bfddcd2a7c3fffb8130d5d1d4 on 2026-07-20. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Fix Plan: #67 — plugin-root Read path resolution (`${CLAUDE_PLUGIN_ROOT}`)
 
 Plan-format-version: 1
