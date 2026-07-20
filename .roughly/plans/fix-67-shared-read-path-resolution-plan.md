@@ -104,3 +104,11 @@ Do NOT change the WRITE/DEST targets on these lines (`.roughly/known-pitfalls.md
 - ADR-012 (shared-reference pattern) + ADR-009 (build:11≡fix:11 sync pair; the gate-protocol section is likewise mirrored).
 - Verify commands assert the new anchored form's presence and the old bare form's absence (distinguished by the backtick before `skills/`), avoiding the self-defeating-verify pitfall since `${CLAUDE_PLUGIN_ROOT}` is new repo-wide.
 - Empirical (runtime) verification deferred to the `ci:dogfood` gate per `docs/runbooks/dogfood-ci.md` (API credits currently depleted).
+
+## Post-implementation deviations (added 2026-07-20, after the historical marker)
+
+This plan is a Stage-3 snapshot; per `skills/shared/stage-8-wrap-up.md` step-4 framing, implementation actuals may differ from it. Two deviations from the text above — both surfaced during Stage 6 review and shipped in commit `b2c15d8` — recorded here for auditability (the Stage-3 task text above is intentionally left unchanged):
+
+1. **15 anchored sites, not 14.** Stage 6 code review found a 15th plugin-root-relative runtime directive the Stage-3 completeness grep missed: `skills/upgrade/SKILL.md:74` — "enumerate all template files in the plugin's `skills/setup/templates/` directory". The plan's completeness scan (`(Read|Copy|read|copy) …`) was **verb-scoped** and did not match the verb "enumerate", so the Scope-decision "14" count and T3's enumeration predate it. The shipped fix anchors this site too (`${CLAUDE_PLUGIN_ROOT}/skills/setup/templates/`), for 15 total. **Lesson:** completeness inventories must be verb-agnostic — scan for the *path*, not a fixed verb set.
+
+2. **T2 marker clarification.** T2's numbered list renders the five template `Read` targets as shorthand (`…/<file>.template`). Those *display* entries are illustrative (`form:`), not literal; the concrete `verbatim:` target applied at each site is the full `${CLAUDE_PLUGIN_ROOT}/skills/setup/templates/<file>.template`, and T2's Verify command asserted that concrete anchored form — so implementation was unambiguous despite the shorthand. (Had the shorthand been marked `form:` in the display, this would have been self-consistent.)
