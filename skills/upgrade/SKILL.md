@@ -65,13 +65,13 @@ If yes: create `.roughly/` directory if it doesn't exist. Move (preserving conte
 
 3. **Cleanup:** Remove the marker — usually at `.roughly/plans/.migration-in-progress` (carried by a successful move) but also remove `docs/plans/.migration-in-progress` if it still exists (resume case where a prior attempt failed before the rename completed). Both removals are silent if the file is absent. Idempotency: a successful migration leaves `docs/plans/` absent; re-running detects the absence at step 1 and skips entirely.
 
-**Version check:** Read `.roughly/workflow-upgrades` and extract the `roughly-version` line. Read `.claude-plugin/plugin.json` for the current plugin version. If they differ:
+**Version check:** Read `.roughly/workflow-upgrades` and extract the `roughly-version` line. Read `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` for the current plugin version. If they differ:
 > "Plugin version changed: [installed] → [current]. Structural diffs below may include changes from the version bump, not just your edits."
 
 If `.roughly/workflow-upgrades` is missing or has no version line, warn:
 > "No installed version recorded. Run `/roughly:setup` to initialize, or proceeding will compare against current plugin templates."
 
-After displaying the version status, enumerate all template files in the plugin's `skills/setup/templates/` directory dynamically. For each template, determine its installed counterpart:
+After displaying the version status, enumerate all template files in the plugin's `${CLAUDE_PLUGIN_ROOT}/skills/setup/templates/` directory dynamically. For each template, determine its installed counterpart:
 
 **Known mappings:**
 | Template | Installs to |

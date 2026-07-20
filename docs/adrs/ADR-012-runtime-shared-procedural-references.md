@@ -16,13 +16,17 @@ The forcing function for this ADR was the binding 300/300 state on `skills/fix/S
 
 ## Decision
 
-Procedural prose duplicated across `skills/build/SKILL.md` and `skills/fix/SKILL.md` is extracted to authoritative files under `skills/shared/<name>.md` and referenced at the consumer section head via a single-line directive of the form `` Read `skills/shared/<file>.md` `` placed within 3 lines of the section heading. The orchestrator reads the shared file when reaching the section and applies the procedure documented there.
+Procedural prose duplicated across `skills/build/SKILL.md` and `skills/fix/SKILL.md` is extracted to authoritative files under `skills/shared/<name>.md` and referenced at the consumer section head via a single-line directive of the form `` Read `${CLAUDE_PLUGIN_ROOT}/skills/shared/<file>.md` `` (see `## Path resolution` below — the `${CLAUDE_PLUGIN_ROOT}` anchor is required) placed within 3 lines of the section heading. The orchestrator reads the shared file when reaching the section and applies the procedure documented there.
 
 Pipeline-specific divergence inside a shared file uses inline conditional prose: "When invoked from /roughly:build: X. When invoked from /roughly:fix: Y." The runtime LLM applies the branch matching its dispatch context. No template engine; no placeholder substitution; no marker comments.
 
 This is **distinct from ADR-003's sync-reference pattern.** ADR-003 covers *static context* (e.g., `agents/agent-preamble.md`) inlined verbatim in agents and manually kept in sync across consumers. ADR-012 is *runtime-loaded* procedural reference: the consumer never inlines the prose; the orchestrator reads the shared file at runtime and applies the procedure.
 
 The drift surface for ADR-012 is documented in CONTRIBUTING.md `## Skill authoring conventions` and enforced by a new check in `.claude/hooks/verify-all.sh` (path-presence + content-duplication phrase scan).
+
+## Path resolution: `${CLAUDE_PLUGIN_ROOT}`
+
+Runtime `Read`/`Copy` directives that load **plugin-bundled** files MUST anchor the path with `${CLAUDE_PLUGIN_ROOT}` — e.g. `` Read `${CLAUDE_PLUGIN_ROOT}/skills/shared/<file>.md` `` — not a bare relative path. Claude Code does not auto-rewrite bare relative paths appearing in skill/agent prose; only `${...}` placeholders resolve at runtime. A bare `` Read `skills/shared/<file>.md` `` resolves against the consumer's current working directory, not the plugin's install location, and silently fails in any non-dogfood project where that path does not happen to exist. This was the root cause of issue #67: the shared-reference directives introduced by this ADR appeared to work only because the dogfood repo's cwd coincidentally contains `skills/shared/` at the same relative path. `${CLAUDE_PLUGIN_ROOT}` is Claude Code's documented mechanism for referencing plugin-bundled files independent of the consumer's cwd, and is the required anchor for every `Read`/`Copy` directive this ADR introduces.
 
 ## Consequences
 

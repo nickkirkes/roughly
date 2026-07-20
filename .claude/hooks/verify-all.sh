@@ -137,7 +137,7 @@ else
       window=$(grep -A 3 "^## ${heading}\$" "skills/${skill}/SKILL.md" 2>/dev/null)
       if [ -z "$window" ]; then
         issues="${issues}- shared procedural reference drift: skills/${skill}/SKILL.md missing ## ${heading} section heading\n"
-      elif ! printf '%s\n' "$window" | awk -v p="Read \`skills/shared/${shared}\`" 'index($0, p) == 1 {f=1} END {exit !f}'; then
+      elif ! printf '%s\n' "$window" | awk -v p="Read \`\${CLAUDE_PLUGIN_ROOT}/skills/shared/${shared}\`" 'index($0, p) == 1 {f=1} END {exit !f}'; then
         issues="${issues}- shared procedural reference drift: skills/${skill}/SKILL.md missing Read directive for ${shared} at line-start within 3 lines of ## ${heading}\n"
       fi
     done

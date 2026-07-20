@@ -89,7 +89,7 @@ Prompt but don't block on:
 Create `.roughly/` directory if it doesn't exist. (`.roughly/plans/` is created on demand by build/fix Stage 3's `mkdir -p` — no need to pre-create it during setup since the v0.1.6+ pre-flight check uses `docs/plans/*-plan.md` filename detection rather than `.roughly/plans/` absence as its signal.)
 
 ### 5a. CLAUDE.md
-Read `skills/setup/templates/CLAUDE.md.template`. Derive `{{PROJECT_NAME}}` from the repo directory name (or package.json `name` field if available). Replace all `{{PLACEHOLDER}}` markers with collected values:
+Read `${CLAUDE_PLUGIN_ROOT}/skills/setup/templates/CLAUDE.md.template`. Derive `{{PROJECT_NAME}}` from the repo directory name (or package.json `name` field if available). Replace all `{{PLACEHOLDER}}` markers with collected values:
 - `{{PROJECT_NAME}}` — derived from repo/package name
 - `{{DOMAIN_DESCRIPTION}}` — from Step 3 question 6
 - `{{STACK_SUMMARY}}` — from Step 3 question 1 (full answer)
@@ -105,20 +105,20 @@ Write to root `CLAUDE.md`.
 `CLAUDE.md` is the canonical project context file, read by all Roughly agents.
 
 ### 5b. known-pitfalls.md
-Read `skills/setup/templates/known-pitfalls.md.template`. Replace `{{PROJECT_NAME}}` with the project name and `{{DOMAIN_DESCRIPTION}}` with the domain description from Step 3. Write to `.roughly/known-pitfalls.md`.
+Read `${CLAUDE_PLUGIN_ROOT}/skills/setup/templates/known-pitfalls.md.template`. Replace `{{PROJECT_NAME}}` with the project name and `{{DOMAIN_DESCRIPTION}}` with the domain description from Step 3. Write to `.roughly/known-pitfalls.md`.
 
 ### 5c. .claudeignore
-Read `skills/setup/templates/claudeignore.template`. Write to `.claudeignore` (project root).
+Read `${CLAUDE_PLUGIN_ROOT}/skills/setup/templates/claudeignore.template`. Write to `.claudeignore` (project root).
 
 ### 5d. settings.json
 
 **Hook script (unconditional — do this first, before any settings.json branch):**
-Create `.claude/hooks/` if it doesn't exist. Copy `skills/setup/templates/plan-mode-gate.sh.template` to `.claude/hooks/plan-mode-gate.sh`. Set the executable bit (`chmod +x .claude/hooks/plan-mode-gate.sh`).
+Create `.claude/hooks/` if it doesn't exist. Copy `${CLAUDE_PLUGIN_ROOT}/skills/setup/templates/plan-mode-gate.sh.template` to `.claude/hooks/plan-mode-gate.sh`. Set the executable bit (`chmod +x .claude/hooks/plan-mode-gate.sh`).
 
 ---
 
 **Branch 1 — formatter was provided:**
-Read `skills/setup/templates/settings.json.template`, replace `{{FORMATTER_COMMAND}}` with the formatter command, and write to `.claude/settings.json`. The template already contains both `PostToolUse` (formatter) and `UserPromptSubmit` (plan-mode-gate) entries — no additional merging required.
+Read `${CLAUDE_PLUGIN_ROOT}/skills/setup/templates/settings.json.template`, replace `{{FORMATTER_COMMAND}}` with the formatter command, and write to `.claude/settings.json`. The template already contains both `PostToolUse` (formatter) and `UserPromptSubmit` (plan-mode-gate) entries — no additional merging required.
 
 **Branch 2 — no formatter provided AND `.claude/settings.json` does not exist:**
 Write a minimal `.claude/settings.json` that registers the plan-mode-gate hook:
@@ -194,7 +194,7 @@ Plans **add-new**, **replace**, and **merge** all need a hook file at `.claude/h
 The previous staging-then-promote pattern matters here: if Step C's `overwrite` was chosen, a pre-existing user file is at `.claude/hooks/verify-all.sh` and would be lost the moment we write our template content directly. Step D writes to a staging path, takes a settings.json snapshot before mutating it, applies jq, promotes the staging file, and only commits the install if every step succeeds. If anything fails, the user is rolled back to a clean state: pre-existing user files at `.claude/hooks/verify-all.sh` remain byte-identical, and `.claude/settings.json` is restored to its pre-Step-D content (with one carve-out: if the snapshot step below — Step D's item 3, NOT the setup skill's top-level Step 3 — had to defensively create settings.json because the user originally had no file, rollback leaves a minimal `{"hooks":{}}` instead of restoring "no file"; the originally-empty hook configuration is recoverable but the bare-no-file precondition is not).
 
 1. Ensure `.claude/hooks/` exists (`mkdir -p .claude/hooks/`); if `mkdir` fails, surface a Step 7 warning and abort with no record. No other state has been touched yet.
-2. Read `skills/setup/templates/verify-all-stop-hook.sh.template`, replace `{{PROJECT_NAME}}` with the project name and `{{TYPE_CHECK_COMMAND}}` with the Step 3 question 3 type-check command. **Validate** that `{{TYPE_CHECK_COMMAND}}` substitutes to a non-empty, real command (an empty substitution would produce a `if !` block with no command, causing a bash syntax error and silent no-op). If empty: surface a Step 7 warning that the type-check command is missing from CLAUDE.md and abort with no record. Write the substituted content to **`.claude/hooks/verify-all.sh.new`** (NOT to the final path), and `chmod +x` the staging file. If the file write or `chmod` fails (read-only filesystem, quota, permissions): rm the partial `.new` file (best-effort; if rm also fails, surface a Step 7 warning naming the orphan path), abort with no record. Do NOT touch `.claude/hooks/verify-all.sh` yet.
+2. Read `${CLAUDE_PLUGIN_ROOT}/skills/setup/templates/verify-all-stop-hook.sh.template`, replace `{{PROJECT_NAME}}` with the project name and `{{TYPE_CHECK_COMMAND}}` with the Step 3 question 3 type-check command. **Validate** that `{{TYPE_CHECK_COMMAND}}` substitutes to a non-empty, real command (an empty substitution would produce a `if !` block with no command, causing a bash syntax error and silent no-op). If empty: surface a Step 7 warning that the type-check command is missing from CLAUDE.md and abort with no record. Write the substituted content to **`.claude/hooks/verify-all.sh.new`** (NOT to the final path), and `chmod +x` the staging file. If the file write or `chmod` fails (read-only filesystem, quota, permissions): rm the partial `.new` file (best-effort; if rm also fails, surface a Step 7 warning naming the orphan path), abort with no record. Do NOT touch `.claude/hooks/verify-all.sh` yet.
 3. Snapshot the current settings.json so we have a rollback target.
    - If `.claude/settings.json` does not exist (unexpected per the Branch 1/2/3 invariant — those branches always create settings.json or leave an existing file in place — but defensive for enrich-mode races and external deletions): first create a minimal valid settings.json for jq to modify: `printf '%s' '{"hooks":{}}' > .claude/settings.json`. If this `printf` redirect fails (read-only filesystem, quota, etc.), abort: rm the staging `.new` file (best-effort), surface a Step 7 warning naming "could not create .claude/settings.json" with the underlying error, no record. **Track that we created it** (a boolean — call it `defensive_create`); this affects rollback behavior: when `defensive_create` is true, restoring the snapshot leaves a benign `{"hooks":{}}` rather than the pre-Step-D "no file" state — empty hook configuration is recoverable, file-absent precondition is not.
    - Then snapshot: `cp .claude/settings.json .claude/settings.json.pre-stop-hook` (distinct from `.claude/settings.json.tmp` which jq uses internally). This snapshot is the rollback target if any later step fails.
@@ -226,7 +226,7 @@ The previous staging-then-promote pattern matters here: if Step C's `overwrite` 
 7. On full success (mv succeeded): rm `.claude/settings.json.pre-stop-hook` (no longer needed). Record `stop-hook-v1-added YYYY-MM-DD` in `.roughly/workflow-upgrades`.
 
 ### 5e. workflow-upgrades
-Read the current plugin version from `.claude-plugin/plugin.json` (the `version` field).
+Read the current plugin version from `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` (the `version` field).
 
 If `.roughly/workflow-upgrades` does **not** exist: create it with the version line:
 ```
