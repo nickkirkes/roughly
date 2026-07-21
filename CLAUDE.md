@@ -44,7 +44,7 @@ There is no build step — this is pure markdown.
 - Project-specific values use `{{PLACEHOLDER}}` markers — never hardcode project names, commands, or paths
 - Maturity check IDs must be versioned (e.g., `investigator-v1`)
 - All significant design changes need ADRs (see `docs/adrs/`)
-- Spec-revision-candidate escalation in this repo targets the **active epic file** — the single epic at `docs/planning/epics/` root (not under `complete/`) — appending to its `## v0.1.X candidates` section. This overrides the default `.roughly/spec-candidates.md` per `skills/shared/spec-candidate-escalation.md` (ADR-019 / ADR-006). If zero or more than one epic sits at that root, fall back to the default ledger and flag the ambiguity to the human.
+- Spec-revision-candidate escalation in this repo targets the **active epic file** at `docs/planning/epics/` root (not under `complete/`): the root-level `E<NN>-<slug>.md` epic itself, **not** its `-audit`/`-review` companion files (every epic travels with those — see the trios under `complete/` — and they do not count as separate epics). Append the candidate to that epic's `## v0.1.X candidates` section. This overrides the default `.roughly/spec-candidates.md` per `skills/shared/spec-candidate-escalation.md` (ADR-019 / ADR-006). If zero epics — or, ignoring `-audit`/`-review` companions, more than one — sit at that root, fall back to the default ledger and flag the ambiguity to the human.
 
 ## Key Design Decisions
 
