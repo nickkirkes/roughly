@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and committed in commit 610b169d4fc78e99b4df2e98c76d522ac6410f6c on 2026-07-21. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Fix Plan: #72 — de-dogfood the Stage 6 spec-revision-candidate escalation target
 
 Plan-format-version: 1
