@@ -40,3 +40,5 @@ Bug fixes, template improvements, documentation changes, and new agent definitio
 - [ADR-013](ADR-013-build-ci-runs-review-plan.md) — Build `--ci` runs review-plan (unifies with fix `--ci`)
 - [ADR-014](ADR-014-local-only-gate-instrumentation.md) — Local-only gate instrumentation; re-scopes the telemetry deferral
 - [ADR-015](ADR-015-gate-protocol-and-local-commit-boundary.md) — Gate protocol (verbatim text gates, closed-world tool ban) + local-commit pipeline boundary
+- ADR-016–018 — Reserved for the differential-gate-allocation spec set (not yet written); see docs/planning/differential-gate-allocation-specs.md
+- [ADR-019](ADR-019-tool-neutral-spec-candidate-escalation.md) — Tool-neutral spec-revision-candidate escalation target (default .roughly/spec-candidates.md, CLAUDE.md-overridable)

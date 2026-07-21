@@ -127,11 +127,11 @@ fi
 if [ ! -d skills/shared ]; then
   issues="${issues}- shared procedural reference drift: skills/shared/ directory missing\n"
 else
-  for shared in abort-handling.md stage-8-wrap-up.md gate-protocol.md; do
+  for shared in abort-handling.md stage-8-wrap-up.md gate-protocol.md spec-candidate-escalation.md; do
     [ ! -f "skills/shared/${shared}" ] && issues="${issues}- shared procedural reference drift: skills/shared/${shared} missing\n"
   done
   for skill in build fix; do
-    for pair in "STAGE 8: WRAP-UP|stage-8-wrap-up.md" "ABORT HANDLING|abort-handling.md" "GATE PROTOCOL|gate-protocol.md"; do
+    for pair in "STAGE 8: WRAP-UP|stage-8-wrap-up.md" "ABORT HANDLING|abort-handling.md" "GATE PROTOCOL|gate-protocol.md" "SPEC-REVISION-CANDIDATE ESCALATION|spec-candidate-escalation.md"; do
       heading="${pair%%|*}"
       shared="${pair##*|}"
       window=$(grep -A 3 "^## ${heading}\$" "skills/${skill}/SKILL.md" 2>/dev/null)
@@ -153,6 +153,13 @@ else
     # Inline local-commit boundary must survive a skipped/compacted Read of stage-8-wrap-up.md (ADR-015, F2 defense-in-depth).
     if ! grep -qF 'never pushes, opens a PR' "skills/${skill}/SKILL.md" 2>/dev/null; then
       issues="${issues}- local-commit boundary drift: skills/${skill}/SKILL.md STAGE 8 is missing the inline never-push boundary sentence (ADR-015)\n"
+    fi
+    # De-dogfood revert tripwire (issue #72): the pre-T2 epic-file leak phrases must not reappear.
+    if grep -qF 'v0.1.X candidates section' "skills/${skill}/SKILL.md" 2>/dev/null; then
+      issues="${issues}- de-dogfood regression: skills/${skill}/SKILL.md still names the epic-file escalation target 'v0.1.X candidates section' (issue #72 — escalate via SPEC-REVISION-CANDIDATE ESCALATION)\n"
+    fi
+    if grep -qF 'appended to the epic file' "skills/${skill}/SKILL.md" 2>/dev/null; then
+      issues="${issues}- de-dogfood regression: skills/${skill}/SKILL.md still names the epic-file escalation target 'appended to the epic file' (issue #72 — escalate via SPEC-REVISION-CANDIDATE ESCALATION)\n"
     fi
   done
 fi
