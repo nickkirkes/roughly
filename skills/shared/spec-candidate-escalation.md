@@ -6,7 +6,7 @@ A Stage 6 spec-revision-candidate finding, or a cubic termination option (c) fin
 
 1. **Determine the target.** First **read (or re-read) the project's `CLAUDE.md`** — it may have been read early and compacted out of context — to check whether it documents a spec-candidate escalation target. If it does (e.g. an epic file or an issue tracker), that is the target; otherwise the target is the default `.roughly/spec-candidates.md` at the project root. If the chosen target file does not exist, create it first: `mkdir -p` its parent directory (e.g. `mkdir -p .roughly`, per the mkdir-p pitfall), then `Write` it with a one-line header — `Edit` cannot create a file, so a first-time target needs `Write` before any append.
 
-2. **Append the candidate** (append-only — never overwrite; use `Edit` with `replace_all: false` or an append) as a dated entry capturing:
+2. **Append the candidate** (append-only — never overwrite existing entries; since `Edit` replaces matched text rather than appending, add the entry by matching a stable trailing anchor such as the header line and replacing it with that same text plus the new entry beneath it) as a dated entry capturing:
    - The finding itself, stated precisely.
    - Why it can't be fixed in the current task's scope — categorize as one of: AC contradiction, missing failure-mode coverage, prose ambiguity, or anchoring weakness.
    - Its source: the task, story, or PR the finding surfaced from.
