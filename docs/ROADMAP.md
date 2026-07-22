@@ -174,7 +174,7 @@ Prioritized by certainty × readiness, not raw impact. B1 is the cheap, high-cer
 - **Tool-agnostic (hard):** never hardcode Shortcut/Linear/Jira; ship the intake mechanism + a project-declared issue-source config.
 - **MCP auth is a hard external dependency for B3.** Non-interactive sessions cannot run OAuth; the PM-tool MCP must be authorized (claude.ai connector settings, or `claude mcp` / `/mcp` interactively) before B3's fetch is testable.
 - **`.roughly/` artifact consistency:** `.roughly/spec-candidates.md` (B1) and any B3 intake config live under `.roughly/`, consistent with gate-log (ADR-014) and verify-rules (ADR-015).
-- **New ADRs:** B1 escalation-target → new ADR; B3 intake-resolution → new ADR (spike output). Both need numbers **≥ADR-019** (ADR-014–018 are claimed by the differential-gate spec set). Fold in the standing ADR-009 / ADR-010 stale-reference cleanup while renumbering.
+- **New ADRs:** B1 escalation-target → **ADR-019 (shipped)**; B3 intake-resolution → new ADR (spike output), next free number **≥ADR-021**. The differential-gate spec set claims **ADR-014, 016, 017, 018, 020** (Spec 2 was renumbered 015→020 after ADR-015 shipped as the #66 gate protocol; ADR-019 is escalation). Fold in the standing ADR-009 / ADR-010 stale-reference cleanup while renumbering.
 - **Setup budget:** setup is at 289/300 lines. B3's STEP 4 question is one line, but the 5f write logic + `.roughly/config` schema go in `skills/setup/templates/` + a shared reference (ADR-012), not inline.
 
 ---

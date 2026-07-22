@@ -42,13 +42,13 @@ Do not inject any of this into v0.2.0's frozen cost-aware scope. v0.2.0 ships th
 
 **Per-role model selection must compose with v0.2.0, not fight it.** v0.2.0 establishes Sonnet-default + Haiku-for-simple + Opus-exclusive-to-epic-reviewer (ADR-008). Specs 3 and 5 add review/adversarial lenses; each lens picks a model from that same ladder (e.g. test-coverage and perf lenses → Haiku/Sonnet; devil's-advocate and synthesis-lead → Sonnet; epic adversarial lenses → at most Opus for the cross-cutting lens, Sonnet for the bounded ones). No lens gets Opus "for better results" without the ADR-008 cross-document-reasoning justification.
 
-**ADR numbering — the roadmap is stale here.** Roadmap v0.2.0 item 4 says "ADR-009. Complexity flag, routing rules" but **ADR-009 is already accepted** as plan-mode detection. ADR-010 is reserved for v0.2.0 plan-format-v2 (per CLAUDE.md + ADR-013). The highest accepted ADR is 013. So cost-aware work needs a *new* number (≥014), and these five specs should claim **ADR-014 through ADR-018** (proposed, below). Flag the roadmap's "ADR-009" reference for correction when v0.2.0 is scoped.
+**ADR numbering — the roadmap is stale here.** Roadmap v0.2.0 item 4 says "ADR-009. Complexity flag, routing rules" but **ADR-009 is already accepted** as plan-mode detection. ADR-010 is reserved for v0.2.0 plan-format-v2 (per CLAUDE.md + ADR-013). These five specs were originally proposed to claim **ADR-014 through ADR-018**, but the block was partly consumed since: **ADR-014** shipped as this set's Spec 1 (gate instrumentation) ✓, while **ADR-015** was taken by the unrelated #66 gate protocol and **ADR-019** by tool-neutral spec-candidate escalation. So Spec 2 (verify-autonomy) is **renumbered from 015 to ADR-020**; Specs 3/4/5 keep ADR-016/017/018. Current claim: **ADR-014, 016, 017, 018, 020**. Flag the roadmap's "ADR-009" reference for correction when v0.2.0 is scoped.
 
 | Spec | Proposed ADR | Proposed release |
 |------|--------------|------------------|
 | 1 Gate instrumentation | ADR-014 | v0.2.x (point) |
-| 2a Verify-rules engine + verify subagent | ADR-015 | v0.2.x / v0.3.x (pull forward) |
-| 2b Stage-7 residual human-seat demotion | ADR-015 | v0.5.0 (data-gated) |
+| 2a Verify-rules engine + verify subagent | ADR-020 | v0.2.x / v0.3.x (pull forward) |
+| 2b Stage-7 residual human-seat demotion | ADR-020 | v0.5.0 (data-gated) |
 | 4 Story-plan async escalation | ADR-017 | v0.5.0 |
 | 3 Multi-lens review cell | ADR-016 | after 2a; flag-gated |
 | 5 Epic-review adversarial cell | ADR-018 | after 2a; flag-gated |
@@ -136,7 +136,7 @@ These are not soft contract notes. They are what keeps the absolute no-egress tr
 
 ---
 
-## Spec 2 — Verification autonomy hardening (ADR-015)
+## Spec 2 — Verification autonomy hardening (ADR-020)
 
 Goal: make verification trustworthy enough to run unattended. The blocker is that mechanical-correctness errors — wrong CLI, wrong invocation, environment mismatch — currently have no home; they either slip through or surface to the human at Stage 7.
 
@@ -190,7 +190,7 @@ Mechanical failures that the rules can auto-correct (wrong CLI → rewrite to th
 ### Reconciliation Notes
 
 - **DIVERGENCE FROM FRAME:** "stop-gated verification hooks" — corrected. The Stop hook gates nothing; verification's human-attention cost is Stage 7's interactive gate plus the absence of a mechanical-correctness oracle. Spec retargeted accordingly.
-- **DIVERGENCE FROM FRAME:** there is no verification subagent to "harden" — Part B builds one. ADR-015 should record the inline-skill→subagent transition and cite ADR-001 for the anti-skip rationale and ADR-007's note that *if* a stage moves from inline to subagent the cost calculus changes.
+- **DIVERGENCE FROM FRAME:** there is no verification subagent to "harden" — Part B builds one. ADR-020 should record the inline-skill→subagent transition and cite ADR-001 for the anti-skip rationale and ADR-007's note that *if* a stage moves from inline to subagent the cost calculus changes.
 - **ASSUMPTION:** auto-rewriting a wrong CLI invocation is safe to do without human sight. True only for deterministic `forbid`/`require` pairs with an unambiguous rewrite; anything requiring judgment must `ESCALATE`. The rule format must forbid ambiguous auto-rewrites.
 - **DECISION (PROPOSED):** `verify-rules.md` is a **separate file** from `known-pitfalls.md` (deterministic assertions vs prose) but **shares its write-path and owner** — setup scaffolds it empty (Step 5b pattern), `doc-writer` accretes rules reactively at wrap-up. No rule is a shipped framework default; Roughly ships only format + engine. Setup stack-detection is not used to enumerate rules (out of scope; detection is shallow).
 - **SEQUENCING (split):** 2a (engine + verify subagent) is independent of Spec 1 — it demotes the wrong-CLI gate by construction and is pulled forward to v0.2.x / v0.3.x. 2b (residual ESCALATE-seat demotion) is data-gated to v0.5.0. Flag-gated Specs 3+5 must land *after* 2a, never before.
@@ -336,8 +336,8 @@ Gathered by a docs-research pass against code.claude.com at draft time. **Re-ver
 ## Build sequencing summary
 
 1. **Spec 1** (v0.2.x, ADR-014) — gate instrumentation, local-only. Telemetry-deferral re-scope signed off 2026-06-28 (ADR-014); ship behind the four blocking ACs. Unblocks the data-gated work.
-2. **Spec 2a** (v0.2.x / v0.3.x, ADR-015) — verify-rules engine + verify subagent. **Independent of Spec 1; runs alongside or just after it.** The boring, high-certainty autonomy win tied to the motivating pain — it leads. Frees build/fix line budget; composes with v0.2.0's complexity flag.
-3. **Spec 2b + Spec 4** (v0.5.0, ADR-015/017) — residual Stage-7 demotion + story-plan async. Both consume Spec 1 evidence. Spec 4's risk floor starts aggressive and loosens with data.
+2. **Spec 2a** (v0.2.x / v0.3.x, ADR-020) — verify-rules engine + verify subagent. **Independent of Spec 1; runs alongside or just after it.** The boring, high-certainty autonomy win tied to the motivating pain — it leads. Frees build/fix line budget; composes with v0.2.0's complexity flag.
+3. **Spec 2b + Spec 4** (v0.5.0, ADR-020/017) — residual Stage-7 demotion + story-plan async. Both consume Spec 1 evidence. Spec 4's risk floor starts aggressive and loosens with data.
 4. **Specs 3 + 5** (after 2a; flag-gated, ADR-016/018) — multi-lens + adversarial cells, subagent-default, never load-bearing. **Must not precede Spec 2a.** Re-verify CC agent-teams facts before any `=team` variant.
 
 Reconcile the roadmap's stale "ADR-009" reference (v0.2.0 item 4 — already accepted as plan-mode detection; cost-aware work needs ≥ADR-014) and confirm none of this enters v0.2.0's frozen scope before scoping the v0.5.0 epic. This housekeeping stands independent of whether any spec here ships.
