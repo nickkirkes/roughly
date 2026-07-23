@@ -10,7 +10,7 @@ This means your first deliverable isn't story-writing — it's clustering and th
 
 ## Read first
 
-1. **`docs/planning/epics/E03-trust-and-ergonomics.md`** — the v0.1.5 epic, especially the **v0.1.6 candidates section** (your primary input). Each entry has surfacing-story context that explains why it's there. Note: the `docs/plans/` → `.roughly/plans/` candidate already has locked design decisions recorded in its entry — inherit those, do not re-litigate.
+1. **`docs/planning/epics/complete/E03-trust-and-ergonomics.md`** — the v0.1.5 epic, especially the **v0.1.6 candidates section** (your primary input). Each entry has surfacing-story context that explains why it's there. Note: the `docs/plans/` → `.roughly/plans/` candidate already has locked design decisions recorded in its entry — inherit those, do not re-litigate.
 2. **`docs/planning/epics/complete/E03-trust-and-ergonomics-audit.md`** — post-implementation audit of v0.1.5. The 5 PARTIAL marks identify gaps; some may translate to v0.1.6 stories, some may stay as audit-noted-but-acceptable.
 3. **`docs/ROADMAP.md`** — strategic context. v0.1.6 is not in the release scope section yet — your epic will define it. v0.1.5 has shipped (2026-05-13); v0.2.0 is explicitly out of bounds (cost-aware pipeline, plan-format v2, ADR-010).
 4. **`CLAUDE.md`** — project conventions. The 300-line skill body cap is non-negotiable; build is at 298/300 and fix at 299/300 as of v0.1.5 release.

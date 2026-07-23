@@ -90,14 +90,14 @@ PM handoff: detail level sufficient for an epic-writing agent to expand into sto
 
 **Effort:** ~10 days (medium release; 9 stories across 5 clusters) · **Status:** SHIPPED 2026-05-24.
 
-Scope and per-story details: [docs/planning/epics/E04-path-consolidation-and-process-codification.md](planning/epics/E04-path-consolidation-and-process-codification.md). Headline outcomes — 9/9 stories merged across PRs #39–#47; post-implementation audit (PR #48) reported 71/75 ACs MET with 0 regressions; Risk 1 (plan-path migration dual-state) + Risk 6 (cubic-gate format rejection) closed; Risks 3/4/5 in their by-design open windows. Two `.roughly/known-pitfalls.md` entries added per story average; line-cap budget contract held across all 9 stories (final fix/SKILL.md at 300/300 — the off-ramp becomes binding for any v0.1.7 fix-touching story).
+Scope and per-story details: [docs/planning/epics/complete/E04-path-consolidation-and-process-codification.md](planning/epics/complete/E04-path-consolidation-and-process-codification.md). Headline outcomes — 9/9 stories merged across PRs #39–#47; post-implementation audit (PR #48) reported 71/75 ACs MET with 0 regressions; Risk 1 (plan-path migration dual-state) + Risk 6 (cubic-gate format rejection) closed; Risks 3/4/5 in their by-design open windows. Two `.roughly/known-pitfalls.md` entries added per story average; line-cap budget contract held across all 9 stories (final fix/SKILL.md at 300/300 — the off-ramp becomes binding for any v0.1.7 fix-touching story).
 
 ### Out of scope (→ v0.1.7)
 
 - Doc-writer failure-handling cluster (5 items from E04.S8 — recommended as a single v0.1.7 story; AC3 cap-revision is the structural unblock)
 - Review-plan-as-spec-quality-gate cluster (5 items from E04.S1/S2/S5/S6/S9 — recommended as a single v0.1.7 story)
 - E04.S3 ABORT HANDLING gap for Stage 8's 2-commit window (requires off-ramp invocation due to fix/SKILL.md at-cap)
-- Full v0.1.7 candidates list: see [E04 epic v0.1.7 candidates section](planning/epics/E04-path-consolidation-and-process-codification.md#v017-candidates).
+- Full v0.1.7 candidates list: see [E04 epic v0.1.7 candidates section](planning/epics/complete/E04-path-consolidation-and-process-codification.md#v017-candidates).
 
 ---
 
@@ -105,7 +105,7 @@ Scope and per-story details: [docs/planning/epics/E04-path-consolidation-and-pro
 
 **Effort:** ~6 days (medium release; 7 stories across 4 clusters) · **Status:** SHIPPED 2026-06-01.
 
-Scope and per-story details: [docs/planning/epics/E05-doc-writer-hardening-and-spec-quality-gates.md](planning/epics/E05-doc-writer-hardening-and-spec-quality-gates.md). Headline outcomes — 7/7 stories merged across PRs #50–#56; post-implementation audit (PR #57) reported 43/45 ACs MET (2 PARTIAL backfilled in audit cycle; 0 NOT MET; 0 regressions); Risks 3/4/5 closed; Risk 1 partial-close (T2 PARTIAL PASS surfaces the all-fail template misfire as v0.1.8 substantive work); Risk 2 (off-ramp shared-reference drift) in by-design 30-day dogfood window (closes ~2026-06-27 on zero false-positive accumulation). Line-cap budget contract closed the v0.1.6 binding state — fix/SKILL.md recovered from 300/300 to 269/300; doc-writer.md compliant at 649/650 post-cap-revision. ADR-012 codifies the new runtime-shared-procedural-references pattern (skills/shared/abort-handling.md + skills/shared/stage-8-wrap-up.md). CONTRIBUTING.md gains `## Cross-epic AC amendments` convention (codified in S3, first-applied in S2).
+Scope and per-story details: [docs/planning/epics/complete/E05-doc-writer-hardening-and-spec-quality-gates.md](planning/epics/complete/E05-doc-writer-hardening-and-spec-quality-gates.md). Headline outcomes — 7/7 stories merged across PRs #50–#56; post-implementation audit (PR #57) reported 43/45 ACs MET (2 PARTIAL backfilled in audit cycle; 0 NOT MET; 0 regressions); Risks 3/4/5 closed; Risk 1 partial-close (T2 PARTIAL PASS surfaces the all-fail template misfire as v0.1.8 substantive work); Risk 2 (off-ramp shared-reference drift) in by-design 30-day dogfood window (closes ~2026-06-27 on zero false-positive accumulation). Line-cap budget contract closed the v0.1.6 binding state — fix/SKILL.md recovered from 300/300 to 269/300; doc-writer.md compliant at 649/650 post-cap-revision. ADR-012 codifies the new runtime-shared-procedural-references pattern (skills/shared/abort-handling.md + skills/shared/stage-8-wrap-up.md). CONTRIBUTING.md gains `## Cross-epic AC amendments` convention (codified in S3, first-applied in S2).
 
 ### Out of scope (→ v0.1.8)
 
@@ -113,7 +113,7 @@ Scope and per-story details: [docs/planning/epics/E05-doc-writer-hardening-and-s
 - **agents/doc-writer.md cap relief** (now at 649/650 hard cap; any v0.1.8 doc-writer-touching story needs relief OR explicit carve-out)
 - **.claude/hooks/verify-all.sh cap relief** (now at 148/150 soft cap; next drift check addition needs the same off-ramp pattern E05.S4 invoked for build/fix)
 - **CI-coverage cluster** — negative-path CI + fix-side `--ci` (carried from E05 OQ4 resolution; unblocked now that fix/SKILL.md headroom is restored)
-- **Full v0.1.8 candidates list**: see CHANGELOG `## [0.1.7]` section + [E05 epic](planning/epics/E05-doc-writer-hardening-and-spec-quality-gates.md) + [E05 audit report](planning/epics/E05-doc-writer-hardening-and-spec-quality-gates-audit.md).
+- **Full v0.1.8 candidates list**: see CHANGELOG `## [0.1.7]` section + [E05 epic](planning/epics/complete/E05-doc-writer-hardening-and-spec-quality-gates.md) + [E05 audit report](planning/epics/complete/E05-doc-writer-hardening-and-spec-quality-gates-audit.md).
 
 ---
 
@@ -121,7 +121,7 @@ Scope and per-story details: [docs/planning/epics/E05-doc-writer-hardening-and-s
 
 **Effort:** ~8 days (medium release; 7 stories across 3 clusters) · **Status:** SHIPPED 2026-06-10.
 
-Scope and per-story details: [docs/planning/epics/E06-anchoring-closure-and-ci-coverage.md](planning/epics/E06-anchoring-closure-and-ci-coverage.md). Headline outcomes — 7/7 stories merged; post-implementation audit (PR #65) reported 35/37 ACs MET (2 PARTIAL — both evidence-artifact gaps, not functional defects; 0 NOT MET; 0 regressions). Risk 1 (AC4 all-fail anchoring) CLOSED at prose-level by E06.S1 — both T2 scenarios FULL PASS against source-tree state; runtime-cache confirmation deferred to v0.1.8 retrospective. Risk 2 (cap-relief trim coverage degradation) CLOSED via 4-coverage-group preservation enumeration. Risk 4 (cross-epic re-amendment trail readability) CLOSED via preserve-hops convention extension in CONTRIBUTING.md. Risk 3 (CI fixture harness fragility) OPEN with watch list — 3-consecutive-green-runs gate restarted against post-#65 main; AC2 plan-revision determinism under per-fixture validation. New artifacts: **ADR-013** (build `--ci` runs review-plan — reverses E03.S11b-2's skip-and-synthesize; unifies build/fix `--ci`; restores ADR-001 enforcement on the CI path). CONTRIBUTING.md gains `## AC authoring conventions` section (E06.S4 — `verbatim:` / `form:` markers + marker-intent sub-carve-out) and `## Audit conventions` section (E06.S7 — audit-table-in-PR-body convention). Line-cap state preserved across all 7 stories — agents/doc-writer.md at 647/650 (net −2 via cap-relief trim); skills/build/SKILL.md 270/300; skills/fix/SKILL.md 275/300; verify-all.sh unchanged at 148/150 (off-ramp prepared, not invoked). Cumulative intra-epic AC deviation catalog: 9 instances across all 7 stories spanning 6 distinct shapes — comprehensive enough to fully scope the v0.1.9 codifier story.
+Scope and per-story details: [docs/planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md](planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md). Headline outcomes — 7/7 stories merged; post-implementation audit (PR #65) reported 35/37 ACs MET (2 PARTIAL — both evidence-artifact gaps, not functional defects; 0 NOT MET; 0 regressions). Risk 1 (AC4 all-fail anchoring) CLOSED at prose-level by E06.S1 — both T2 scenarios FULL PASS against source-tree state; runtime-cache confirmation deferred to v0.1.8 retrospective. Risk 2 (cap-relief trim coverage degradation) CLOSED via 4-coverage-group preservation enumeration. Risk 4 (cross-epic re-amendment trail readability) CLOSED via preserve-hops convention extension in CONTRIBUTING.md. Risk 3 (CI fixture harness fragility) OPEN with watch list — 3-consecutive-green-runs gate restarted against post-#65 main; AC2 plan-revision determinism under per-fixture validation. New artifacts: **ADR-013** (build `--ci` runs review-plan — reverses E03.S11b-2's skip-and-synthesize; unifies build/fix `--ci`; restores ADR-001 enforcement on the CI path). CONTRIBUTING.md gains `## AC authoring conventions` section (E06.S4 — `verbatim:` / `form:` markers + marker-intent sub-carve-out) and `## Audit conventions` section (E06.S7 — audit-table-in-PR-body convention). Line-cap state preserved across all 7 stories — agents/doc-writer.md at 647/650 (net −2 via cap-relief trim); skills/build/SKILL.md 270/300; skills/fix/SKILL.md 275/300; verify-all.sh unchanged at 148/150 (off-ramp prepared, not invoked). Cumulative intra-epic AC deviation catalog: 9 instances across all 7 stories spanning 6 distinct shapes — comprehensive enough to fully scope the v0.1.9 codifier story.
 
 ### Out of scope (→ v0.1.9)
 
@@ -132,7 +132,7 @@ Scope and per-story details: [docs/planning/epics/E06-anchoring-closure-and-ci-c
 - **Risk 1 runtime-cache confirmation** — runtime-level T2 re-run against installed plugin cache (not source tree). Promoted from v0.1.7 retrospective.
 - **`.roughly/known-pitfalls.md` organization sweep** — 174 lines vs 80 threshold; recurring advisory across all v0.1.8 stories.
 - **Install-marker producer generalization** — apply E06.S6 write-on-install + back-fill pattern to other always-installed components (formatter PostToolUse hook, settings entries beyond hook registrations).
-- **Full v0.1.9 candidates list**: see CHANGELOG `## [0.1.8]` section + [E06 epic](planning/epics/E06-anchoring-closure-and-ci-coverage.md) `## v0.1.9 candidates` section + [E06 audit report](planning/epics/E06-anchoring-closure-and-ci-coverage-audit.md).
+- **Full v0.1.9 candidates list**: see CHANGELOG `## [0.1.8]` section + [E06 epic](planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md) `## v0.1.9 candidates` section + [E06 audit report](planning/epics/complete/E06-anchoring-closure-and-ci-coverage-audit.md).
 
 ---
 
@@ -174,7 +174,7 @@ Prioritized by certainty × readiness, not raw impact. B1 is the cheap, high-cer
 - **Tool-agnostic (hard):** never hardcode Shortcut/Linear/Jira; ship the intake mechanism + a project-declared issue-source config.
 - **MCP auth is a hard external dependency for B3.** Non-interactive sessions cannot run OAuth; the PM-tool MCP must be authorized (claude.ai connector settings, or `claude mcp` / `/mcp` interactively) before B3's fetch is testable.
 - **`.roughly/` artifact consistency:** `.roughly/spec-candidates.md` (B1) and any B3 intake config live under `.roughly/`, consistent with gate-log (ADR-014) and verify-rules (ADR-015).
-- **New ADRs:** B1 escalation-target → new ADR; B3 intake-resolution → new ADR (spike output). Both need numbers **≥ADR-019** (ADR-014–018 are claimed by the differential-gate spec set). Fold in the standing ADR-009 / ADR-010 stale-reference cleanup while renumbering.
+- **New ADRs:** B1 escalation-target → **ADR-019 (shipped)**; B3 intake-resolution → new ADR (spike output), next free number **≥ADR-021**. The differential-gate spec set claims **ADR-014, 016, 017, 018, 020** (Spec 2 was renumbered 015→020 after ADR-015 shipped as the #66 gate protocol; ADR-019 is escalation). Fold in the standing ADR-009 / ADR-010 stale-reference cleanup while renumbering.
 - **Setup budget:** setup is at 289/300 lines. B3's STEP 4 question is one line, but the 5f write logic + `.roughly/config` schema go in `skills/setup/templates/` + a shared reference (ADR-012), not inline.
 
 ---

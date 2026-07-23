@@ -20,7 +20,7 @@ Entries are not prioritized. When picking up an investigation, evaluate freshnes
 ## DI-001: Stage 6 review depth vs external review tools
 
 **Date noticed:** 2026-05-05
-**Surfaced during:** [E03.S2 stop-hook-v1 maturity check completion](planning/epics/E03-trust-and-ergonomics.md) (branch `feat/S03.2-stop-hook-v1-maturity-check`)
+**Surfaced during:** [E03.S2 stop-hook-v1 maturity check completion](planning/epics/complete/E03-trust-and-ergonomics.md) (branch `feat/S03.2-stop-hook-v1-maturity-check`)
 
 **Observation:**
 The build pipeline's Stage 6 (parallel `code-reviewer` + `static-analysis` + `silent-failure-hunter` agents) ran 2 review cycles on S03.2 and closed 7 findings before commit. Post-commit, 6 successive `cubic review --json` rounds surfaced ~12 additional findings. All cubic findings were valid, all in the same conceptual buckets the Stage 6 reviewers were ostensibly looking at (orphan-on-failure, branch-cleanup completeness, type-validity guards, contract violations through default tooling like `set -e`, gate-text precision).

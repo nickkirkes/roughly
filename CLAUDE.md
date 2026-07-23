@@ -15,7 +15,7 @@ This is a plugin, not a standalone app. It runs inside Claude Code sessions in t
 | `skills/build/implementer-prompt.md` | Reference copy of implementation subagent prompt (runtime copy is inlined in build/fix SKILL.md) |
 | `skills/build/spec-reviewer-prompt.md` | Reference copy of spec compliance checklist (runtime copy is inlined in build/fix SKILL.md) |
 | `skills/shared/<name>.md` | Runtime-shared procedural references read by build/fix SKILL.md at section heads (see ADR-012) |
-| `docs/adrs/` | Architecture Decision Records (ADR-001 through ADR-009, ADR-011, ADR-012, ADR-013; ADR-010 reserved for v0.2.0 plan-format-v2) |
+| `docs/adrs/` | Architecture Decision Records (ADR-001 through ADR-009, ADR-011 through ADR-015, ADR-019; ADR-010 reserved for v0.2.0 plan-format-v2, ADR-016–018 reserved for the differential-gate spec set) |
 | `.roughly/` | Runtime files installed per-project: `known-pitfalls.md` and `workflow-upgrades` |
 | `.claude-plugin/plugin.json` | Plugin manifest |
 
@@ -44,6 +44,10 @@ There is no build step — this is pure markdown.
 - Project-specific values use `{{PLACEHOLDER}}` markers — never hardcode project names, commands, or paths
 - Maturity check IDs must be versioned (e.g., `investigator-v1`)
 - All significant design changes need ADRs (see `docs/adrs/`)
+- Spec-revision-candidate escalation in this repo *can* override the default `.roughly/spec-candidates.md` (ADR-019 / ADR-006 via `skills/shared/spec-candidate-escalation.md`) onto the **active epic file** — the root-level `E<NN>-<slug>.md` at `docs/planning/epics/` root (not under `complete/`), **not** its `-audit`/`-review` companion files (every epic travels with those — see the trios under `complete/` — and they do not count as separate epics). Resolve the root state:
+  - **Exactly one epic at root** (mid-release-cycle): append the candidate to its `## v0.1.X candidates` section.
+  - **Zero epics at root** — the normal state *between* releases, once the active epic is moved to `complete/` (**its current state on `main`**): the override is dormant; use the default `.roughly/spec-candidates.md` ledger. This is expected, not an error — do **not** flag it.
+  - **More than one epic at root** (ignoring `-audit`/`-review` companions): genuinely ambiguous — use the default ledger and flag it to the human.
 
 ## Key Design Decisions
 
@@ -63,6 +67,9 @@ See `docs/adrs/` for full reasoning. Summary:
 | ADR-011 | User-facing skill behavior changes are flags, not env vars |
 | ADR-012 | Procedural prose duplicated across build/fix SKILL.md extracted to `skills/shared/` and referenced via runtime `Read` directive |
 | ADR-013 | Build `--ci` runs review-plan (reverses E03.S11b-2 skip-and-synthesize; unifies with fix `--ci`) |
+| ADR-014 | Local-only gate instrumentation (telemetry deferral re-scoped to local-only) |
+| ADR-015 | Gates are verbatim plain text under a closed-world prohibition on structured prompt tools; pipeline ends at local commits |
+| ADR-019 | Tool-neutral spec-candidate escalation (default `.roughly/spec-candidates.md`; per-project CLAUDE.md override) |
 
 ## Known Pitfalls for Contributors
 
