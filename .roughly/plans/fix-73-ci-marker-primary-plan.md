@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and committed in commit c39ed5f3364ec9b8a243b93f7e3f9d5eb0265bda on 2026-07-24. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Fix Plan: #73 — `--ci` marker-primary reword (drop the unenforceable "exits non-zero" claim)
 
 Plan-format-version: 1
