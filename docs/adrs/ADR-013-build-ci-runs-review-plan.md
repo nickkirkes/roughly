@@ -26,3 +26,5 @@ It emits structured verdict markers (`[--ci] plan review verdict: PASS` / `[--ci
 - The build happy-path now incurs one real review-plan dispatch (slightly higher per-run cost/wall-time).
 - ADR-010 remains reserved for v0.2.0 plan-format-v2.
 - Supersedes the E03.S11b-2 skip-and-synthesize behavior.
+
+**Correction (#73, 2026-07-24):** the "exit non-zero" phrasing in the Decision above is inaccurate — `claude -p` cannot set a process exit code, so the process exits 0 on a model-level abort; the structured marker described in the same paragraph is the actual CI signal. See `skills/build/SKILL.md`'s marker-primary `--ci` contract and `.roughly/known-pitfalls.md` § "CI assertions on Roughly pipeline aborts must be marker-primary, not exit-code-primary".
