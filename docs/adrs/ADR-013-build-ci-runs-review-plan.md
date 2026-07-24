@@ -16,7 +16,7 @@ Fix's `--ci` (`skills/fix/SKILL.md`) already runs review-plan and acts on the ve
 
 ## Decision
 
-Build `--ci` now dispatches review-plan and acts on its verdict with a NEEDS-REVISION recovery loop: auto-apply the revision, re-dispatch, allow up to 2 verdicts then exit non-zero, and auto-progress on PASS. This unifies build with fix `--ci` and restores ADR-001 enforcement for build.
+Build `--ci` now dispatches review-plan and acts on its verdict with a NEEDS-REVISION recovery loop: auto-apply the revision, re-dispatch, allow up to 2 verdicts then exit non-zero (**inaccurate — see the Correction note below; the structured marker, not the exit code, is the actual CI signal**), and auto-progress on PASS. This unifies build with fix `--ci` and restores ADR-001 enforcement for build.
 
 It emits structured verdict markers (`[--ci] plan review verdict: PASS` / `[--ci] plan review verdict: NEEDS REVISION (attempt <n>)`) for CI assertion.
 
