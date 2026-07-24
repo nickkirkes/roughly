@@ -130,7 +130,7 @@ Scope and per-story details: [docs/planning/epics/complete/E06-anchoring-closure
 - **ADR-013 unification follow-ups** — decide whether to port the build-side NEEDS REVISION recovery loop to fix `--ci` (full unification) or codify the asymmetry as intentional. Fix-side negative-path scenarios (Stage 5c abort + NEEDS REVISION recovery) also unblocked.
 - **`--ci` "exits non-zero" aspirational-language reframing** — `claude -p` cannot set process exit code on model-level aborts; both build + fix `--ci` contracts need either marker-primary reframing or a marker→exit wrapper.
 - **Risk 1 runtime-cache confirmation** — runtime-level T2 re-run against installed plugin cache (not source tree). Promoted from v0.1.7 retrospective.
-- **`.roughly/known-pitfalls.md` organization sweep** — 174 lines vs 80 threshold; recurring advisory across all v0.1.8 stories.
+- ~~**`.roughly/known-pitfalls.md` organization sweep**~~ **RESOLVED (#74):** the advisory is a whole-file `wc -l` count (domain-grouping can't reduce it) on an append-only corpus; threshold recalibrated 80→300 rather than deleting real content.
 - **Install-marker producer generalization** — apply E06.S6 write-on-install + back-fill pattern to other always-installed components (formatter PostToolUse hook, settings entries beyond hook registrations).
 - **Full v0.1.9 candidates list**: see CHANGELOG `## [0.1.8]` section + [E06 epic](planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md) `## v0.1.9 candidates` section + [E06 audit report](planning/epics/complete/E06-anchoring-closure-and-ci-coverage-audit.md).
 
