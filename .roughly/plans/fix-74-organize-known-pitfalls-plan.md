@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and committed in commit 808746402db06f1ead13f9f8d9c1213ded9e18f0 on 2026-07-24. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Fix Plan: #74 — silence the known-pitfalls "consider organizing" advisory (threshold recalibration)
 
 Plan-format-version: 1
