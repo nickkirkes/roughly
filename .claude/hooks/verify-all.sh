@@ -87,7 +87,8 @@ fi
 # .roughly/known-pitfalls.md organize-suggestion threshold (closes E03.S3 manual-edit coverage gap).
 # Bidirectional sync: matching policy parameter in agents/doc-writer.md Process step 5
 # ("Organize suggestion"). Update both if the threshold changes.
-PITFALLS_ORGANIZE_THRESHOLD=80
+# Value 300 mirrors the SKILL.md line cap: known-pitfalls is an append-only corpus, so this flags "genuinely large" (was 80, permanent noise from ~36 lines up).
+PITFALLS_ORGANIZE_THRESHOLD=300
 if [ -f .roughly/known-pitfalls.md ]; then
   n=$(wc -l < .roughly/known-pitfalls.md)
   if [ "$n" -gt "$PITFALLS_ORGANIZE_THRESHOLD" ]; then
