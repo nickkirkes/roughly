@@ -146,6 +146,15 @@ Two themes. (1) Close E06's systemic findings — the codification carry-forward
 
 The seven priorities in the v0.1.8 "Out of scope (→ v0.1.9)" list above. Two are must-do per the E06 audit: the **intra-epic AC amendment convention codifier** and the **verdict persistent-artifact convention**. The verdict-artifact item overlaps Cluster B's B1 (both answer "where does a deferred finding/verdict get persisted") — scope them together.
 
+**CONTRIBUTING.md micro-conventions bundle** — six standalone tickets, each extending `## AC authoring conventions` / `## Audit conventions` / `## Skill authoring conventions`. Small edits (~3-8 lines each); can bundle into a single "spec-authoring conventions bundle" sub-story of the Cluster A codifier, or ship as independent PRs. Recommended sequencing: HIGH-priority items first, then should-dos in any order.
+
+- **[GH #81](https://github.com/nickkirkes/roughly/issues/81) — `"verified"`-tag provenance discipline** *(HIGH priority; propagation pattern)*. Codify observed-facts vs inferred-mechanisms distinction; prevent the E05→E06 audit-hygiene propagation from recurring (the "verified 2026-05-31" false claim traveled 5 hops before external catch).
+- **[GH #82](https://github.com/nickkirkes/roughly/issues/82) — CI assertion authoring convention** *(should-do)*. Codify E06.S2's F6 pattern (structural + behavioral, not grep-only).
+- **[GH #83](https://github.com/nickkirkes/roughly/issues/83) — Spec-example command validation at plan-review** *(should-do)*. Codify AC-executable-content pre-validation; prevent E06.S7-style malformed-example ships.
+- **[GH #84](https://github.com/nickkirkes/roughly/issues/84) — Mirror-verbatim + negative-grep self-test** *(should-do)*. Codify AC-internal-contradiction pre-check; ties to E06.S4 quoted-wording marker work.
+- **[GH #85](https://github.com/nickkirkes/roughly/issues/85) — CI job key naming convention** *(nice-to-have)*. Codify "never rename GH Actions job keys in-place" (branch-protection identifier stability).
+- **[GH #86](https://github.com/nickkirkes/roughly/issues/86) — OQ-resolution-annotation-in-epic convention** *(nice-to-have)*. Codify existing known-pitfalls entry in normative CONTRIBUTING.md.
+
 ### Cluster B — Consumer-project intake hardening (new)
 
 Prioritized by certainty × readiness, not raw impact. B1 is the cheap, high-certainty bug fix; B3 is the strategically most important ("the main gap") but is spike-first — a new capability blocked on MCP auth.
@@ -163,7 +172,9 @@ Prioritized by certainty × readiness, not raw impact. B1 is the cheap, high-cer
 
 ### Cluster C — Obsolete `ruckus` reference cleanup (new)
 
-**C1 — Remove obsolete `ruckus` plugin checks** *(cheap standalone cleanup; GH issue [#80](https://github.com/nickkirkes/roughly/issues/80))*. `ruckus` was the plugin's original name; renamed to `roughly` in v0.1.4 (E02). No remaining users, forks, or projects still using `.ruckus/`; the pre-flight migration checks (9 skill files), Stop-hook drift-check (`.claude/hooks/verify-all.sh:16-18`), and v0.1.4 `.ruckus/` → `.roughly/` migration engine (`skills/upgrade/SKILL.md:21-58`) are wasteful cycles that fire on every pipeline run for legacy state that no longer exists in any active project. Removal is coordinated with 4 `CONTRIBUTING.md` worked-example lines (would rot without a runtime referent) + 2 `.roughly/known-pitfalls.md` entries refactored to synthetic examples (L82 setup soft-abort + L118 dual-semantic-role Edit — preserve the reusable patterns, replace the ruckus specifics); 4 other pitfall entries (L24 / L114 / L126 / L140) left as historical-example. Historical record explicitly preserved: CHANGELOG (41 hits across v0.1.0–v0.1.4), README migration section, ADR-004/005/006/008 body text + footnotes, all E01–E04 epic files, `docs/planning/prompts/ruckus-*` filenames + v0.1.4 rename PM prompt. Full site enumeration + verification hints in [GH #80](https://github.com/nickkirkes/roughly/issues/80). Estimated effort: half a day to a full day (comparable to E06.S6 / E06.S7 scope). Independent of Cluster A + B; can ship in any window. Single-story bundle recommended for coordination (runtime removal + CONTRIBUTING sync + 2 pitfall refactors must land together to avoid docs-referencing-deleted-checks rot).
+**C1 — Remove obsolete `ruckus` plugin checks** *(cheap standalone cleanup; GH issue [#80](https://github.com/nickkirkes/roughly/issues/80))*. `ruckus` was the plugin's original name; renamed to `roughly` in v0.1.4 (E02). No remaining users, forks, or projects still using `.ruckus/`; the pre-flight migration checks (9 skill files), Stop-hook drift-check (`.claude/hooks/verify-all.sh:16-19`), and v0.1.4 `.ruckus/` → `.roughly/` migration engine (`skills/upgrade/SKILL.md:21-58`) are wasteful cycles that fire on every pipeline run for legacy state that no longer exists in any active project. Removal is coordinated with 4 `CONTRIBUTING.md` worked-example lines (would rot without a runtime referent) + 2 `.roughly/known-pitfalls.md` entries refactored to synthetic examples (L82 setup soft-abort + L118 dual-semantic-role Edit — preserve the reusable patterns, replace the ruckus specifics); 4 other pitfall entries (L24 / L114 / L126 / L140) left as historical-example. Historical record explicitly preserved: CHANGELOG (41 hits across v0.1.0–v0.1.4), README migration section, ADR-004/005/006/008 body text + footnotes, all E01–E04 epic files, `docs/planning/prompts/ruckus-*` filenames + v0.1.4 rename PM prompt. Full site enumeration + verification hints in [GH #80](https://github.com/nickkirkes/roughly/issues/80). Estimated effort: half a day to a full day (comparable to E06.S6 / E06.S7 scope). Independent of Cluster A + B; can ship in any window. Single-story bundle recommended for coordination (runtime removal + CONTRIBUTING sync + 2 pitfall refactors must land together to avoid docs-referencing-deleted-checks rot).
+
+**C2 — `.roughly/known-pitfalls.md` organization sweep + dedup** *([GH #87](https://github.com/nickkirkes/roughly/issues/87); bundle-with-C1 recommended)*. File at ~180 lines vs 80-line organize threshold; `verify-all.sh` advisory has fired on every v0.1.8 story. Chronic file-growth signal (E06 stories added ~27 lines across 4 shipped stories); growth rate is not slowing. Scope: (1) section reorganization — group by domain/symptom rather than chronological accretion; (2) dedup pass on E06-added related-theme entries; (3) threshold decision — extend `PITFALLS_ORGANIZE_THRESHOLD=80` in `.claude/hooks/verify-all.sh`, split file into per-domain files, or accept advisory as informational (document choice in CHANGELOG). Coordinate with C1 — same file already opened for the L82 + L118 refactors; options are (a) merge into C1's scope OR (b) ship immediately after C1 to avoid rebase conflicts. Recommended (b) unless C1's implementer prefers to absorb. Estimated effort: half a day (prose-only). Historical carry-forward priority-raised at v0.1.8 retrospective (E05.S2 candidate #4 + E05.S5 candidate #7).
 
 ### Out of scope for v0.1.9 (sequenced, not shelved)
 
@@ -180,6 +191,16 @@ Prioritized by certainty × readiness, not raw impact. B1 is the cheap, high-cer
 - **`.roughly/` artifact consistency:** `.roughly/spec-candidates.md` (B1) and any B3 intake config live under `.roughly/`, consistent with gate-log (ADR-014) and verify-rules (ADR-015).
 - **New ADRs:** B1 escalation-target → **ADR-019 (shipped)**; B3 intake-resolution → new ADR (spike output), next free number **≥ADR-021**. The differential-gate spec set claims **ADR-014, 016, 017, 018, 020** (Spec 2 was renumbered 015→020 after ADR-015 shipped as the #66 gate protocol; ADR-019 is escalation). Fold in the standing ADR-009 / ADR-010 stale-reference cleanup while renumbering.
 - **Setup budget:** setup is at 289/300 lines. B3's STEP 4 question is one line, but the 5f write logic + `.roughly/config` schema go in `skills/setup/templates/` + a shared reference (ADR-012), not inline.
+
+### v0.1.8 retrospective assessments (v0.1.9 DoD items)
+
+Five inherited-risk windows either close during v0.1.9's implementation timeline or need explicit close-out at v0.1.9 tag time. All are OBSERVATION items (evidence-driven), not additional scope.
+
+- [ ] **E04 Risk 3 — Stop hook drift 30-day window** (opened 2026-05-20 at E04.S5 ship; closes ~2026-06-19 — within v0.1.9 implementation window). Zero false-positive accumulation on `main` → CLOSE at v0.1.9 ship. Any false positives → promote mitigation-tightening to v0.1.10.
+- [ ] **E05 Risk 2 — off-ramp shared-reference drift 30-day window** (opened 2026-05-28 at E05.S4 ship; closes ~2026-06-27). Zero false-positive accumulation on Check 8 → CLOSE at v0.1.9 retrospective. False positives → promote Check 8 mechanic tightening OR per-skill carve-out to v0.1.10.
+- [ ] **E05 Risk 1 — runtime-level T2 confirmation** (prose-level closed at E06.S1 ship; runtime-cache layer confirmation pending dogfood in another project). Post-v0.1.8-install dispatch of `doc-writer` against a real multi-file failure scenario → both T2 scenarios FULL PASS at runtime-cache layer closes Risk 1 runtime-level. Regression on the 0-succeeded case promotes v0.1.9 programmatic-mechanism candidate (response-validation subagent OR template parser) to v0.1.10 must-do.
+- [ ] **E06 Risk 3 — 3-consecutive-green-runs gate on post-#65 main.** Counter restarts after every `main` change touching the workflow or its inputs (per E06.S3 close criterion) — has been repeatedly reset across #66–#79 fix merges + #80. Assess current consecutive-green count at v0.1.9 pre-tag time; if ≥3, CLOSE Risk 3. Otherwise carry OPEN into v0.1.10 with the current gate state documented.
+- [ ] **E04 Risk 5 — real-dogfood multi-file exercise of doc-writer.** No natural real-dogfood invocation observed in v0.1.8. Assess at v0.1.9 pre-tag: any evidence of real-dogfood multi-file invocation post-v0.1.8-install? If not, promote to v0.1.10 synthetic CI-test story per E04 opportunistic-close-or-promote rule (E06.S1 T2 synthetic re-run does NOT count as real-dogfood exercise).
 
 ---
 
@@ -270,9 +291,9 @@ Targets Duff, DGF, HuntReady. Today's setup misclassifies them and generates one
 
 Triggered by next unrelated touch of `upgrade/SKILL.md`.
 
-1. Remove pre-flight migration checks from 9 skills.
-2. Drop v0.1.2 + v0.1.4 migration steps from `upgrade/SKILL.md`.
-3. Prune Stop hook legacy-`.ruckus/` detection.
+1. ~~Remove pre-flight migration checks from 9 skills.~~ **Done in v0.1.9 (#80).**
+2. Drop the v0.1.2 `docs/claude/` migration step from `upgrade/SKILL.md` (the v0.1.4 `.ruckus/` step was removed in v0.1.9 / #80).
+3. ~~Prune Stop hook legacy-`.ruckus/` detection.~~ **Done in v0.1.9 (#80).**
 4. Decide: keep CHANGELOG `### Migration` convention or move to CONTRIBUTING.md.
 
 ---
