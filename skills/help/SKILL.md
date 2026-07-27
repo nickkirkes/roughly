@@ -8,16 +8,7 @@ disable-model-invocation: false
 
 In-CLI overview: commands by cluster, current marker state, and any in-progress plan.
 
-**Read-only.** This skill never modifies files, never aborts the session, and never blocks other work. It is itself a recovery path — like `/roughly:upgrade` — so it surfaces legacy state without halting.
-
----
-
-## STEP 0: PRE-FLIGHT NOTE (NEVER ABORTS)
-
-If `.ruckus/` directory exists at the project root, emit a single note line before Step 1's output:
-> "Legacy `.ruckus/` directory present. If migration is still pending, run `/roughly:upgrade`. If this directory contains only user-extras you kept after a completed migration, it can be removed manually."
-
-Do NOT abort. Continue to Step 1. If no `.ruckus/` directory exists, emit nothing and proceed silently.
+**Read-only.** This skill never modifies files, never aborts the session, and never blocks other work.
 
 ---
 
@@ -46,7 +37,7 @@ Emit three labeled groups. For each command, give one short line of purpose. Use
 ## STEP 2: MARKER STATE
 
 Read `.roughly/workflow-upgrades`. If the file does not exist, emit:
-> "No `.roughly/workflow-upgrades` file found. Run `/roughly:setup` to initialize, or `/roughly:upgrade` if a `.ruckus/` legacy file is present."
+> "No `.roughly/workflow-upgrades` file found. Run `/roughly:setup` to initialize."
 Skip the rest of Step 2.
 
 If the file exists, parse it:

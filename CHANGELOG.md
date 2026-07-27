@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.9] — 2026-07-27
+
+### Removed
+
+- **Obsolete `ruckus` / pre-v0.1.6 legacy machinery (#80).** Removed the pre-flight migration blocks from the 7 hard-abort skills + the setup soft-abort clause + the help STEP 0 note; the Stop-hook `.ruckus/known-pitfalls` drift check and the pre-flight byte-identity check from `.claude/hooks/verify-all.sh` (plus `tests/fixtures/canonical-preflight-block.txt`); and the v0.1.4 `.ruckus/` → `.roughly/` migration engine in `skills/upgrade/SKILL.md`. Coordinated doc sync: the CONTRIBUTING structural-invariants enumeration went 7 → 5, its Tooling-Pitfalls worked example was genericized, and 2 `.roughly/known-pitfalls.md` entries were refactored to synthetic examples (reusable patterns preserved). Historical record preserved: CHANGELOG v0.1.0–v0.1.8 entries, the README migration section, ADR-004/005/006/008, all E01–E04 epic files, and the `ruckus-*` planning artifacts. **Behavior change:** un-migrated pre-v0.1.6 `docs/plans/*-plan.md` state is no longer detected proactively on every pipeline run — it is only caught reactively via `/roughly:upgrade` (whose v0.1.6 migration check is unchanged). No migration path remains for v0.1.3-or-earlier `.ruckus/` installs; such users must first run `/roughly:upgrade` on ≤ v0.1.8 before adopting v0.1.9.
+
 ## [0.1.8] — 2026-06-10
 
 > doc-writer all-fail anchoring + cross-epic re-amendment convention extension. Scope per [docs/planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md](docs/planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md).

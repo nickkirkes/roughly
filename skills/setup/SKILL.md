@@ -28,7 +28,7 @@ Also detect:
 - Test framework (jest, vitest, pytest, go test, etc.)
 - Formatter (prettier, black, gofmt, etc.)
 - CI configuration (.github/workflows, .gitlab-ci, etc.)
-- Existing .claude/, .ruckus/, .roughly/, or docs/claude/ directory
+- Existing .claude/, .roughly/, or docs/claude/ directory
 
 Display: "Project maturity: [level] ([N] source files). Detected: [test framework], [formatter], [CI]."
 
@@ -36,10 +36,7 @@ Display: "Project maturity: [level] ([N] source files). Detected: [test framewor
 
 ## STEP 2: CHECK EXISTING STATE
 
-If `.ruckus/.migration-in-progress`, `.ruckus/known-pitfalls.md`, or `.ruckus/workflow-upgrades` exists, OR if `.roughly/` exists AND any file matching `docs/plans/*-plan.md` exists (the `*-plan.md` pattern distinguishes pre-v0.1.6 Roughly plans from unrelated `docs/plans/` documentation):
-> "Legacy state detected (`.ruckus/` from v0.1.3 install or incomplete v0.1.4 migration; or pre-v0.1.6 Roughly plans matching `docs/plans/*-plan.md` alongside `.roughly/`). Run `/roughly:upgrade` first to migrate, then re-run `/roughly:setup` if needed. (proceed anyway / abort)"
-
-Else if `docs/claude/` exists:
+If `docs/claude/` exists:
 > "Legacy Roughly installation detected at `docs/claude/`. Run `/roughly:upgrade` to migrate to `.roughly/` first, then re-run `/roughly:setup` if needed. (proceed anyway / abort)"
 
 Else if `.roughly/` or `.claude/` already exists:
@@ -86,7 +83,7 @@ Prompt but don't block on:
 
 ## STEP 5: CREATE FILES
 
-Create `.roughly/` directory if it doesn't exist. (`.roughly/plans/` is created on demand by build/fix Stage 3's `mkdir -p` — no need to pre-create it during setup since the v0.1.6+ pre-flight check uses `docs/plans/*-plan.md` filename detection rather than `.roughly/plans/` absence as its signal.)
+Create `.roughly/` directory if it doesn't exist. (`.roughly/plans/` is created on demand by build/fix Stage 3's `mkdir -p` — no need to pre-create it during setup.)
 
 ### 5a. CLAUDE.md
 Read `${CLAUDE_PLUGIN_ROOT}/skills/setup/templates/CLAUDE.md.template`. Derive `{{PROJECT_NAME}}` from the repo directory name (or package.json `name` field if available). Replace all `{{PLACEHOLDER}}` markers with collected values:

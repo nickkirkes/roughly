@@ -110,18 +110,18 @@ At-risk tools:
 
 Each rewrites every match in one pass with no per-site review.
 
-Worked example: `.claude/hooks/verify-all.sh`. During the `ruckus` → `roughly` migration, the intent was to update user-facing comment prose at lines 2 and 11. A single `replace_all: true` edit also rewrote the legacy drift detector at lines 17–19 — the comment, the `rg` pattern, and the error string all flipped from `.ruckus/known-pitfalls` to `.roughly/known-pitfalls`. The detector was designed to catch stale references to the *old* path; after the bulk replace it hunted for the *current* path and would never fire. Surgical `Edit` calls scoped by surrounding context restored the legacy lines.
+Worked example: a config-loader script where the token `legacyDataDir` appears both as user-facing comment prose (to be renamed to `modernDataDir`) AND inside a legacy-migration detector block that intentionally greps `legacyDataDir` to flag un-migrated projects. A single `replace_all: true` rename flips both — the detector silently starts hunting for the *current* path and can never fire. It was invisible in CI (no fixture triggered the inverted grep); caught only by re-reading with fresh eyes. Surgical `Edit` calls scoped by surrounding context restored the detector's literal.
 
 Before any bulk replace, scan the file for occurrences where the OLD form is intentional — legacy detectors, migration-context strings, "renamed FROM X" prose — and use targeted `Edit` calls per site instead. Verify with two greps that should match expectations exactly:
 
-- `rg -nw 'ruckus' .claude/hooks/verify-all.sh` should return 3 matches at lines 17, 18, 19 (legacy detector lines that MUST retain `ruckus`)
-- `rg -nw 'roughly' .claude/hooks/verify-all.sh` should return 2 matches at lines 2 and 11 (user-facing prose, legitimately renamed)
+- `rg -nw 'legacyDataDir' config-loader.sh` should match only the detector sites (which MUST retain the legacy token)
+- `rg -nw 'modernDataDir' config-loader.sh` should match only the renamed user-facing prose
 
 New pitfalls discovered during a build are recorded in `.roughly/known-pitfalls.md` — the runtime catalog the build pipeline updates at wrap-up when a contributor confirms a new one.
 
 ## Migration
 
-v0.1.6 relocated `docs/plans/` to `.roughly/plans/` to consolidate all Roughly runtime state under a single root. Existing projects with historical plans run `/roughly:upgrade` to migrate; `--force-plans` overrides the dirty-tree safety check. Plan files written by the build/fix pipelines now land in `.roughly/plans/<feature>-plan.md`. The pre-flight migration check in the 7 hard-abort skills + setup soft-abort detects either `.ruckus/` or `docs/plans/` legacy state and redirects to `/roughly:upgrade`.
+v0.1.6 relocated `docs/plans/` to `.roughly/plans/` to consolidate all Roughly runtime state under a single root. Existing projects with historical plans run `/roughly:upgrade` to migrate; `--force-plans` overrides the dirty-tree safety check. Plan files written by the build/fix pipelines now land in `.roughly/plans/<feature>-plan.md`.
 
 ## Plan-file lifecycle
 
@@ -198,17 +198,15 @@ macOS contributors running `scripts/ci-dogfood.sh` locally need `gtimeout` from 
 
 ## Stop hook drift checks
 
-`.claude/hooks/verify-all.sh` runs as a non-blocking Stop hook after every Claude turn (always exits 0, informational only — see `skills/setup/templates/verify-all-stop-hook.sh.template` header). It enforces seven structural invariants:
+`.claude/hooks/verify-all.sh` runs as a non-blocking Stop hook after every Claude turn (always exits 0, informational only — see `skills/setup/templates/verify-all-stop-hook.sh.template` header). It enforces five structural invariants:
 
-1. **Path drift** — `agents/` files must not reference legacy `.ruckus/known-pitfalls`.
-2. **Skill line cap** — every `skills/*/SKILL.md` stays ≤ 300 lines.
-3. **Agent word cap** — every `agents/*.md` stays ≤ 650 words.
-4. **HTML comment integrity** — `agents/agent-preamble.md` contains exactly one `<!--` opener and one `-->` closer.
-5. **Pre-flight wording byte-identity across 7 hard-abort skills** — `audit-epic`, `build`, `fix`, `review`, `review-plan`, `review-epic`, `verify-all` must have byte-identical pre-flight migration check blocks (canonical source: `tests/fixtures/canonical-preflight-block.txt`). `skills/setup/SKILL.md` uses an intentionally-divergent soft-abort form and is excluded.
-6. **`plan-mode-gate` hook-pair presence + byte-identity** — `.claude/hooks/plan-mode-gate.sh` and `skills/setup/templates/plan-mode-gate.sh.template` must both exist and be byte-identical. Missing either file is itself drift (plan-mode protection would be silently unregistered, the failure mode ADR-009 was written to prevent). **A separate, unrelated pair — `verify-all-stop-hook.sh.template` ↔ dogfood `verify-all.sh` — is intentionally NOT enforced as whole files** (different files, different purpose) — but their shared `emit_drift_json` function IS sync-checked (function-scoped; added for #75, since the silent divergence of exactly that function was the #68 root cause): per `docs/planning/epics/complete/E03-trust-and-ergonomics.md` section `#### E03.S2: Stop-hook-v1 maturity check completion` under `### Trust hardening cluster`, the dogfood "stays as-is (project-specific drift checks for the plugin's own development); this story produces a separate, project-agnostic template."
-7. **`.roughly/known-pitfalls.md` organize threshold** — fires when `wc -l > PITFALLS_ORGANIZE_THRESHOLD` (currently 300). The matching policy parameter lives in `agents/doc-writer.md` Process step 5 ("Organize suggestion") — bidirectional sync comments name each consumer.
+1. **Skill line cap** — every `skills/*/SKILL.md` stays ≤ 300 lines.
+2. **Agent word cap** — every `agents/*.md` stays ≤ 650 words.
+3. **HTML comment integrity** — `agents/agent-preamble.md` contains exactly one `<!--` opener and one `-->` closer.
+4. **`plan-mode-gate` hook-pair presence + byte-identity** — `.claude/hooks/plan-mode-gate.sh` and `skills/setup/templates/plan-mode-gate.sh.template` must both exist and be byte-identical. Missing either file is itself drift (plan-mode protection would be silently unregistered, the failure mode ADR-009 was written to prevent). **A separate, unrelated pair — `verify-all-stop-hook.sh.template` ↔ dogfood `verify-all.sh` — is intentionally NOT enforced as whole files** (different files, different purpose) — but their shared `emit_drift_json` function IS sync-checked (function-scoped; added for #75, since the silent divergence of exactly that function was the #68 root cause): per `docs/planning/epics/complete/E03-trust-and-ergonomics.md` section `#### E03.S2: Stop-hook-v1 maturity check completion` under `### Trust hardening cluster`, the dogfood "stays as-is (project-specific drift checks for the plugin's own development); this story produces a separate, project-agnostic template."
+5. **`.roughly/known-pitfalls.md` organize threshold** — fires when `wc -l > PITFALLS_ORGANIZE_THRESHOLD` (currently 300). The matching policy parameter lives in `agents/doc-writer.md` Process step 5 ("Organize suggestion") — bidirectional sync comments name each consumer.
 
-Checks 1–4 are pre-existing (S2-era structural invariants). Checks 5–7 land in E04.S5 as a coverage-completion bundle.
+Checks 1–3 are pre-existing (S2-era structural invariants); Checks 4–5 landed in E04.S5.
 
 agent word cap raised 500 → 650 in E05.S1 to accommodate failure-handling clauses with verbatim summary templates and to provide real headroom (≥50 words at projected post-E05.S2 state) rather than landing at the edge of a tighter cap.
 

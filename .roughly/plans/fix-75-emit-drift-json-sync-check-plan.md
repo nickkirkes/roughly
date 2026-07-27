@@ -65,7 +65,7 @@ fi
 Do not change any other check, the `emit_drift_json` definition itself, or the final emit block.
 **Verify:**
 ```
-cd /Users/nickkirkes/rowdycloud/code/roughly
+cd "$(git rev-parse --show-toplevel)"
 bash -n .claude/hooks/verify-all.sh || { echo FAIL-syntax; exit 1; }
 # (a) silent on the real (identical) files — verify-all must still emit 0 bytes:
 out=$(bash .claude/hooks/verify-all.sh 2>&1); [ -z "$out" ] || { echo "FAIL-not-clean: $out"; exit 1; }
@@ -100,7 +100,7 @@ Replace the bold lead only — change `is intentionally NOT enforced** (differen
 Do not change the "seven structural invariants" count or add an enumerated item (out of scope — see plan Design notes; the count is already inaccurate for unrelated reasons).
 **Verify:**
 ```
-cd /Users/nickkirkes/rowdycloud/code/roughly
+cd "$(git rev-parse --show-toplevel)"
 command grep -qF 'is intentionally NOT enforced as whole files' CONTRIBUTING.md || { echo FAIL-not-qualified; exit 1; }
 command grep -qF 'shared `emit_drift_json` function IS sync-checked' CONTRIBUTING.md || { echo FAIL-no-pointer; exit 1; }
 command grep -qF 'E03.S2: Stop-hook-v1 maturity check completion' CONTRIBUTING.md || { echo FAIL-rationale-lost; exit 1; }
