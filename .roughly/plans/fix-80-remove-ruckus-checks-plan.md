@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and committed in commit a078222b7959547ac6e6386e0ef4483819d8ab0f on 2026-07-27. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Fix Plan: #80 — remove obsolete `ruckus` / pre-v0.1.6 legacy machinery
 
 Plan-format-version: 1
