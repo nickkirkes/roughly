@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and committed in commit 9a7a41094b2f7bc47858573dda0f508d4dc880a9 on 2026-07-26. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Fix Plan: #75 — function-scoped drift check keeping `emit_drift_json` in sync (closes #68 root cause)
 
 Plan-format-version: 1
