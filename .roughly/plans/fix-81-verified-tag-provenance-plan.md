@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and committed in commit 2b9a5529fd47c99c15d5297faa22c76049a131f7 on 2026-07-27. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Fix Plan: #81 — codify "verified"-tag provenance discipline
 
 Plan-format-version: 1
