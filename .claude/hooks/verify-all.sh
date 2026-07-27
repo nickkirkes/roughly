@@ -75,13 +75,28 @@ fi
 # Both files MUST exist in this plugin source repo; missing either is a structural break
 # (plan-mode protection silently unregistered — the failure mode ADR-009 was written to prevent).
 # Note: a DIFFERENT pair — verify-all-stop-hook.sh.template ↔ dogfood verify-all.sh —
-# is intentionally NOT checked here (per E03.S2; see CONTRIBUTING.md "Stop hook drift checks").
+# is intentionally NOT byte-identical as whole files (per E03.S2; see CONTRIBUTING.md "Stop hook drift checks"),
+# but their shared emit_drift_json function IS sync-checked just below (#75; the #68 root cause).
 if [ ! -f skills/setup/templates/plan-mode-gate.sh.template ]; then
   issues="${issues}- plan-mode-gate template missing: skills/setup/templates/plan-mode-gate.sh.template — Check 2 canonical source absent\n"
 elif [ ! -f .claude/hooks/plan-mode-gate.sh ]; then
   issues="${issues}- plan-mode-gate hook missing: .claude/hooks/plan-mode-gate.sh — plan-mode protection may be unregistered\n"
 elif ! diff -q .claude/hooks/plan-mode-gate.sh skills/setup/templates/plan-mode-gate.sh.template >/dev/null 2>&1; then
   issues="${issues}- plan-mode-gate hook drift: .claude/hooks/plan-mode-gate.sh and skills/setup/templates/plan-mode-gate.sh.template differ (run \`diff\` for details)\n"
+fi
+
+# emit_drift_json function-scoped sync (closes #75; the #68 root cause).
+# The dogfood hook and skills/setup/templates/verify-all-stop-hook.sh.template are
+# intentionally NOT whole-file identical, but their shared emit_drift_json infra MUST
+# stay in sync — a silent backport-drift of exactly this function caused #68.
+if [ ! -f skills/setup/templates/verify-all-stop-hook.sh.template ]; then
+  issues="${issues}- verify-all template missing: skills/setup/templates/verify-all-stop-hook.sh.template — emit_drift_json sync unverifiable\n"
+else
+  edj_hook=$(awk '/^emit_drift_json\(\) \{$/{f=1} f{print; if ($0=="}") exit}' .claude/hooks/verify-all.sh)
+  edj_tmpl=$(awk '/^emit_drift_json\(\) \{$/{f=1} f{print; if ($0=="}") exit}' skills/setup/templates/verify-all-stop-hook.sh.template)
+  if [ -z "$edj_hook" ] || [ "$edj_hook" != "$edj_tmpl" ]; then
+    issues="${issues}- emit_drift_json drift: .claude/hooks/verify-all.sh and skills/setup/templates/verify-all-stop-hook.sh.template diverged (shared function must stay in sync — #68 root cause)\n"
+  fi
 fi
 
 # .roughly/known-pitfalls.md organize-suggestion threshold (closes E03.S3 manual-edit coverage gap).
