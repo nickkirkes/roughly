@@ -1,0 +1,21 @@
+docs/ROADMAP.md
+  s_5ac377140ee651::t_c809da05d0bc43 149-157,175-177,195-204,294-296
+docs/planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md
+  s_5ac377140ee651::t_c809da05d0bc43 538-539
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "23abdb94b40a16550de784865b35c2dd51d855d0",
+  "prompts": {},
+  "sessions": {
+    "s_5ac377140ee651": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "abfcdf78-b0dd-4e7e-aa3b-4ef3ed674039",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
