@@ -58,7 +58,7 @@ Plan-format-version: 1
 Do NOT touch the emit_drift_json function, the #75 sync check, or any other check.
 **Verify:**
 ```
-cd /Users/nickkirkes/rowdycloud/code/roughly
+cd "$(git rev-parse --show-toplevel)"
 command rg -nw 'ruckus' skills/audit-epic/SKILL.md skills/build/SKILL.md skills/fix/SKILL.md skills/review/SKILL.md skills/review-epic/SKILL.md skills/review-plan/SKILL.md skills/verify-all/SKILL.md .claude/hooks/verify-all.sh && { echo FAIL-ruckus-remains; exit 1; } || echo "0 ruckus in 7 skills + hook"
 command rg -l 'pre-flight:start' skills/ && { echo FAIL-block-remains; exit 1; } || echo "no pre-flight blocks remain"
 test ! -f tests/fixtures/canonical-preflight-block.txt || { echo FAIL-fixture-remains; exit 1; }
@@ -82,7 +82,7 @@ echo "T1 PASS ($(wc -l < .claude/hooks/verify-all.sh) lines)"
 4. `skills/help/SKILL.md` L49: the marker-state error message — remove the trailing clause `, or \`/roughly:upgrade\` if a \`.ruckus/\` legacy file is present` so it ends `… Run \`/roughly:setup\` to initialize.`
 **Verify:**
 ```
-cd /Users/nickkirkes/rowdycloud/code/roughly
+cd "$(git rev-parse --show-toplevel)"
 command rg -nw 'ruckus' skills/setup/SKILL.md skills/help/SKILL.md && { echo FAIL-ruckus-remains; exit 1; } || echo "0 ruckus in setup+help"
 command grep -qF 'Else if `docs/claude/` exists' skills/setup/SKILL.md && { echo FAIL-orphan-elseif; exit 1; } || echo "conditional chain fixed"
 command grep -qF 'STEP 0: PRE-FLIGHT NOTE' skills/help/SKILL.md && { echo FAIL-step0-remains; exit 1; } || echo "help STEP 0 removed"
@@ -96,7 +96,7 @@ echo "T2 PASS"
 **Details:** Delete from the line `**v0.1.4 migration check:** If \`.ruckus/\` directory exists in the project (legacy v0.1.3 installation):` through the end of its step 10, i.e. everything up to (but not including) the `**v0.1.6 migration check:**` line — plus one of the two surrounding blank lines so exactly one blank separates the v0.1.2 `If yes:` paragraph from `**v0.1.6 migration check:**`. (Currently lines 21–58 + the blank at 59; anchor by the two `**vX migration check:**` markers, not raw line numbers.) Do NOT touch the v0.1.2 `**Migration check:**` block (16–19) or the v0.1.6 block.
 **Verify:**
 ```
-cd /Users/nickkirkes/rowdycloud/code/roughly
+cd "$(git rev-parse --show-toplevel)"
 command rg -nw 'ruckus' skills/upgrade/SKILL.md && { echo FAIL-ruckus-remains; exit 1; } || echo "0 ruckus in upgrade"
 command grep -qF 'v0.1.4 migration check' skills/upgrade/SKILL.md && { echo FAIL-v014-remains; exit 1; } || echo "v0.1.4 engine gone"
 command grep -qF 'v0.1.6 migration check' skills/upgrade/SKILL.md || { echo FAIL-v016-lost; exit 1; }
@@ -116,7 +116,7 @@ echo "T3 PASS ($n lines)"
 3. **Migration section** (L124): delete the sentence "The pre-flight migration check in the 7 hard-abort skills + setup soft-abort detects either `.ruckus/` or `docs/plans/` legacy state and redirects to `/roughly:upgrade`." Keep the rest of the "## Migration" section (v0.1.6 `docs/plans/`→`.roughly/plans/` guidance).
 **Verify:**
 ```
-cd /Users/nickkirkes/rowdycloud/code/roughly
+cd "$(git rev-parse --show-toplevel)"
 command rg -nw 'ruckus' CONTRIBUTING.md && { echo FAIL-ruckus-remains; exit 1; } || echo "0 ruckus in CONTRIBUTING"
 command grep -qF 'five structural invariants' CONTRIBUTING.md || { echo FAIL-count; exit 1; }
 command grep -qF 'Path drift' CONTRIBUTING.md && { echo FAIL-pathdrift-remains; exit 1; } || echo "Path-drift item removed"
@@ -136,7 +136,7 @@ echo "T4 PASS"
 Do not renumber or reflow other entries; the file's `wc -l` stays well under the 300 organize threshold.
 **Verify:**
 ```
-cd /Users/nickkirkes/rowdycloud/code/roughly
+cd "$(git rev-parse --show-toplevel)"
 # the two refactored entries no longer carry ruckus/pre-flight specifics:
 command grep -qF 'legacyDataDir' .roughly/known-pitfalls.md || { echo FAIL-A-missing; exit 1; }
 command grep -qF 'admin-view' .roughly/known-pitfalls.md || { echo FAIL-B-missing; exit 1; }
@@ -166,7 +166,7 @@ echo "T5 PASS"
    (Use today's date if known; otherwise the literal `TBD-RELEASE` placeholder — the human sets the real date at release.)
 **Verify:**
 ```
-cd /Users/nickkirkes/rowdycloud/code/roughly
+cd "$(git rev-parse --show-toplevel)"
 command grep -qF 'verify-all.sh:16-19' docs/ROADMAP.md || { echo FAIL-roadmap-offby1; exit 1; }
 command grep -qF '## [0.1.9]' CHANGELOG.md || { echo FAIL-changelog-entry; exit 1; }
 command grep -qF '#80' CHANGELOG.md || { echo FAIL-changelog-issue-ref; exit 1; }
