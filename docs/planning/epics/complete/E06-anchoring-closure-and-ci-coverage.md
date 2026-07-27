@@ -531,6 +531,10 @@ Items deliberately out of v0.1.8 scope. Carry-forward from v0.1.7 still applies 
 - **Risk 3 (E04) Stop hook drift mitigation tightening.** Promoted IF 30-day window assessment (~2026-06-19) accumulates false-positive evidence.
 - **Risk 5 (E04) synthetic CI-test for doc-writer real-dogfood multi-file exercise.** Promoted IF no real-dogfood multi-file invocation occurs in v0.1.8 timeline.
 
+**New from v0.1.8 post-release PM triage (2026-06-10):**
+
+- **Obsolete `ruckus` plugin-checks removal** (GH issue [#80](https://github.com/nickkirkes/roughly/issues/80)) — user-requested cleanup surfaced during v0.1.9 pre-planning. `ruckus` was the plugin's original name (renamed to `roughly` in v0.1.4 via E02). Two Explore-agent investigations (runtime + documentation surfaces) confirmed no remaining users / forks / projects using `.ruckus/`; the pre-flight migration checks (9 skill files), Stop-hook drift-check (`.claude/hooks/verify-all.sh:16-18`), and v0.1.4 migration engine (`skills/upgrade/SKILL.md:21-58`) are wasteful cycles for a legacy state that no longer exists. In-scope: runtime removal + `CONTRIBUTING.md` worked-example sync (L113/L117/L124/L203) + 2 pitfall refactors (`.roughly/known-pitfalls.md` L82 setup soft-abort + L118 dual-semantic-role Edit — refactor to synthetic examples). Out of scope: all historical record (CHANGELOG, README migration section, ADR-004/005/006/008, E01–E04 epic files, `ruckus-*` planning-prompt filenames). Decisions pre-resolved at issue creation: upgrade migration engine included; L118 + L82 refactored to synthetic; L24/L114/L126/L140 left historical-example. Single-story bundle recommended. Full site enumeration + verification hints in GH #80. Estimated effort: half a day to a full day. Release-plan slot: `docs/ROADMAP.md` v0.1.9 · Cluster C.
+
 **New from v0.1.8 PM work:**
 
 (Nothing surfaced this PM round beyond the carry-forward list — v0.1.8 PM session was candidate-driven, not new-surface-driven. New v0.1.9 candidates may surface during E06 implementation.)
