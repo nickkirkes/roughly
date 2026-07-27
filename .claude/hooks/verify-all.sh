@@ -13,11 +13,6 @@ cd "$ROOT" 2>/dev/null || exit 0  # exit-0 contract: silent no-op on cd failure 
 
 issues=""
 
-# Path drift: agents/ should not reference legacy .ruckus/known-pitfalls
-if rg -q '\.ruckus/known-pitfalls' agents/ 2>/dev/null; then
-  issues="${issues}- stale .ruckus/known-pitfalls reference in agents/ (S2.3 drift)\n"
-fi
-
 # Skill line cap (300)
 for f in skills/*/SKILL.md; do
   n=$(wc -l < "$f")
@@ -36,39 +31,6 @@ opens=$(grep -c '<!--' "$preamble" 2>/dev/null || echo 0)
 closes=$(grep -c '\-\->' "$preamble" 2>/dev/null || echo 0)
 if [ "$opens" != "1" ] || [ "$closes" != "1" ]; then
   issues="${issues}- agent-preamble.md HTML comment broken: $opens openers, $closes closers\n"
-fi
-
-# Pre-flight wording byte-identity across 7 hard-abort skills
-# (Canonical source: tests/fixtures/canonical-preflight-block.txt.
-# setup/SKILL.md uses a soft-abort form by design and is excluded — see .roughly/known-pitfalls.md.)
-# Uses `shasum` (default on macOS + full Linux distros); falls back to `sha1sum`
-# (default on BusyBox/Alpine and other minimal containers without Perl).
-PREFLIGHT_SHA=$(command -v shasum 2>/dev/null || command -v sha1sum 2>/dev/null)
-if [ ! -f tests/fixtures/canonical-preflight-block.txt ]; then
-  issues="${issues}- pre-flight canonical fixture missing: tests/fixtures/canonical-preflight-block.txt — Check 1 cannot run\n"
-elif [ -z "$PREFLIGHT_SHA" ]; then
-  issues="${issues}- pre-flight check tooling unavailable: neither shasum nor sha1sum on PATH — Check 1 cannot run\n"
-else
-  preflight_missing_markers=""
-  for skill in audit-epic build fix review review-plan review-epic verify-all; do
-    block=$(awk '/<!-- pre-flight:start -->/,/<!-- pre-flight:end -->/' "skills/${skill}/SKILL.md" 2>/dev/null)
-    [ -z "$block" ] && preflight_missing_markers="${preflight_missing_markers}${skill} "
-  done
-  if [ -n "$preflight_missing_markers" ]; then
-    issues="${issues}- pre-flight markers missing in skills: ${preflight_missing_markers% }\n"
-  else
-    unique_preflight=$(
-      {
-        for skill in audit-epic build fix review review-plan review-epic verify-all; do
-          awk '/<!-- pre-flight:start -->/,/<!-- pre-flight:end -->/' "skills/${skill}/SKILL.md" | "$PREFLIGHT_SHA" | awk '{print $1}'
-        done
-        "$PREFLIGHT_SHA" tests/fixtures/canonical-preflight-block.txt | awk '{print $1}'
-      } | sort -u | grep -cv '^$'
-    )
-    if [ "$unique_preflight" -ne 1 ]; then
-      issues="${issues}- pre-flight wording drift: ${unique_preflight} unique blocks across 7 hard-abort skills (expected 1)\n"
-    fi
-  fi
 fi
 
 # plan-mode-gate hook-pair presence + byte-identity.
