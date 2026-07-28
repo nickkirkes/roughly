@@ -1,3 +1,5 @@
+> **Status:** Historical — implemented and committed in commit 171025dc8e6dd1897d1e4115c07c6f0a5886f7e6 on 2026-07-28. This plan was an active build/fix artifact; treat as historical reference only.
+
 # Fix Plan: #83 — codify spec-example command validation at plan-review
 
 Plan-format-version: 1
