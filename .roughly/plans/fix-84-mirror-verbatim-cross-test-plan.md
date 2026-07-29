@@ -62,7 +62,7 @@ Do not modify the existing checks or the `**Assumptions:**`/`**Overengineering:*
 **Verify:**
 ```
 cd "$(git rev-parse --show-toplevel)"
-command grep -qF '- **Mirror-verbatim vs negative-grep cross-test.**' skills/review-plan/SKILL.md || { echo FAIL-not-added; exit 1; }
+command grep -qF -e '- **Mirror-verbatim vs negative-grep cross-test.**' skills/review-plan/SKILL.md || { echo FAIL-not-added; exit 1; }
 command grep -qF 'Canonical positive: E06.S2.AC1' skills/review-plan/SKILL.md || { echo FAIL-no-canonical-pos; exit 1; }
 awk '/\*\*Completeness:\*\*/{a=1} /\*\*Assumptions:\*\*/{a=0} a && /Mirror-verbatim vs negative-grep cross-test/{f=1} END{exit !f}' skills/review-plan/SKILL.md || { echo FAIL-wrong-block; exit 1; }
 command grep -qF '**AC executable-example verify command.**' skills/review-plan/SKILL.md || { echo FAIL-83-check-lost; exit 1; }
