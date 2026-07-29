@@ -22,6 +22,7 @@ Given a set of changed files, review them for bugs, logic errors, security vulne
 5. **Check security** — Injection, XSS, auth bypass, data exposure, OWASP top 10
 6. **Check conventions** — Does the code follow project patterns from CLAUDE.md?
 7. **Check pitfalls** — Does the code match any known pitfall patterns?
+8. **Check epic Open Question cross-reference (if applicable)** — When the diff resolves an epic Open Question — whether asserted in the CHANGELOG or commit message, or implemented as a decision that maps to an open epic OQ — confirm the same diff also annotates that epic's `## Open questions` section with a matching strikethrough + resolution annotation (per `CONTRIBUTING.md` § "Epic Open Question resolution"). Flag Critical if an OQ is resolved but its epic entry does not reflect it. If the project has no epic docs with open questions, this check is inert — skip it.
 
 ## Output
 
@@ -45,5 +46,5 @@ Given a set of changed files, review them for bugs, logic errors, security vulne
 
 - Every finding must cite a file path and line region.
 - Distinguish severity clearly: critical = will cause bugs/vulnerabilities, warning = should fix, info = optional improvement.
-- Don't flag stylistic preferences — only flag convention violations documented in CLAUDE.md.
+- Don't flag stylistic preferences — only flag convention violations documented in CLAUDE.md or CONTRIBUTING.md.
 - If code is correct and clean, say so. A short clean review is valuable signal.
