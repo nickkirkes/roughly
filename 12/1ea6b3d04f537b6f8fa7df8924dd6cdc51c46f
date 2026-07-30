@@ -1,0 +1,29 @@
+docs/planning/prompts/roughly-pm-agent-v0.1.9-status-handoff.md
+  s_8c155faf06e4f6::t_b0521da18c85a7 1-116
+docs/planning/prompts/roughly-pm-agent-v0.1.9.md
+  s_b52ffcaba9df97::t_4e8fd0a9585b7c 1-182
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "121ea6b3d04f537b6f8fa7df8924dd6cdc51c46f",
+  "prompts": {},
+  "sessions": {
+    "s_8c155faf06e4f6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "115f0f52-6417-4b46-b586-c6dd4f2b9c53",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    },
+    "s_b52ffcaba9df97": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "074cdd46-2eac-4da5-9576-e6063d2df9dd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
