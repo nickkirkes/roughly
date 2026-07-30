@@ -1,0 +1,278 @@
+# E07 — Codification close-out + release-gate repair
+
+**Target version:** v0.1.9 · **Target effort:** ~6–8 days engineering + 3 paid dogfood dispatches (~$30 ceiling) · **Status:** SCOPED — freezes v0.1.9.
+
+**Depends on:** E06 (codification carry-forward; the E06 `## v0.1.9 candidates` block is this epic's scope source) · E05 (Risk 1, Risk 2 windows) · E04 (Risk 3, Risk 5 windows).
+
+## Release thesis
+
+v0.1.9 is a close-out, not a feature release. Its declared scope shipped across PRs #88 / #90 / #91, and what remains is two conventions, one intake guard, and a contract cleanup. **The release is evidence-gated, and the evidence apparatus has not produced a green run since the pipeline scenarios landed.** The dogfood workflow has 6 successes all-time — all on 2026-05-08, against the E03.S11a scaffolding that predates the real scenarios — against 138 failures. Its last executed run (2026-07-18) died in 11 seconds on `Credit balance is too low`; the run before it (2026-07-17, on `main`) died on the plugin-load probe's model-enumeration false-negative. #66 repaired that probe two days after the credit ran out, so the repair has never executed against a funded key. #66 also removed the `push:` trigger, so nothing produces a run on `main` any more without a manual dispatch.
+
+E07 therefore treats the evidence track as the work, not the footnote: repair the harness diagnostics, dispatch deliberately against `main`, and record each of the five inherited risk windows as CLOSE or CARRY with the evidence that actually exists. The three feature stories are parallel and gate nothing.
+
+## Reconciliation
+
+**Shipped — verified closed on `main` (tip `121ea6b`), not re-planned:** Cluster A #81–#86 (PR #90) · #87 known-pitfalls reorg (PR #90) · #80 ruckus cleanup (PR #88) · #89 OQ-resolution enforcement (PR #91) · #72 → ADR-019 spec-candidate escalation · #73 `--ci` marker-primary reframing (closes the ROADMAP v0.1.8 out-of-scope item "`--ci` 'exits non-zero' aspirational-language reframing") · #74 known-pitfalls threshold 80→300. Zero open GitHub issues.
+
+**In scope:** B2 granularity guard (S6) · 3a intra-epic AC amendment codifier (S4) · residual verdict-persistence + `--ci` NEEDS-REVISION parity (S5) · CHANGELOG backfill (S3) · dogfood harness diagnostics + validation (S1) · risk-window disposition (S2) · tag-prep (S7).
+
+**Out of scope, wholesale:** B3 external issue-tracker intake (v0.1.10 — see stubs) · the differential-gate spec set including Spec 1 gate-log · DI-001 systematic pitfall-into-briefs pass · epic→story decomposition loop · review-epic / audit-epic external-fetch wiring · fix-side negative-path CI scenarios (would add paid scenarios to a harness that has not produced a green) · install-marker producer generalization.
+
+## Risk register
+
+**R1 — The 6 pipeline scenarios have not executed since 2026-06-10.** The plugin-load probe is repaired (`6405652`) but unvalidated against a funded key, and everything downstream of it — build, fix, build-abort, build-abort-control, plan-revision, plan-clean — has been dark for seven weeks while `skills/build/SKILL.md` and `skills/fix/SKILL.md` accumulated the #66–#91 changes. The first funded dispatch is a discovery run, not a proving run. Each defect it surfaces costs another ~$10 dispatch to re-test. *Mitigation:* S1 lands diagnostics that make a failed dispatch legible on first read; S2 budgets discovery dispatches separately from the 3 consecutive proving runs and CARRIES rather than burning the release window if the scenarios do not converge.
+
+**R2 — B2's detector false-positives on Roughly's own documented input format.** [README.md:52](../../../README.md) Quick Start pipes a multi-story epic file into `/roughly:build`, and [README.md:182-201](../../../README.md) documents "Epic files" as a first-class `/roughly:build` input with a worked two-story example. A guard that flags "a file enumerating multiple child stories" fires on the manual's own example on a new user's first run. *Mitigation:* S6's AC set requires the README correction to land in the same story as the detector — the guard and the docs it contradicts are one change, not two.
+
+**R3 — Line-cap collision in `skills/fix/SKILL.md`.** At 286/300 with 14 lines of headroom, and two E07 stories add prose to it (S5 at Stage 4, S6 at Stage 1), cumulatively ~8–12 lines. `skills/build/SKILL.md` at 281/300 has the same exposure. Whichever story merges last may find the headroom consumed. *Mitigation:* S5 and S6 each carry an ADR-012 extraction off-ramp in their ACs, and S5 (the smaller delta) sequences first so S6 inherits a known budget rather than the reverse.
+
+**R4 — Two of the codifier's four named back-application targets are moot.** E06.S5 W1 (scope-naming ambiguity) and W2 (missing evidence-artifact language) were substantially resolved by #72's extraction to `skills/shared/spec-candidate-escalation.md`: the two Stage 6 paragraphs now route to one named procedure, the cubic paragraph carries an explicit scope preamble, and the shared reference states "the appended entry is the evidence" — W2's exact ask. Their cited locations (build L205 / fix L208) no longer hold that prose. An implementer applying the E06 candidates block mechanically will edit text that moved. *Mitigation:* S4 replaces those two amendments with two verified close-out annotations, specified in its ACs.
+
+**R5 — CHANGELOG backfill is written ~3 weeks post-merge from PR diffs, not build context.** The E06 audit found an inaccurate word-count claim in an entry written *with* fresh context (S1's 649→649 vs actual 649→647). Eight issues' worth of entries reconstructed cold will be worse. *Mitigation:* S3 sequences first, while the PRs are the most recent thing in the log, and its ACs require each entry to cite the merging PR and name the files it touched so claims are checkable against the diff.
+
+---
+
+# Track A — Release-gate repair (critical path)
+
+## E07.S1 — Dogfood harness diagnostics + local validation
+
+**Maps to:** E06 Risk 3 dogfood gate (unblocking).
+
+**Files touched:** `scripts/ci-dogfood.sh` · `docs/runbooks/dogfood-ci.md` · `.roughly/known-pitfalls.md` · `CHANGELOG.md`
+
+**Acceptance criteria**
+
+- **AC1 — Account-state failures are distinguishable from code failures.** The smoke-step failure ladder in `scripts/ci-dogfood.sh` (L77–86) currently emits `FAIL — smoke step claude exited $SMOKE_EXIT` and dumps output, so `Credit balance is too low` reads identically to a genuine pipeline regression. Add a classification branch that detects account-state failures (insufficient credit, invalid/revoked key, rate limit) in the captured output and emits a distinct marker — `ci-dogfood: FAIL — API account state: <classification>` — naming the condition and stating that no Roughly behavior was exercised. Applies to the smoke step and the plugin-load step. Verify: inject each condition via a stubbed `claude` on `PATH` and assert the account-state marker fires, and that a non-account non-zero exit still produces the existing generic ladder.
+- **AC2 — Plugin-load probe validated against a funded key.** The probe at L105–131 was repaired in `6405652` after the 2026-07-17 false-negative but has never executed with credit available. Run it locally via `claude --bare --plugin-dir <repo>` against a funded key and capture the output in the CHANGELOG entry. Pair it with a negative control: the same probe against `--plugin-dir` pointed at a directory containing no `skills/`, which must FAIL. Both arms required — structural assertion plus behavioral control, per the `## CI conventions` behavioral-assertion rule shipped in #82.
+- **AC3 — `docs/runbooks/dogfood-ci.md` documents how to produce a run on `main`.** `6405652` removed the `push:` trigger; `workflow_dispatch` is now the only path to a `main` run, and the `ci:dogfood` label path only ever produces PR-ref runs. The runbook's `## When to run it` section must state this explicitly, and `## Cost` must record the per-run ceiling derived from the `--max-budget-usd` values actually in the script (smoke $0.05 + plugin-load $1.00 + 6 × $1.50 = $10.05) rather than a remembered figure.
+- **AC4 — The E06 Risk 3 counter mechanics are written down.** Add a `## Risk 3 consecutive-green accounting` section to the runbook: what resets the counter (any `main` change touching the workflow, `scripts/ci-dogfood.sh`, or the fixtures), what a qualifying run is (a `workflow_dispatch` against `main` that reaches a green `dogfood-build-cycle` conclusion), and where the count is recorded. Without this the counter is re-derived by memory every release, which is how it reached 0 unnoticed.
+- **AC5 — No new paid scenarios.** `scripts/ci-dogfood.sh` scenario count stays at 6; no new `claude` dispatches added. Verify: `grep -c 'max-budget-usd 1.50' scripts/ci-dogfood.sh` = 6.
+- **AC6 — Pitfall captured + CHANGELOG entry.** Add a `.roughly/known-pitfalls.md` entry under the CI domain for the class this story fixes: a paid CI harness whose first failure rung collapses account-state and code failures into one message will read as a code regression for as long as the account is broken. Cross-reference the existing L28 entry on `set -e` assertion masking — same family, different rung.
+
+**Verification.** Everything in this story is verifiable locally at the cost of two short `claude` sessions (~$1). No dogfood dispatch required. `bash .claude/hooks/verify-all.sh` clean.
+
+**Dependencies:** none. First story in the epic.
+
+**Out of scope for this story.** Running the dogfood workflow (S2). Fixing anything the 6 pipeline scenarios surface (S2). Re-adding a `push:` trigger — the label gate exists because per-push dogfooding is what exhausted the account; it stays.
+
+---
+
+## E07.S2 — Risk-window disposition: dispatch, assess, record
+
+**Maps to:** release-gating DoD (all five windows); E06 Risk 3 dogfood gate.
+
+**Files touched:** `CHANGELOG.md` · `docs/ROADMAP.md` (v0.1.8-retrospective DoD checkboxes) · `docs/planning/epics/complete/E04-path-consolidation-and-process-codification.md` · `docs/planning/epics/complete/E05-doc-writer-hardening-and-spec-quality-gates.md` · `docs/planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md` (risk-register status annotations) · `docs/runbooks/dogfood-ci.md`
+
+**Acceptance criteria**
+
+- **AC1 — E06 Risk 3: dispatch, iterate, then call it.** Dispatch the dogfood workflow against `main` via `workflow_dispatch`. Treat the first dispatch as discovery: whatever the 6 scenarios surface after seven weeks dark is in scope for this story to fix (the E06.S3 precedent — harness modifications discovered during scenario execution are bundled with the run that surfaces them, not deferred). Once a dispatch reaches green, run two more without touching the workflow, script, or fixtures. **CLOSE** on 3 consecutive green; **CARRY to v0.1.10** otherwise, recording the count reached, the failing scenario, and the diagnosis. Both outcomes are acceptable ship states — the tag is not gated on CLOSE.
+- **AC2 — E04 Risk 3 (stop-hook drift, 30-day window elapsed).** Assess false-positive accumulation on `main`: the drift check has run on every Stop event across the #66–#91 bundle. Zero false positives → CLOSE. Any → CARRY with the mitigation-tightening candidate promoted to the v0.1.10 stub list. Cite the evidence examined, not a recollection.
+- **AC3 — E05 Risk 2 (off-ramp shared-reference Check 8 drift, 30-day window elapsed).** Same shape as AC2 against Check 8. Zero false positives → CLOSE; any → CARRY with either the Check 8 mechanic tightening or a per-skill carve-out named as the v0.1.10 candidate.
+- **AC4 — E05 Risk 1 and E04 Risk 5 both depend on AC1's outcome.** Risk 1 (doc-writer runtime-cache T2 confirmation) and Risk 5 (real-dogfood multi-file doc-writer exercise) can only close on evidence a green dogfood run produces. If AC1 CARRIES, both CARRY — state that dependency explicitly rather than asserting an independent assessment. If AC1 CLOSES, inspect the run transcripts for a multi-file doc-writer invocation; an E06.S1 T2 synthetic re-run does **not** satisfy Risk 5.
+- **AC5 — Dispositions are recorded in three places, consistently.** Each of the five windows gets: a CHANGELOG line under the v0.1.9 section stating CLOSE or CARRY with its evidence; a checked or annotated box in the ROADMAP v0.1.8-retrospective DoD list; and a status annotation on the originating epic's risk-register entry. A window recorded in one place and not the others is the failure mode this AC exists to prevent — verify all three surfaces agree for all five.
+- **AC6 — Every CARRY produces a v0.1.10 stub.** No window may CARRY without a corresponding entry in this epic's `## v0.1.10 candidates` section naming what would close it.
+
+**Verification.** Paid: 1 discovery dispatch + up to 3 proving dispatches (~$40 ceiling). The disposition record itself is verifiable by inspection — for each of the five windows, the three surfaces named in AC5 must state the same outcome.
+
+**Dependencies:** E07.S1 (its diagnostics are what make a failed dispatch legible). Should begin as soon as S1 merges — this is the long pole, and a dispatch that surfaces defects needs runway before tag.
+
+**Out of scope for this story.** Feature work of any kind. Adding scenarios. Closing a window on evidence that does not exist — CARRY is the correct answer when the evidence is absent, and an honest CARRY beats a green asserted from a synthetic re-run.
+
+---
+
+# Track B — Codification finish (parallel; gates nothing)
+
+## E07.S3 — CHANGELOG v0.1.9 backfill + heading revert
+
+**Maps to:** tag-prep DoD (front-loaded).
+
+**Files touched:** `CHANGELOG.md`
+
+**Acceptance criteria**
+
+- **AC1 — Heading reverted to the pre-tag form.** `CHANGELOG.md:3` currently reads `## [0.1.9] — 2026-07-27`: renamed early, against the DoD's "rename at tag time" rule, and dated two days *before* PRs #90 and #91 merged. Revert to `## [Unreleased] — v0.1.9`, matching the E06 post-audit precedent (Rec 2, 2026-06-10, where the identical premature rename was reverted for v0.1.8). Verify: `grep -c '^## \[Unreleased\] — v0.1.9' CHANGELOG.md` = 1.
+- **AC2 — #81–#86 entries written.** The v0.1.9 section records only #80. Add entries for the Cluster A CONTRIBUTING bundle delivered by PR #90 — #81 verified-tag provenance, #82 CI assertion authoring, #83 spec-example command validation, #84 mirror-verbatim + negative-grep self-test, #85 CI job-key naming, #86 OQ-resolution annotation — under `### Added`. Each entry names the sections it created or extended in `CONTRIBUTING.md` and cites PR #90.
+- **AC3 — #87 and #89 entries written.** #87 (known-pitfalls navigability reorg, PR #90) and #89 (`agents/code-reviewer.md` Process step 8 OQ-resolution enforcement, PR #91). The #89 entry states that build and fix inherit the check via `/roughly:review` rather than implying it is build-only.
+- **AC4 — Every entry is checkable against its diff.** Each new entry cites the merging PR number and names at least one file it touched. Verify by spot-diff: for each entry, `git show` the merge commit and confirm the named file appears in the diff. This AC exists because the E06 audit caught an inaccurate claim in an entry written with fresh context; these are written cold.
+- **AC5 — Entry ordering follows house convention.** Existing `### Removed` (#80) stays; new entries group under `### Added` and `### Changed` as appropriate, matching the v0.1.8 section's structure.
+
+**Verification.** Inspection + spot-diff per AC4. `bash .claude/hooks/verify-all.sh` clean.
+
+**Dependencies:** none. Sequence first in Track B so S7 becomes a mechanical re-date.
+
+**Out of scope for this story.** The tag-time re-date itself, `plugin.json`, and the ROADMAP Current marker — all S7. Entries for work this epic has not yet shipped.
+
+---
+
+## E07.S4 — Intra-epic AC amendment convention codifier + back-applications
+
+**Maps to:** 3a intra-epic codifier (ROADMAP v0.1.8 out-of-scope item 1; E06 audit main systemic finding).
+
+**Files touched:** `CONTRIBUTING.md` · `docs/planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md` · `.roughly/known-pitfalls.md` · `CHANGELOG.md`
+
+**Acceptance criteria**
+
+- **AC1 — New `## Intra-epic AC amendments` section in `CONTRIBUTING.md`.** Placed between `## Cross-epic AC amendments` (L87) and `## Epic Open Question resolution` (L99), per the section-cluster rationale that resolved OQ-S4 and OQ-S7. Specifies the back-annotation form for amending an AC's text **within the same epic** during a build: the epic's story entry gains a dated deviation note adjacent to the AC (never an in-place edit of the AC text), the note states what shipped versus what the AC specified and why, and the CHANGELOG entry cross-references the AC and the note. Must state its boundary against the cross-epic convention explicitly — same epic, in-flight, versus a later epic amending shipped work.
+- **AC2 — Shape catalog with ≥6 entries, each citing a real E06 instance.** The ROADMAP names a "6-shape catalog." E06 self-identifies four distinct shapes across five instances; the two remaining come from E06.S3. Required: narrative-vs-literal omission (E06.S1.AC1(a), E06.S4.AC1) · AC-internal contradiction (E06.S2.AC1) · premise-false spec (E06.S6.AC1) · spec-revision-candidate dogfooded on its own implementation (E06.S5) · AC retarget on a non-existent premise (E06.S3.AC1, Stage 6 max-cycles → Stage 5c) · in-build scope expansion (E06.S3.AC2 via ADR-013). Each entry names the story, the shape, and the deviation note that records it. Verify: each of the six cites a location that exists in the E06 epic file.
+- **AC3 — Back-applied to E06.S1.AC1(a) and E06.S4.AC1.** Both already carry post-merge deviation notes (E06 epic L90 and L314). Re-express each in the new convention's normative form and add the shape label from AC2's catalog. Additive only — existing note text is preserved, not rewritten.
+- **AC4 — E06.S5 W1 and W2 closed out, not amended.** Both were substantially resolved by #72's extraction to `skills/shared/spec-candidate-escalation.md`: the Stage 6 disposition and cubic-termination paragraphs now route to one named procedure, the cubic paragraph opens with an explicit scope preamble, and both the pipeline text and the shared reference state that the appended entry is the evidence. Their cited locations (build L205 / fix L208) no longer hold that prose. Annotate both entries in the E06 `## v0.1.9 candidates` block as resolved-by-#72 with the verifying quotation, rather than applying amendments to text that moved. Verify: `grep -n 'the appended entry is the evidence' skills/build/SKILL.md skills/shared/spec-candidate-escalation.md` returns matches in both.
+- **AC5 — E06.S2.AC1 and E06.S6.AC1 cross-referenced, not amended.** Both already carry adequate deviation notes and are catalogued in AC2; add a one-line pointer from each to the new convention so the trail is discoverable, without restructuring shipped notes.
+- **AC6 — CHANGELOG entry + `CONTRIBUTING.md` line budget.** Entry names the new section, the six catalogued shapes, and the two back-applications plus two close-outs. `CONTRIBUTING.md` has no hard cap but is at 231 lines; state the post-merge count in the entry.
+
+**Verification.** `grep -n '^## Intra-epic AC amendments' CONTRIBUTING.md` = 1 match, positioned between L87's and L99's sections. Each of AC2's six catalog citations resolves to a real location in the E06 epic file. `bash .claude/hooks/verify-all.sh` clean.
+
+**Dependencies:** none. Parallel with S5 and S6.
+
+**Out of scope for this story.** Editing any shipped AC text in place — the whole point of the convention is that this never happens. Amending E06.S5 W1/W2 (AC4 closes them instead). Any change to `skills/` — this is a docs-and-epic story.
+
+---
+
+## E07.S5 — Stage 4 contract: verdict persistence + build/fix `--ci` parity
+
+**Maps to:** residual verdict-persistence gap (E06 audit Rec 4, partially satisfied by #72); ADR-013 unification follow-up (ROADMAP v0.1.8 out-of-scope item 3).
+
+Bundled because both changes edit the same Stage 4 section in the same two files under a 14-line headroom in `skills/fix/SKILL.md`. Splitting them means two rounds of edits to the same lines and two independent cap negotiations.
+
+**Files touched:** `skills/build/SKILL.md` · `skills/fix/SKILL.md` · `docs/adrs/ADR-013-build-ci-runs-review-plan.md` · `CONTRIBUTING.md` · `CHANGELOG.md`
+
+**Acceptance criteria**
+
+- **AC1 — The review-plan verdict is written to the plan file.** Both pipelines currently display the Stage 4 verdict and preserve it in context ("Preserve: … PASS verdict") but persist it nowhere; E06.S7.AC3 shipped with the PASS verdict recorded only in a commit message, and E06.S5.AC5 with a self-attestation in the plan's AC-mapping section. Add a directive to Stage 4 in both files: on PASS (or on confirmed override), append the verdict block verbatim to the plan file under a `## Review-plan verdict` heading, dated, before proceeding to the gate. Byte-identical between build and fix, per the E06.S5.AC2 parity precedent. Verify: `diff` of the two added blocks is empty.
+- **AC2 — Escalation and verdict persistence are distinguishable.** `skills/shared/spec-candidate-escalation.md` (ADR-019) persists Stage 6 spec-revision *candidates* to `.roughly/spec-candidates.md`. This story persists the Stage 4 *verdict* to the plan file. Different artifact, different trigger, different destination. The new prose must not route through the escalation procedure or reference the candidates ledger. Verify: the added Stage 4 text contains no reference to `spec-candidates.md`.
+- **AC3 — `--ci` NEEDS-REVISION handling unified.** Build `--ci` runs a recovery loop (up to 2 NEEDS REVISION verdicts, then a structured marker and halt); fix `--ci` halts on the first. Port build's recovery loop to fix so both pipelines behave identically, and delete the asymmetry disclaimer from `skills/fix/SKILL.md` Stage 4 — the sentence currently ships a promise ("a known asymmetry, slated for unification review in v0.1.9") that becomes false at tag if left. Verify: `grep -c 'slated for unification review' skills/fix/SKILL.md` = 0, and both files' `--ci` Stage 4 blocks specify the same 2-verdict cap and the same marker form.
+- **AC4 — ADR-013 amended, not superseded.** ADR-013 already claims to unify build `--ci` with fix `--ci`; the unification was partial in the opposite direction. Add a dated `## Amendment (v0.1.9)` section recording that fix `--ci` now carries the recovery loop and that the unification is complete. Do not mint a new ADR — this completes ADR-013's stated intent rather than deciding something new. ADR-010 stays reserved; the next free number remains ≥021.
+- **AC5 — Verdict-persistence convention codified.** Add the rule to `CONTRIBUTING.md` `## AC authoring conventions`: a gate outcome cited as evidence must exist as an artifact, not as an attestation in prose. Names the plan-file verdict block as the canonical instance and cross-references E06 audit cross-cutting finding #4.
+- **AC6 — Line caps held, with an off-ramp.** `skills/build/SKILL.md` 281/300 and `skills/fix/SKILL.md` 286/300 at story start. Post-merge both ≤300. If either would exceed, extract the Stage 4 verdict-persistence prose to `skills/shared/stage-4-verdict.md` and reference it via a runtime `Read` directive using `${CLAUDE_PLUGIN_ROOT}`, per ADR-012 — the off-ramp is pre-authorized by this AC and does not require a new decision mid-build. Verify: `wc -l` on both ≤300.
+
+**Verification.** `diff` parity check per AC1; the two greps in AC3 and AC2; `wc -l` per AC6. Behavioral verification of the `--ci` recovery loop depends on the `plan-revision` dogfood scenario, which is part of S2's dispatch — note the dependency, do not block on it. `bash .claude/hooks/verify-all.sh` clean.
+
+**Dependencies:** none blocking. Sequence before S6 within Track B so S6 inherits a known line budget (R3).
+
+**Out of scope for this story.** Fix-side negative-path CI scenarios (would add paid scenarios). Persisting Stage 6 review verdicts or T2 transcripts — E06 audit finding #4 names three gap shapes and this story closes the plan-file verdict shape only; the transcript shape stays a v0.1.10 candidate. Any change to `skills/shared/spec-candidate-escalation.md`.
+
+---
+
+# Track C — Intake guard (parallel; gates nothing)
+
+## E07.S6 — Epic-vs-story granularity guard
+
+**Maps to:** B2 granularity guard (ROADMAP Cluster B).
+
+**Files touched:** `skills/build/SKILL.md` · `skills/fix/SKILL.md` · `skills/help/SKILL.md` · `README.md` · `docs/adrs/ADR-021-epic-vs-story-intake-guard.md` (new) · `CLAUDE.md` (ADR table row) · `docs/adrs/README.md` (ADR index) · `.roughly/known-pitfalls.md` · `CHANGELOG.md`
+
+**Acceptance criteria**
+
+- **AC1 — Stage 1 detects epic-shaped input and asks.** Both pipelines currently resolve a referenced file and proceed; feeding an epic silently treats it as one monolithic feature. Add to Stage 1 in both files: after resolving the input, classify it as epic-shaped if it enumerates multiple child stories (two or more headings matching a story-heading form, or an explicit story-ID enumeration). On a positive classification, warn and ask the human to narrow to one story or confirm monolithic treatment. Byte-identical between build and fix.
+- **AC2 — The prompt is a verbatim plain-text gate.** Per ADR-015 and `skills/shared/gate-protocol.md`, the question is asked as plain text in the reply — never through `AskUserQuestion` or any other structured or interactive prompt tool, present or future. The added prose must carry that constraint explicitly at the point of the new prompt, not rely on the pipeline-level gate-protocol reference alone. This is the surface the 2026-07-16 unauthorized-push incident came through; a new gate is exactly where the substitution recurs.
+- **AC3 — Detection is advisory, never a hard abort.** A false positive must cost one keystroke, not a re-run. Confirming monolithic treatment proceeds with today's exact behavior. Under `CI_MODE=true` the prompt auto-proceeds with its default like every other gate in the pipeline — verify the new gate is covered by the existing `--ci` auto-proceed rule and does not introduce a CI hang.
+- **AC4 — README corrected in the same story.** [README.md:52](../../../README.md) Quick Start feeds a multi-story epic file to `/roughly:build`, and the `### Epic files` section (L182–201) documents epic files as a `/roughly:build` input with a two-story worked example — both of which the AC1 detector now flags. Rewrite the Quick Start example to a single story, and rewrite `### Epic files` to state that `/roughly:build` takes one story while `/roughly:review-epic` and `/roughly:audit-epic` take the whole epic. Verify: no example under a `/roughly:build` invocation in `README.md` contains two or more story headings.
+- **AC5 — Rule surfaced in `/roughly:help`.** Add "feed story IDs, not epic IDs" to the `## STEP 1: COMMANDS BY CLUSTER` Pipeline entries for `/roughly:build` and `/roughly:fix` — one clause each, within the existing "one short line of purpose" format. `skills/help/SKILL.md` is 161/300; state the post-merge count.
+- **AC6 — ADR-021 written.** A Stage-1 gating-behavior change meets the `docs/adrs/README.md` criterion "changes the pipeline stage structure (number, order, or gating behavior)." Record: why advisory-and-ask rather than hard-abort; why detection is heuristic rather than schema-based (Roughly parses unstructured epic files by design — see `### Epic files`); the false-positive posture from AC3; and the decomposition-loop boundary. Add the row to the `CLAUDE.md` ADR table and the entry to `docs/adrs/README.md`. ADR-010 stays reserved; B3's intake ADR takes ≥022.
+- **AC7 — Line caps held, with an off-ramp.** Both pipeline files ≤300 post-merge, accounting for S5's prior additions. If either would exceed, extract the Stage 1 classification prose to `skills/shared/intake-granularity.md` and reference it via a runtime `Read` with `${CLAUDE_PLUGIN_ROOT}`, per ADR-012 — pre-authorized by this AC.
+
+**Verification.** Parity `diff` of the added Stage 1 blocks; `wc -l` on all three skill files; the README grep in AC4; `grep -c 'AskUserQuestion' skills/build/SKILL.md skills/fix/SKILL.md` unchanged from baseline (the constraint is stated as prohibition prose, not as a new mention). Behavioral verification against a two-story fixture is desk-check only — no new paid CI scenario. `bash .claude/hooks/verify-all.sh` clean.
+
+**Dependencies:** E07.S5 (line budget, per R3). No functional dependency.
+
+**Out of scope for this story.** Any epic→story decomposition loop — that needs live intake and is deferred with B3. External issue-tracker ID/URL resolution (B3, v0.1.10). `review-epic` / `audit-epic` intake — both correctly take whole epics and are untouched. A new CI scenario exercising the guard.
+
+---
+
+# Track D — Tag
+
+## E07.S7 — Tag-prep wrap
+
+**Maps to:** tag-prep DoD.
+
+**Files touched:** `.claude-plugin/plugin.json` · `docs/ROADMAP.md` · `CHANGELOG.md`
+
+**Acceptance criteria**
+
+- **AC1 — `plugin.json` bumped.** `"version"` `0.1.8` → `0.1.9`. Verify: `grep '"version"' .claude-plugin/plugin.json` shows `0.1.9`.
+- **AC2 — ROADMAP Current marker moved.** `docs/ROADMAP.md:3` `**Current:** v0.1.8` → `v0.1.9`, with `**Updated:**` set to the tag date. The v0.1.9 release-map row (L19) already exists — no promotion needed — but its theme text must be corrected per the OQ resolution below: B3 left the release, so "consumer-project intake hardening" overstates what shipped.
+- **AC3 — v0.1.9 ROADMAP status line finalized.** The section header currently reads `**Status:** SCOPING (draft — not yet frozen; Cluster B intake items PROPOSED pending confirmation)`. Replace with the shipped disposition, naming B3's move to v0.1.10.
+- **AC4 — CHANGELOG heading re-dated.** `## [Unreleased] — v0.1.9` → `## [0.1.9] — <actual tag date>`. The date must be the tag date, not an earlier one — the premature-and-wrong date this epic reverted in S3 is the second occurrence of this error in two releases (E06 audit finding #3 was the first).
+- **AC5 — The three surfaces agree.** `plugin.json`, the ROADMAP Current marker, and the CHANGELOG heading must all state v0.1.9. Verify all three in one pass; the E06 audit's "inconsistent version triad" finding exists because they were checked separately.
+- **AC6 — Executed after S2's disposition call.** All five risk-window dispositions from S2.AC5 must be recorded before this story runs, whether CLOSE or CARRY. A CARRY does not block the tag; an *unrecorded* window does.
+
+**Verification.** The three greps in AC5. `bash .claude/hooks/verify-all.sh` clean. Git tag creation is a maintainer action, not part of this story.
+
+**Dependencies:** all of S1–S6. Last story in the epic.
+
+**Out of scope for this story.** Writing CHANGELOG content (S3 did that). Creating the git tag or a GitHub release. Any code or convention change.
+
+---
+
+# Sequencing
+
+```
+S1 harness diagnostics ──► S2 dispatch + disposition ──────────────┐  CRITICAL PATH
+                                                                    │
+S3 CHANGELOG backfill ─────────────────────────────────────────────┤
+                                                                    ├──► S7 tag-prep
+S4 codifier ───────────────────────────────────────────────────────┤
+                                                                    │
+S5 Stage 4 contract ──► S6 granularity guard ──────────────────────┘
+```
+
+**Critical path is S1 → S2 → S7.** S2 is the long pole and the only story with an external dependency (paid dispatches) and an unbounded discovery component. Start S1 immediately and S2 the moment it merges — a dispatch that surfaces defects in scenarios dark for seven weeks needs runway, and running it at tag crunch is how the tag slips.
+
+**Track B and C gate nothing.** S3, S4, and S5→S6 are parallel with each other and with the critical path. Their only ordering constraint is S5 before S6 for line budget (R3), and all of them before S7. If the release window compresses, they can merge in any order; if S2's discovery run consumes the budget, S4 is the first cut — it is dogfooding-internal with no consumer-facing effect.
+
+**Pre-implementation review.** Run `/roughly:review-epic` against this epic before dispatching any story. Budgeted as an explicit step — it has caught real blockers every prior round.
+
+---
+
+# v0.1.10 tracking stubs
+
+Fileable as GitHub issues; not stories in this epic.
+
+**Stub 1 — B3: external issue-tracker intake, wholesale.** Deferred from v0.1.9 in full. Its exit criterion is a confirmed working fetch tool, which needs PM-tool MCP OAuth and cannot complete in a non-interactive session; splitting the scaffolding across two releases strands it away from what it enables. Sub-tasks: (a) **fetch-contract survey + ADR ≥022** across Linear / Jira / Shortcut, deciding the tool-agnostic intake-resolution mechanism — Roughly ships the mechanism and config, never a specific tracker; (b) **setup config surface** — STEP 4 issue-source declaration question with advisory MCP detection that never blocks setup, a new 5f writing the intake block to `.roughly/config`, and a versioned `issue-intake-v1` maturity check at STEP 6 re-offered via build/fix Stage 8; (c) **Stage-1 classifier + inline fallback**, with live fetch deferred — resolution order local-file → configured-pattern → inline, degrading to exactly today's behavior when no config exists. **Constraint:** `skills/setup/SKILL.md` is at 286/300; the 5f write logic and the `.roughly/config` schema go to `skills/setup/templates/` plus a shared reference per ADR-012, not inline. Operational toggles unify in `.roughly/config`; content artifacts (`known-pitfalls`, `verify-rules`, `spec-candidates`) stay separate files.
+
+**Stub 2 — DI-001: systematic pitfall-into-briefs pass.** `docs/deferred-investigations.md` DI-001 — surface `.roughly/known-pitfalls.md` patterns into the three Stage-6 agent briefs. #89 did this for one pitfall (OQ-resolution annotation → `agents/code-reviewer.md` step 8); the systematic pass is unstarted. Natural seed for the Spec 3 review-cell work in the differential-gate set, so it wants a v0.2.0-adjacent home rather than a v0.1.10 slot. Re-evaluate freshness before picking it up — DI-001 was noticed 2026-05-05 and its evidence base is a single story's cubic history.
+
+**Stub 3 — ADR-009 / ADR-010 stale-reference cleanup.** Doc-only, flagged in the ROADMAP Reconciliation section. Deferred out of v0.1.9 per the OQ resolution below.
+
+---
+
+# Open questions
+
+**OQ1 — Residual verdict-persistence gap: VERIFIED OPEN, scoped to one shape.** ~~Does ADR-019's ledger cover the Stage-4 review-plan verdict, or only the Stage-6 escalation path?~~ **Resolved at epic authoring (2026-07-30): escalation only.** `skills/shared/spec-candidate-escalation.md` covers Stage 6 spec-revision candidates and cubic option (c), routing both to `.roughly/spec-candidates.md`. Stage 4 in both pipelines displays the verdict and preserves it in context but writes it nowhere. E06 audit Rec 4 named three gap shapes (S1.AC3 transcripts, S7.AC3 plan-file verdict, S5.AC5 self-attestation); #72 closed none of them. E07.S5 closes the plan-file verdict shape as a micro-convention. The T2-transcript shape stays a v0.1.10 candidate. Spec 1 and the differential-gate set are not reopened.
+
+**OQ2 — Does B2 warrant an ADR?** ~~Lightweight ADR ≥021 vs convention-only.~~ **Resolved at epic authoring: ADR-021.** A Stage-1 gating-behavior change meets the `docs/adrs/README.md` criterion directly, and the advisory-not-abort posture plus the heuristic-detection choice are decisions a future contributor would otherwise have to reverse-engineer. B3's intake ADR moves to ≥022. ADR-010 stays reserved.
+
+**OQ3 — Does the `--ci` unification warrant its own ADR?** ~~New ADR-022 vs ADR-013 amendment.~~ **Resolved at epic authoring: amendment.** ADR-013 already states it unifies build `--ci` with fix `--ci`; the unification was partial in the opposite direction. Completing it is that ADR's stated intent, not a new decision. E07.S5.AC4 adds a dated amendment section. Flag if you would rather have a discrete ADR — the tradeoff is discoverability (a reader grepping for the fix-side change finds ADR-013 only if they read it through) against ADR inflation.
+
+**OQ4 — Release shape.** ~~Minimal (B2 + risk track + tag-prep) vs +3a codifier.~~ **Resolved at scoping: codifier in.** Its back-applications are fully specified in the E06 candidates block, the context that makes it cheap is decaying, and #81–#86 shipped orphaned of their parent codifier. It remains the designated first cut if S2's discovery dispatch consumes the effort budget.
+
+**OQ5 — Risk-window disposition.** Open until E07.S2 executes. Current evidence: **E06 Risk 3 count on `main` is 0** — 6 successes all-time, all 2026-05-08 against pre-scenario scaffolding, against 138 failures; no run has executed since 2026-07-18, and none on `main` since 2026-07-17. Since `6405652` removed the `push:` trigger, reaching 3 requires 3 deliberate `workflow_dispatch` runs against `main`, preceded by at least one discovery dispatch. **E04 Risk 3** and **E05 Risk 2** are assessable now from `main` history without spend. **E05 Risk 1** and **E04 Risk 5** are strictly downstream of a green dogfood run and CARRY if Risk 3 does.
+
+**OQ6 — Does the ADR-009 / ADR-010 stale-reference cleanup ride v0.1.9?** **Recommendation: no — defer to the v0.2.0 scoping pass** (Stub 3). It is doc-only and cheap, but v0.1.9 is already carrying two ADR edits (new ADR-021, amended ADR-013) plus the `CLAUDE.md` and `docs/adrs/README.md` index updates that come with them. Folding a third ADR-surface change into the same release makes the ADR diff harder to review for no release-gating benefit, and ADR-010 must stay reserved either way. Overrule if you want the ADR surface clean at tag.
+
+**OQ7 — Theme re-characterization.** **Recommendation: adopt.** With B3 out, "consumer-project intake hardening" reduces to a single advisory Stage-1 prompt and overclaims in both the ROADMAP release-map row (L19) and the v0.1.9 section header. Proposed row text: `E06 codification close-out + release-gate repair + epic-vs-story intake guard`. E07.S7.AC2 carries the edit. Confirm the wording or supply your own.
+
+**OQ8 — Carried for implementer discretion: what counts as "epic-shaped" in E07.S6.AC1.** Two or more story-form headings is the obvious heuristic, but the threshold and the heading forms recognized are a judgment call best made against real files — `docs/planning/epics/complete/E06-*.md` and the README examples are the available corpus. Resolve at plan-write and annotate this OQ per the `## Epic Open Question resolution` convention shipped in #86.
+
+---
+
+## v0.1.10 candidates
+
+Items deliberately out of v0.1.9 scope. Pull from this list when scoping v0.1.10. Stage 6 spec-revision candidates surfaced during E07 builds append here, per `CLAUDE.md` and ADR-019.
+
+- **B3 external issue-tracker intake, wholesale** — see Stub 1.
+- **DI-001 systematic pitfall-into-briefs pass** — see Stub 2; v0.2.0-adjacent.
+- **ADR-009 / ADR-010 stale-reference cleanup** — see Stub 3.
+- **T2-transcript persistence** — the second of E06 audit finding #4's three gap shapes. E07.S5 closes the plan-file verdict shape only; capturing full T2 transcripts as artifacts rather than first-line outputs plus a methodology note is unaddressed.
+- **Fix-side negative-path CI scenarios** (Stage 5c abort + NEEDS REVISION recovery) — unblocked by E06.S2 but deliberately withheld from v0.1.9: adding paid scenarios to a harness that has not produced a green run since 2026-06-10 increases the cost of every dispatch without increasing confidence. Revisit once E06 Risk 3 closes.
+- **Install-marker producer generalization** — apply the E06.S6 write-on-install plus back-fill-from-artifact pattern to other always-installed components (formatter PostToolUse hook, settings entries beyond hook registrations). Includes the audit-noted jq edge case: `upgrade` STEP 6's back-fill assumes a nested `.hooks[].hooks[]` shape and silently skips on a foreign `UserPromptSubmit` entry lacking an inner array; no fixture covers it.
+- **Dogfood-self template-sync mechanism** — carried from v0.1.7.
+- **Cubic-readable known-issues mechanism for accepted violations** — carried from v0.1.7 (E04.S8).
+- **Preamble + Stage 1 extraction to `skills/shared/`** — carried from v0.1.7; E07.S5 and E07.S6 both pre-authorize narrower ADR-012 extractions, which may supply the forcing function.
+- **Other-agents multi-file failure-handling audit** — investigator, discovery, code-reviewer, silent-failure-hunter, static-analysis, epic-reviewer.
+- **`set -uo pipefail` audit of `.claude/hooks/verify-all.sh`** — carried from v0.1.7.
+- **Setup Step 5b/5e defensive `mkdir -p` consistency** — E05.S4.5 candidate #1.
+- **Stage 8 step 6 doc-writer dispatch-side escalation** on `doc-writer: all writes failed —` returns — E05.S4.5 candidate #2.
+- **Cross-epic AC re-amendment: 4-hop recursive clarity** — E06.S1 SFH Info #5; hypothetical until a 4-hop chain exists.
+- **doc-writer self-check ordering / authoritative tiebreaker** — E06.S1 SFH Concern #1; requires a ~5–10 word trim elsewhere in `agents/doc-writer.md` (649/650).
+- **AC quoted-wording marker trigger-enumeration expansion** — E06.S4 SFH W2; `{{PLACEHOLDER}}` and square-bracket `[text]` slots are unenumerated metasyntactic forms.
+- *(Risk-window carries from E07.S2 append here per S2.AC6.)*
