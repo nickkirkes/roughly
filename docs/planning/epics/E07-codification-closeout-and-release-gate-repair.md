@@ -72,6 +72,8 @@ The first funded dispatch is still a discovery run, not a proving run, and each 
 
 **Files touched:** `CHANGELOG.md` · `docs/ROADMAP.md` (v0.1.8-retrospective DoD checkboxes) · `docs/planning/epics/complete/E04-path-consolidation-and-process-codification.md` · `docs/planning/epics/complete/E05-doc-writer-hardening-and-spec-quality-gates.md` · `docs/planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md` (risk-register status annotations) · `docs/runbooks/dogfood-ci.md`
 
+*Conditional — only if AC1's discovery dispatch surfaces an in-scope defect:* `skills/build/SKILL.md`, `skills/fix/SKILL.md` (Class A `${CLAUDE_PLUGIN_ROOT}` runtime-`Read` directives only — Class C stage-logic changes are explicitly out of scope) · `skills/shared/gate-protocol.md` (Class B) · `scripts/ci-dogfood.sh`, `tests/fixtures/**`, `.github/workflows/dogfood.yml` (harness-side, per the E06.S3 bundling precedent).
+
 **Acceptance criteria**
 
 - **AC1 — E06 Risk 3: dispatch, iterate, then call it.** Dispatch the dogfood workflow against `main` via `workflow_dispatch`. Treat the first dispatch as discovery. Once a dispatch reaches green, run two more without touching the workflow, script, or fixtures. **CLOSE** on 3 consecutive green; **CARRY to v0.1.10** otherwise, recording the count reached, the failing scenario, and the diagnosis. A third disposition, **BLOCKED-NO-EVIDENCE → CARRY**, applies if dispatches cannot execute at all (key depletion mid-story — the 2026-07-18 `Credit balance is too low` failure is the precedent); record it across the same surfaces as any other CARRY, with the stub naming key funding as the gating action. All three outcomes are acceptable ship states — the tag is gated on a *recorded disposition*, never on CLOSE.
@@ -174,7 +176,7 @@ The first funded dispatch is still a discovery run, not a proving run, and each 
 
 Bundled because both changes edit the same Stage 4 section in the same two files under a 14-line headroom in `skills/fix/SKILL.md`. Splitting them means two rounds of edits to the same lines and two independent cap negotiations.
 
-**Files touched:** `skills/build/SKILL.md` · `skills/fix/SKILL.md` · `docs/adrs/ADR-013-build-ci-runs-review-plan.md` · `CONTRIBUTING.md` · `CHANGELOG.md`
+**Files touched:** `skills/build/SKILL.md` · `skills/fix/SKILL.md` · `docs/adrs/ADR-013-build-ci-runs-review-plan.md` · `CONTRIBUTING.md` · `CHANGELOG.md` · *conditional:* `skills/shared/stage-4-verdict.md` (new — only if AC6's line-cap off-ramp is taken)
 
 **Acceptance criteria**
 
@@ -208,7 +210,7 @@ Bundled because both changes edit the same Stage 4 section in the same two files
 
 **Maps to:** B2 granularity guard (ROADMAP Cluster B).
 
-**Files touched:** `skills/build/SKILL.md` · `skills/fix/SKILL.md` · `skills/help/SKILL.md` · `README.md` · `docs/adrs/ADR-021-epic-vs-story-intake-guard.md` (new) · `CLAUDE.md` (ADR table row) · `docs/adrs/README.md` (ADR index) · `.roughly/known-pitfalls.md` · `CHANGELOG.md`
+**Files touched:** `skills/build/SKILL.md` · `skills/fix/SKILL.md` · `skills/help/SKILL.md` · `skills/shared/gate-protocol.md` (Rule 3 exemption list, per AC3b) · `README.md` · `docs/adrs/ADR-021-epic-vs-story-intake-guard.md` (new) · `CLAUDE.md` (ADR table row + ADR-020 reserved-list correction) · `docs/adrs/README.md` (ADR index) · `.roughly/known-pitfalls.md` · `CHANGELOG.md` · *conditional:* `skills/shared/intake-granularity.md` (new — only if AC7's line-cap off-ramp is taken)
 
 **Acceptance criteria**
 
