@@ -37,13 +37,29 @@ The first funded dispatch is still a discovery run, not a proving run, and each 
 
 **R5 — CHANGELOG backfill is written ~3 weeks post-merge from PR diffs, not build context.** The E06 audit found an inaccurate word-count claim in an entry written *with* fresh context (S1's 649→649 vs actual 649→647). Eight issues' worth of entries reconstructed cold will be worse. *Mitigation:* S3 sequences first, while the PRs are the most recent thing in the log, and its ACs require each entry to cite the merging PR and name the files it touched so claims are checkable against the diff.
 
+## Story tracking
+
+Each story is filed as a GitHub issue carrying a self-contained implementer brief. **This epic remains canonical for acceptance criteria** — the issues summarize and link, they do not duplicate AC text. If an issue and the epic disagree, amend the epic; a second normative source is the drift class E07.S4 exists to codify against.
+
+| Story | Issue | Dispatch order |
+|---|---|---|
+| E07.S3 — CHANGELOG backfill + heading revert | [#93](https://github.com/nickkirkes/roughly/issues/93) | 1 — hard predecessor of all |
+| E07.S1 — Dogfood harness diagnostics | [#94](https://github.com/nickkirkes/roughly/issues/94) | 2 |
+| E07.S2 — Risk-window disposition | [#95](https://github.com/nickkirkes/roughly/issues/95) | 3 (Phase 1) … 7 (Phase 2) |
+| E07.S5 — Stage 4 contract | [#96](https://github.com/nickkirkes/roughly/issues/96) | 4 |
+| E07.S6 — Granularity guard + ADR-021 | [#97](https://github.com/nickkirkes/roughly/issues/97) | 5 |
+| E07.S4 — Intra-epic AC codifier | [#98](https://github.com/nickkirkes/roughly/issues/98) | 6 (first cut if budget compresses) |
+| E07.S7 — Tag-prep wrap | [#99](https://github.com/nickkirkes/roughly/issues/99) | 8 — last |
+
+Deferred: [#100](https://github.com/nickkirkes/roughly/issues/100) (B3, v0.1.10) · [#101](https://github.com/nickkirkes/roughly/issues/101) (DI-001, v0.2.0-adjacent).
+
 ---
 
 # Track A — Release-gate repair (critical path)
 
 ## E07.S1 — Dogfood harness diagnostics + local validation
 
-**Maps to:** E06 Risk 3 dogfood gate (unblocking).
+**Maps to:** E06 Risk 3 dogfood gate (unblocking) · **Issue:** [#94](https://github.com/nickkirkes/roughly/issues/94)
 
 **Files touched:** `scripts/ci-dogfood.sh` · `docs/runbooks/dogfood-ci.md` · `.roughly/known-pitfalls.md` · `CHANGELOG.md`
 
@@ -70,7 +86,7 @@ The first funded dispatch is still a discovery run, not a proving run, and each 
 
 ## E07.S2 — Risk-window disposition: dispatch, assess, record
 
-**Maps to:** release-gating DoD (all five windows); E06 Risk 3 dogfood gate.
+**Maps to:** release-gating DoD (all five windows); E06 Risk 3 dogfood gate · **Issue:** [#95](https://github.com/nickkirkes/roughly/issues/95)
 
 **Files touched:** `CHANGELOG.md` · `docs/ROADMAP.md` (v0.1.8-retrospective DoD checkboxes) · `docs/planning/epics/complete/E04-path-consolidation-and-process-codification.md` · `docs/planning/epics/complete/E05-doc-writer-hardening-and-spec-quality-gates.md` · `docs/planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md` (risk-register status annotations) · `docs/runbooks/dogfood-ci.md`
 
@@ -113,7 +129,7 @@ The first funded dispatch is still a discovery run, not a proving run, and each 
 
 ## E07.S3 — CHANGELOG v0.1.9 backfill + heading revert
 
-**Maps to:** tag-prep DoD (front-loaded).
+**Maps to:** tag-prep DoD (front-loaded) · **Issue:** [#93](https://github.com/nickkirkes/roughly/issues/93)
 
 **Files touched:** `CHANGELOG.md`
 
@@ -135,7 +151,7 @@ The first funded dispatch is still a discovery run, not a proving run, and each 
 
 ## E07.S4 — Intra-epic AC amendment convention codifier + back-applications
 
-**Maps to:** 3a intra-epic codifier (ROADMAP v0.1.8 out-of-scope item 1; E06 audit main systemic finding).
+**Maps to:** 3a intra-epic codifier (ROADMAP v0.1.8 out-of-scope item 1; E06 audit main systemic finding) · **Issue:** [#98](https://github.com/nickkirkes/roughly/issues/98)
 
 **Files touched:** `CONTRIBUTING.md` · `docs/planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md` · `.roughly/known-pitfalls.md` · `CHANGELOG.md`
 
@@ -178,7 +194,7 @@ The first funded dispatch is still a discovery run, not a proving run, and each 
 
 ## E07.S5 — Stage 4 contract: verdict persistence + build/fix `--ci` parity
 
-**Maps to:** residual verdict-persistence gap (E06 audit Rec 4, partially satisfied by #72); ADR-013 unification follow-up (ROADMAP v0.1.8 out-of-scope item 3).
+**Maps to:** residual verdict-persistence gap (E06 audit Rec 4, partially satisfied by #72); ADR-013 unification follow-up (ROADMAP v0.1.8 out-of-scope item 3) · **Issue:** [#96](https://github.com/nickkirkes/roughly/issues/96)
 
 Bundled because both changes edit the same Stage 4 section in the same two files under a 14-line headroom in `skills/fix/SKILL.md`. Splitting them means two rounds of edits to the same lines and two independent cap negotiations.
 
@@ -214,7 +230,7 @@ Bundled because both changes edit the same Stage 4 section in the same two files
 
 ## E07.S6 — Epic-vs-story granularity guard
 
-**Maps to:** B2 granularity guard (ROADMAP Cluster B).
+**Maps to:** B2 granularity guard (ROADMAP Cluster B) · **Issue:** [#97](https://github.com/nickkirkes/roughly/issues/97)
 
 **Files touched:** `skills/build/SKILL.md` · `skills/fix/SKILL.md` · `skills/help/SKILL.md` · `skills/shared/gate-protocol.md` (Rule 3 exemption list, per AC3b) · `README.md` · `docs/adrs/ADR-021-epic-vs-story-intake-guard.md` (new) · `CLAUDE.md` (ADR table row + ADR-020 reserved-list correction) · `docs/adrs/README.md` (ADR index) · `.roughly/known-pitfalls.md` · `CHANGELOG.md` · *conditional:* `skills/shared/intake-granularity.md` (new — only if AC7's line-cap off-ramp is taken)
 
@@ -243,7 +259,7 @@ Bundled because both changes edit the same Stage 4 section in the same two files
 
 ## E07.S7 — Tag-prep wrap
 
-**Maps to:** tag-prep DoD.
+**Maps to:** tag-prep DoD · **Issue:** [#99](https://github.com/nickkirkes/roughly/issues/99)
 
 **Files touched:** `.claude-plugin/plugin.json` · `docs/ROADMAP.md` · `CHANGELOG.md`
 
@@ -293,11 +309,11 @@ CHANGELOG  harness  discovery │                │    3 proving runs   tag-pre
 
 # v0.1.10 tracking stubs
 
-Fileable as GitHub issues; not stories in this epic.
+Filed as GitHub issues; not stories in this epic.
 
-**Stub 1 — B3: external issue-tracker intake, wholesale.** Deferred from v0.1.9 in full. Its exit criterion is a confirmed working fetch tool, which needs PM-tool MCP OAuth and cannot complete in a non-interactive session; splitting the scaffolding across two releases strands it away from what it enables. Sub-tasks: (a) **fetch-contract survey + ADR ≥022** across Linear / Jira / Shortcut, deciding the tool-agnostic intake-resolution mechanism — Roughly ships the mechanism and config, never a specific tracker; (b) **setup config surface** — STEP 4 issue-source declaration question with advisory MCP detection that never blocks setup, a new 5f writing the intake block to `.roughly/config`, and a versioned `issue-intake-v1` maturity check at STEP 6 re-offered via build/fix Stage 8; (c) **Stage-1 classifier + inline fallback**, with live fetch deferred — resolution order local-file → configured-pattern → inline, degrading to exactly today's behavior when no config exists. **Constraint:** `skills/setup/SKILL.md` is at 286/300; the 5f write logic and the `.roughly/config` schema go to `skills/setup/templates/` plus a shared reference per ADR-012, not inline. Operational toggles unify in `.roughly/config`; content artifacts (`known-pitfalls`, `verify-rules`, `spec-candidates`) stay separate files.
+**Stub 1 — B3: external issue-tracker intake, wholesale.** *(Filed as [#100](https://github.com/nickkirkes/roughly/issues/100).)* Deferred from v0.1.9 in full. Its exit criterion is a confirmed working fetch tool, which needs PM-tool MCP OAuth and cannot complete in a non-interactive session; splitting the scaffolding across two releases strands it away from what it enables. Sub-tasks: (a) **fetch-contract survey + ADR ≥022** across Linear / Jira / Shortcut, deciding the tool-agnostic intake-resolution mechanism — Roughly ships the mechanism and config, never a specific tracker; (b) **setup config surface** — STEP 4 issue-source declaration question with advisory MCP detection that never blocks setup, a new 5f writing the intake block to `.roughly/config`, and a versioned `issue-intake-v1` maturity check at STEP 6 re-offered via build/fix Stage 8; (c) **Stage-1 classifier + inline fallback**, with live fetch deferred — resolution order local-file → configured-pattern → inline, degrading to exactly today's behavior when no config exists. **Constraint:** `skills/setup/SKILL.md` is at 286/300; the 5f write logic and the `.roughly/config` schema go to `skills/setup/templates/` plus a shared reference per ADR-012, not inline. Operational toggles unify in `.roughly/config`; content artifacts (`known-pitfalls`, `verify-rules`, `spec-candidates`) stay separate files.
 
-**Stub 2 — DI-001: systematic pitfall-into-briefs pass.** `docs/deferred-investigations.md` DI-001 — surface `.roughly/known-pitfalls.md` patterns into the three Stage-6 agent briefs. #89 did this for one pitfall (OQ-resolution annotation → `agents/code-reviewer.md` step 8); the systematic pass is unstarted. Natural seed for the Spec 3 review-cell work in the differential-gate set, so it wants a v0.2.0-adjacent home rather than a v0.1.10 slot. Re-evaluate freshness before picking it up — DI-001 was noticed 2026-05-05 and its evidence base is a single story's cubic history.
+**Stub 2 — DI-001: systematic pitfall-into-briefs pass.** *(Filed as [#101](https://github.com/nickkirkes/roughly/issues/101).)* `docs/deferred-investigations.md` DI-001 — surface `.roughly/known-pitfalls.md` patterns into the three Stage-6 agent briefs. #89 did this for one pitfall (OQ-resolution annotation → `agents/code-reviewer.md` step 8); the systematic pass is unstarted. Natural seed for the Spec 3 review-cell work in the differential-gate set, so it wants a v0.2.0-adjacent home rather than a v0.1.10 slot. Re-evaluate freshness before picking it up — DI-001 was noticed 2026-05-05 and its evidence base is a single story's cubic history.
 
 **Stub 3 — ADR-009 / ADR-010 stale-reference cleanup.** Doc-only, flagged in the ROADMAP Reconciliation section. Deferred out of v0.1.9 per the OQ resolution below.
 
