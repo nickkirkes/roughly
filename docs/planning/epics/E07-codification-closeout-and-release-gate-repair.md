@@ -43,17 +43,19 @@ Each story is filed as a GitHub issue carrying a self-contained implementer brie
 
 **Refresh obligation.** Precedence alone is not enough — it resolves a conflict already noticed, and does nothing to surface one. So: **when an epic change alters a story's scope, sequencing, files touched, or budget, the issues it invalidates are re-synced as part of the same change-set — before the epic commit is pushed — and the commit message names them.** A GitHub edit cannot literally be inside a Git commit, so the convention cannot be enforced by the commit boundary; make staleness *detectable* instead. **Each issue brief ends with the short SHA of the epic commit it was derived from, and the `## Story tracking` table records the same SHA per row.** A brief whose stamp is behind the epic's last content-changing commit is presumed stale, and `git log --oneline <stamp>..HEAD -- <epic path>` shows exactly what it missed. This is a convention with a check, not an automated gate — no CI enforces it. An issue that is merely summarizing stays as-is; an issue whose *instructions* have changed is stale the moment the epic lands without it. This rule exists because the pattern drifted on its first exercise: the 2026-08-10 corrections invalidated the harness invocation count in #94 and #95, the Phase 2 predecessor set in #95, and #98's claim that S4 gates Phase 2 — all three had to be re-synced by hand. Treat a stale brief as a defect in the epic's own convention, not as a stale ticket.
 
-| Story | Issue | Dispatch order |
-|---|---|---|
-| E07.S3 — CHANGELOG backfill + heading revert | [#93](https://github.com/nickkirkes/roughly/issues/93) | 1 — hard predecessor of all |
-| E07.S1 — Dogfood harness diagnostics | [#94](https://github.com/nickkirkes/roughly/issues/94) | 2 |
-| E07.S2 — Risk-window disposition | [#95](https://github.com/nickkirkes/roughly/issues/95) | 3 (Phase 1) … 7 (Phase 2) |
-| E07.S5 — Stage 4 contract | [#96](https://github.com/nickkirkes/roughly/issues/96) | 4 |
-| E07.S6 — Granularity guard + ADR-021 | [#97](https://github.com/nickkirkes/roughly/issues/97) | 5 |
-| E07.S4 — Intra-epic AC codifier | [#98](https://github.com/nickkirkes/roughly/issues/98) | 6 (first cut if budget compresses) |
-| E07.S7 — Tag-prep wrap | [#99](https://github.com/nickkirkes/roughly/issues/99) | 8 — last |
+| Story | Issue | Brief derived from | Dispatch order |
+|---|---|---|---|
+| E07.S3 — CHANGELOG backfill + heading revert | [#93](https://github.com/nickkirkes/roughly/issues/93) | `0e27c40` | 1 — hard predecessor of all |
+| E07.S1 — Dogfood harness diagnostics | [#94](https://github.com/nickkirkes/roughly/issues/94) | `0e27c40` | 2 |
+| E07.S2 — Risk-window disposition | [#95](https://github.com/nickkirkes/roughly/issues/95) | `0e27c40` | 3 (Phase 1) … 7 (Phase 2) |
+| E07.S5 — Stage 4 contract | [#96](https://github.com/nickkirkes/roughly/issues/96) | `0e27c40` | 4 |
+| E07.S6 — Granularity guard + ADR-021 | [#97](https://github.com/nickkirkes/roughly/issues/97) | `0e27c40` | 5 |
+| E07.S4 — Intra-epic AC codifier | [#98](https://github.com/nickkirkes/roughly/issues/98) | `0e27c40` | 6 (first cut if budget compresses) |
+| E07.S7 — Tag-prep wrap | [#99](https://github.com/nickkirkes/roughly/issues/99) | `0e27c40` | 8 — last |
 
-Deferred: [#100](https://github.com/nickkirkes/roughly/issues/100) (B3, v0.1.10) · [#101](https://github.com/nickkirkes/roughly/issues/101) (DI-001, v0.2.0-adjacent).
+Deferred: [#100](https://github.com/nickkirkes/roughly/issues/100) (B3, v0.1.10) · [#101](https://github.com/nickkirkes/roughly/issues/101) (DI-001, v0.2.0-adjacent) · [#102](https://github.com/nickkirkes/roughly/issues/102) (ADR-009/010 cleanup, v0.2.0) — all three briefs derived from `0e27c40`.
+
+The **Brief derived from** column is the staleness check described above: a row whose SHA is behind the epic's last *instruction-changing* commit means that issue needs re-syncing. Commits that only touch this table do not advance it.
 
 ---
 
