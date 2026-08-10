@@ -47,9 +47,9 @@ Each story is filed as a GitHub issue carrying a self-contained implementer brie
 |---|---|---|---|
 | E07.S3 — CHANGELOG backfill + heading revert | [#93](https://github.com/nickkirkes/roughly/issues/93) | `0e27c40` | 1 — hard predecessor of all |
 | E07.S1 — Dogfood harness diagnostics | [#94](https://github.com/nickkirkes/roughly/issues/94) | `0e27c40` | 2 |
-| E07.S2 — Risk-window disposition | [#95](https://github.com/nickkirkes/roughly/issues/95) | `0e27c40` | 3 (Phase 1) … 7 (Phase 2) |
+| E07.S2 — Risk-window disposition | [#95](https://github.com/nickkirkes/roughly/issues/95) | `1933bfb` | 3 (Phase 1) … 7 (Phase 2) |
 | E07.S5 — Stage 4 contract | [#96](https://github.com/nickkirkes/roughly/issues/96) | `0e27c40` | 4 |
-| E07.S6 — Granularity guard + ADR-021 | [#97](https://github.com/nickkirkes/roughly/issues/97) | `0e27c40` | 5 |
+| E07.S6 — Granularity guard + ADR-021 | [#97](https://github.com/nickkirkes/roughly/issues/97) | `1933bfb` | 5 |
 | E07.S4 — Intra-epic AC codifier | [#98](https://github.com/nickkirkes/roughly/issues/98) | `0e27c40` | 6 (first cut if budget compresses) |
 | E07.S7 — Tag-prep wrap | [#99](https://github.com/nickkirkes/roughly/issues/99) | `0e27c40` | 8 — last |
 
@@ -57,7 +57,7 @@ Deferred: [#100](https://github.com/nickkirkes/roughly/issues/100) (B3, v0.1.10)
 
 **Sequence** is story execution order — merge order for the stories, and for E07.S2 the two positions its phases occupy. *(Renamed from "Dispatch order" 2026-08-10: the old header read as paid-dispatch numbering, so S2's "7" looked like a seventh dispatch against a six-dispatch budget. Paid dispatches are counted only in E07.S2.AC1 and are unrelated to these positions.)*
 
-**Brief derived from** is the staleness check. **It is story-scoped — compare a row's SHA against the last commit that changed *that story's own section*, not against the epic's overall tip.** To check one row: `git log --oneline <sha>..HEAD -- <epic path>` for candidates, then `git diff <sha>..HEAD -- <epic path>` and look for changes inside that story's `## E07.SN` block; changes confined to other stories do not make this brief stale. **Re-stamp only the rows whose story actually changed** — bumping every row on every commit destroys the signal. *(Corrected 2026-08-10: a single global watermark marked all ten briefs stale on any change to any one story. The uniform `0e27c40` stamps below are that bug in miniature — they are a valid common baseline only because that commit did touch every story's instructions, and they should diverge from here on.)* Commits that only touch this table do not advance any stamp.
+**Brief derived from** is the staleness check. **It is story-scoped — compare a row's SHA against the last commit that changed *that story's own section*, not against the epic's overall tip.** To check one row: `git log --oneline <sha>..HEAD -- <epic path>` for candidates, then `git diff <sha>..HEAD -- <epic path>` and look for changes inside that story's `## E07.SN` block; changes confined to other stories do not make this brief stale. **Re-stamp only the rows whose story actually changed** — bumping every row on every commit destroys the signal. *(Corrected 2026-08-10: a single global watermark marked all ten briefs stale on any change to any one story. The stamps below started uniform at `0e27c40` — a valid common baseline only because that commit touched every story's instructions — and have since diverged as intended: the 2026-08-10 `1933bfb` pass changed only S2 and S6, so only those two rows advanced.)* Commits that only touch this table do not advance any stamp.
 
 ---
 
