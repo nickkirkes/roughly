@@ -74,7 +74,12 @@ bad=$(grep -o 'S1[,/][^.]\{0,24\}S6' "$EPIC" | grep -vcE 'S1, S5, S6|S1/S5/S6|S1
 while read -r issue stamp; do
   live=$(gh issue view "$issue" --json body -q .body | grep -oE 'epic commit `[0-9a-f]{7}`' | tail -1 | tr -d '`' | awk '{print $3}')
   [ "$stamp" = "$live" ] || { echo "FAIL: #$issue table=$stamp issue=${live:-none}"; fail=1; }
-done < <(grep -oE 'issues/([0-9]+)\) \| `[0-9a-f]{7}`' "$EPIC" | sed -E 's|issues/([0-9]+)\) \| `([0-9a-f]{7})`|\1 \2|' | sort -u)
+done < <(grep -oE 'issues/[0-9]+\) [|] `[0-9a-f]{7}`' "$EPIC" \
+         | sed -E 's#issues/([0-9]+)\) [|] `([0-9a-f]{7})`#\1 \2#' | sort -u)
+# NB: delimiter is '#', and the literal pipe is [|]. Using '|' as the s### delimiter
+# while also writing \| inside the pattern terminates the expression early — the
+# stamp then keeps its '| `' prefix and never compares equal. (Fixed 2026-08-13,
+# caught by this check's own first real run.)
 
 exit $fail
 ```
