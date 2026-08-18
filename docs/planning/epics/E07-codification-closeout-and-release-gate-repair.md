@@ -43,18 +43,18 @@ Each story is filed as a GitHub issue carrying a self-contained implementer brie
 
 **Refresh obligation.** Precedence alone is not enough — it resolves a conflict already noticed, and does nothing to surface one. So: **when an epic change alters a story's scope, sequencing, files touched, or budget, the issues it invalidates are re-synced as part of the same change-set — before the epic commit is pushed — and the commit message names them.** A GitHub edit cannot literally be inside a Git commit, so the convention cannot be enforced by the commit boundary; make staleness *detectable* instead. **Each issue brief ends with the short SHA of the epic commit it was derived from, and the `## Story tracking` table records the same SHA per row.** A brief whose stamp is behind a commit that changed **its own story's section or a shared normative section** is presumed stale — see the scoped rule below the table, which is the operative definition. *(Corrected 2026-08-12 — this sentence previously read "behind the epic's last content-changing commit," the global watermark the scoped rule exists to replace. The two gave opposite answers for a story-only edit, which is exactly the signal this section is supposed to provide.)* `git log --oneline <stamp>..HEAD -- <epic path>` lists the candidate commits; the scoped rule says which of them count. This is a convention with a check, not an automated gate — no CI enforces it. An issue that is merely summarizing stays as-is; an issue whose *instructions* have changed is stale the moment the epic lands without it. This rule exists because the pattern drifted on its first exercise: the 2026-08-10 corrections invalidated the harness invocation count in #94 and #95, the Phase 2 predecessor set in #95, and #98's claim that S4 gates Phase 2 — all three had to be re-synced by hand. Treat a stale brief as a defect in the epic's own convention, not as a stale ticket.
 
-| Story | Issue | Brief derived from | Wave | Constraint |
-|---|---|---|---|---|
-| E07.S3 — CHANGELOG backfill + heading revert | [#93](https://github.com/nickkirkes/roughly/issues/93) | `72baff5` | 1 | Before every other story (rewrites the heading their entries land under) |
-| E07.S1 — Dogfood harness diagnostics | [#94](https://github.com/nickkirkes/roughly/issues/94) | `72baff5` | 2 | After S3 |
-| E07.S2 **Phase 1** — discovery dispatch | [#95](https://github.com/nickkirkes/roughly/issues/95) | `72baff5` | 3 | Opens once S1 merges; **runs concurrently with wave 4** |
-| E07.S5 — Stage 4 contract | [#96](https://github.com/nickkirkes/roughly/issues/96) | `72baff5` | 4 | After S3; before S6 (line budget, R3) |
-| E07.S6 — Granularity guard + ADR-021 | [#97](https://github.com/nickkirkes/roughly/issues/97) | `72baff5` | 4 | After S5 |
-| E07.S4 — Intra-epic AC codifier | [#98](https://github.com/nickkirkes/roughly/issues/98) | `72baff5` | 4 | Unordered within the wave; **optional** — first cut if the dispatch budget compresses |
-| E07.S2 **Phase 2** — 3 proving runs | [#95](https://github.com/nickkirkes/roughly/issues/95) | `72baff5` | 5 | After S1, S5, S6 have merged (AC1's predecessor set). S4 not required <!-- predecessor-set:DERIVED=S1,S5,S6 --> |
-| E07.S7 — Tag-prep wrap | [#99](https://github.com/nickkirkes/roughly/issues/99) | `72baff5` | 6 | Last; after S2's disposition is recorded |
+| Story | Issue | Brief derived from | Body hash | Wave | Constraint |
+|---|---|---|---|---|---|
+| E07.S3 — CHANGELOG backfill + heading revert | [#93](https://github.com/nickkirkes/roughly/issues/93) | `1decb05` | `dd2e63f3038c` | 1 | Before every other story (rewrites the heading their entries land under) |
+| E07.S1 — Dogfood harness diagnostics | [#94](https://github.com/nickkirkes/roughly/issues/94) | `1decb05` | `d024b2891f1a` | 2 | After S3 |
+| E07.S2 **Phase 1** — discovery dispatch | [#95](https://github.com/nickkirkes/roughly/issues/95) | `1decb05` | `f700dced4b2e` | 3 | Opens once S1 merges; **runs concurrently with wave 4** |
+| E07.S5 — Stage 4 contract | [#96](https://github.com/nickkirkes/roughly/issues/96) | `1decb05` | `b56d5f95d873` | 4 | After S3; before S6 (line budget, R3) |
+| E07.S6 — Granularity guard + ADR-021 | [#97](https://github.com/nickkirkes/roughly/issues/97) | `1decb05` | `f5b707cf9aa6` | 4 | After S5 |
+| E07.S4 — Intra-epic AC codifier | [#98](https://github.com/nickkirkes/roughly/issues/98) | `1decb05` | `3b76fa452180` | 4 | Unordered within the wave; **optional** — first cut if the dispatch budget compresses |
+| E07.S2 **Phase 2** — 3 proving runs | [#95](https://github.com/nickkirkes/roughly/issues/95) | `1decb05` | `f700dced4b2e` | 5 | After S1, S5, S6 have merged (AC1's predecessor set). S4 not required <!-- predecessor-set:DERIVED=S1,S5,S6 --> |
+| E07.S7 — Tag-prep wrap | [#99](https://github.com/nickkirkes/roughly/issues/99) | `1decb05` | `56dc451585af` | 6 | Last; after S2's disposition is recorded |
 
-Deferred: [#100](https://github.com/nickkirkes/roughly/issues/100) (B3, v0.1.10) · [#101](https://github.com/nickkirkes/roughly/issues/101) (DI-001, v0.2.0-adjacent) · [#102](https://github.com/nickkirkes/roughly/issues/102) (ADR-009/010 cleanup, v0.2.0) — all three briefs derived from `72baff5`, same as the story rows above.
+Deferred (body hashes `249e19a6c783` / `0a150b346b18` / `af624acc5eb1`): [#100](https://github.com/nickkirkes/roughly/issues/100) (B3, v0.1.10) · [#101](https://github.com/nickkirkes/roughly/issues/101) (DI-001, v0.2.0-adjacent) · [#102](https://github.com/nickkirkes/roughly/issues/102) (ADR-009/010 cleanup, v0.2.0) — all three briefs derived from `1decb05`, same as the story rows above.
 
 **Wave** groups stories that may proceed concurrently; **Constraint** states the actual dependency. Waves are a partial order, not a queue — everything in wave 4 is unordered except S5-before-S6, and S2 Phase 1 (wave 3) overlaps all of wave 4 rather than blocking it. `# Sequencing` holds the authoritative graph; this table summarizes it. *(Replaced a single integer "Sequence"/"Dispatch order" column 2026-08-10. Integers implied a total order that contradicts the overlap — and read as paid-dispatch numbering besides, making S2's "7" look like a seventh dispatch against a six-dispatch budget. Paid dispatches are counted only in E07.S2.AC1.)*
 
@@ -97,6 +97,14 @@ while read -r issue stamp; do
   [ "$stamp" = "$live" ] || { echo "FAIL: #$issue table=$stamp issue=${live:-none}"; fail=1; }
 done < <(grep -oE 'issues/[0-9]+\) [|] `[0-9a-f]{7}`' "$EPIC" \
          | sed -E 's#issues/([0-9]+)\) [|] `([0-9a-f]{7})`#\1 \2#' | sort -u)
+
+# 2b. Body hash: a stamp is metadata, so an edited brief keeps a matching SHA.
+#     This is the only part of the obligation that detects tampering. (Added 2026-08-18.)
+while read -r issue want; do
+  got=$(gh issue view "$issue" --json body -q .body | shasum -a 256 | cut -c1-12)
+  [ "$want" = "$got" ] || { echo "FAIL: #$issue body hash $got != recorded $want"; fail=1; }
+done < <(grep -oE 'issues/[0-9]+\) [|] `[0-9a-f]{7}` [|] `[0-9a-f]{12}`' "$EPIC" \
+         | sed -E 's#issues/([0-9]+)\).*`([0-9a-f]{12})`#\1 \2#' | sort -u)
 # NB: delimiter is '#', and the literal pipe is [|]. Using '|' as the s### delimiter
 # while also writing \| inside the pattern terminates the expression early — the
 # stamp then keeps its '| `' prefix and never compares equal. (Fixed 2026-08-13,
