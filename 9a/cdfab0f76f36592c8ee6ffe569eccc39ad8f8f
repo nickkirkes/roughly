@@ -1,0 +1,22 @@
+docs/planning/epics/E07-codification-closeout-and-release-gate-repair.md
+  s_e83732b17416b7::t_77f8233f34da86 477-482,506-516,584,598-601,605-606
+  s_e83732b17416b7::t_9b57874e439344 72-84,90,92-94,96-97,102-103,109-118
+  s_e83732b17416b7::t_75b79e7e9ff297 85-89,91,174
+  s_e83732b17416b7::t_a420f31f34bb19 390-413
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "9acdfab0f76f36592c8ee6ffe569eccc39ad8f8f",
+  "prompts": {},
+  "sessions": {
+    "s_e83732b17416b7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ec71135b-e9c9-4cb8-9584-11a6f17453a8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
