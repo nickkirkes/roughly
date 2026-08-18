@@ -86,11 +86,17 @@ done < <(grep -oE 'issues/[0-9]+\) [|] `[0-9a-f]{7}`' "$EPIC" \
 
 # 3. Stale-but-matching: table and issues can agree while both trail the epic.
 #    Any commit after the stamp that touched this file must be shown to be editorial.
-stamp=$(grep -oE '\| `[0-9a-f]{7}` \|' "$EPIC" | head -1 | tr -d '| `')
+# Bound by the OLDEST stamp, not row 1's. Rows legitimately differ, so a global
+# watermark taken from whichever row happens to be first fails any valid story-only
+# update that advanced a different row — the exact divergence the convention permits.
+# (Fixed 2026-08-17.)
+oldest=$(grep -oE '\| `[0-9a-f]{7}` \|' "$EPIC" | tr -d '| `' | sort -u \
+         | while read -r s; do printf '%s %s\n' "$(git log -1 --format=%ct "$s" 2>/dev/null)" "$s"; done \
+         | sort -n | head -1 | awk '{print $2}')
 # Re-stamp commits touch the epic but are editorial by definition, so exclude them —
-# otherwise this check warns by exactly one in the normal steady state and gets ignored.
-since=$(git log --oneline --invert-grep --grep='^docs(planning): re-stamp' "$stamp"..HEAD -- "$EPIC" | wc -l | tr -d ' ')
-[ "$since" -eq 0 ] || { echo "WARN: $since commit(s) touched the epic since $stamp — confirm each is editorial, or re-stamp"; git log --oneline --invert-grep --grep='^docs(planning): re-stamp' "$stamp"..HEAD -- "$EPIC"; fail=1; }
+# otherwise this warns by exactly one in the normal steady state and gets ignored.
+since=$(git log --oneline --invert-grep --grep='^docs(planning): re-stamp' "$oldest"..HEAD -- "$EPIC" | wc -l | tr -d ' ')
+[ "$since" -eq 0 ] || { echo "WARN: $since commit(s) touched the epic since the oldest stamp ($oldest) — confirm each is editorial for the rows still on it, or re-stamp those rows"; git log --oneline --invert-grep --grep='^docs(planning): re-stamp' "$oldest"..HEAD -- "$EPIC"; fail=1; }
 
 exit $fail
 ```
@@ -185,7 +191,8 @@ Run it before pushing any epic change. A mismatch between a row and its issue me
 
   | # | Branch | Phase 1 | Phase 2 | Total | ~Cost | Disposition |
   |---|---|---|---|---|---|---|
-  | 1 | Account state blocks the first attempt; nothing ever executes | 0–1 | not run | **0–1** | $0–$10 | BLOCKED-NO-EVIDENCE → CARRY, terminal |
+  | 1 | Account state blocks the first attempt | 1 | not run | **1** | ~$0 | BLOCKED-NO-EVIDENCE → CARRY, terminal |
+  *(Branch 1 read `0–1` / `$0–$10` until 2026-08-17. BLOCKED is declared **only after** an attempt terminates on the account-state marker, and the note above says a blocked attempt counts as a dispatch — so the floor is 1, and its cost is ~$0 because it dies at the smoke step. The `0` case did not correspond to any state the stopping rule can reach.)*
   | 2 | Account state blocks mid-Phase-1 (d−1 already completed) | d | not run | **1–3** | $10–$30 | BLOCKED-NO-EVIDENCE → CARRY, terminal |
   | 3 | Class C surfaced on dispatch d | d | not run | **1–3** | $10–$30 | CARRY, terminal — no retry allowance |
   | 4 | Phase 1 exhausts the cap without green | 3 | not run | **3** | ~$30 | CARRY, terminal |
@@ -194,7 +201,7 @@ Run it before pushing any epic change. A mismatch between a row and its issue me
   | 7 | Green on dispatch d; account state blocks a proving run | d | p (0–2) + 1 blocked attempt | **2–6** | ~$10–$60 | BLOCKED-NO-EVIDENCE → CARRY, terminal |
 
   The **ceiling** stays 3 + 3 = **6 dispatches / ~$60**, and no branch exceeds it. **This table is the single source for paid-dispatch counts in this epic** — the envelope on the header line, the figures in Verification, and any restatement elsewhere are derived views; a change here updates them in the same change-set, per the `## Story tracking` refresh obligation. Class C is the only class with no retry allowance — it CARRIES by default precisely because it is unbounded, and rescoping it is a decision made with evidence rather than a commitment made here.
-- **AC2 — E04 Risk 3 (stop-hook drift, 30-day window elapsed).** Assess false-positive accumulation on `main`: the drift check has run on every Stop event across the #66–#91 bundle. Zero false positives → CLOSE. Any → CARRY with the mitigation-tightening candidate promoted to the v0.1.10 stub list. **Method (required, not optional — "cite the evidence, not a recollection" needs a procedure):** enumerate the change set with `git log --oneline 94ba772..main`, then run `bash .claude/hooks/verify-all.sh` against the current tree and record its drift-check result — the check names and their pass/fail, not raw output *(tightened 2026-08-13, same rule as above; hook output embeds absolute paths and whatever file content tripped a check)*. State the method used and its result; a bare assertion of "zero false positives" does not satisfy this AC.
+- **AC2 — E04 Risk 3 (stop-hook drift, 30-day window elapsed).** Assess false-positive accumulation on `main`: the drift check has run on every Stop event across the #66–#91 bundle. Zero false positives → CLOSE. Any → CARRY with the mitigation-tightening candidate promoted to the v0.1.10 stub list. **Method (required, not optional — "cite the evidence, not a recollection" needs a procedure):** enumerate the change set with `git log --oneline 94ba772..main`, then establish the drift record **across that history, not at a single point** *(corrected 2026-08-17 — the method ran the current hook once against the current tree, which says nothing about whether the checks fired falsely during the window being assessed, yet the AC let that support a CLOSE)*. Two sources, both required: **(a)** replay — for a sample of at least five commits spanning the window, `git worktree add` at that commit and run the hook there, recording pass/fail per commit; **(b)** the lived record — any drift message that actually surfaced during the window, from session transcripts or the maintainer's recollection, stated as such. A window CLOSEs only if (a) is clean across the sample and (b) names no observed false positive. Record check names and pass/fail per sampled commit, not raw output *(tightened 2026-08-13, same rule as above; hook output embeds absolute paths and whatever file content tripped a check)*. State the method used and its result; a bare assertion of "zero false positives" does not satisfy this AC.
 - **AC3 — E05 Risk 2 (off-ramp shared-reference Check 8 drift, 30-day window elapsed).** Same shape as AC2 against Check 8, using the same method and the same record-the-procedure requirement. Zero false positives → CLOSE; any → CARRY with either the Check 8 mechanic tightening or a per-skill carve-out named as the v0.1.10 candidate.
 - **AC4 — E05 Risk 1 and E04 Risk 5 both depend on AC1's outcome.** Risk 1 (doc-writer runtime-cache T2 confirmation) and Risk 5 (real-dogfood multi-file doc-writer exercise) can only close on evidence a green dogfood run produces. If AC1 CARRIES, both CARRY — state that dependency explicitly rather than asserting an independent assessment. If AC1 CLOSES, inspect the run transcripts for a multi-file doc-writer invocation; an E06.S1 T2 synthetic re-run does **not** satisfy Risk 5.
 - **AC5 — Dispositions are recorded on four surfaces, consistently.** Each of the five windows gets: **(1)** a CHANGELOG line under the v0.1.9 section stating CLOSE or CARRY with its evidence; **(2)** a checked or annotated box in the ROADMAP v0.1.8-retrospective DoD list ([docs/ROADMAP.md:199-203](../../ROADMAP.md)); **(3)** a status annotation on the originating epic's risk-register entry; and **(4)** for every CARRY (including BLOCKED-NO-EVIDENCE), a corresponding entry in this epic's `## v0.1.10 candidates` section naming what would close it. A window recorded on one surface and not the others is the failure mode this AC exists to prevent — verify as one pass: five windows × four surfaces, all agreeing.
@@ -219,7 +226,8 @@ A run qualifies against **S1.AC4's five conditions**, which this command project
 2. They differ → the sequence still qualifies only if **no input-affecting commit exists anywhere in the range**, not merely if the endpoints match. *(Corrected 2026-08-12 — an endpoint-only `git diff` is clean when an input change lands and is reverted between runs, so run 2 executed a different tree than runs 1 and 3 while the check reported qualified. The criterion is "no change between the runs," which is a statement about the range, not its endpoints.)* Use `git log`, which enumerates the range:
 
    ```sh
-   git log --oneline <first headSha>..<last headSha> -- \
+   FIRST=<first proving run's headSha>; LAST=<last proving run's headSha>
+   git log --oneline "$FIRST".."$LAST" -- \
      .github/workflows/dogfood.yml scripts/ci-dogfood.sh tests/fixtures/ \
      .claude-plugin/ agents/ skills/          # must print nothing
    ```
@@ -229,10 +237,15 @@ A run qualifies against **S1.AC4's five conditions**, which this command project
 **The input set is derived from the reset rule, never transcribed as a fixed list** — the same closed-world requirement S1.AC4 places on the runbook, for the same reason: a frozen enumeration silently omits inputs added later, which is exactly the failure `CLAUDE.md` warns about. Instantiate it at check time as *everything the six scenarios execute* — the workflow, the harness script and its fixtures, the two pipeline skill bodies, and every shared reference those two `Read` at runtime — deriving the last group mechanically rather than from memory:
 
 ```sh
-git diff --quiet <first> <last> -- \
+# Same range enumeration as step 2 above — this paragraph exists to justify the
+# path list, not to prescribe a second, weaker check.
+FIRST=<first proving run's headSha>; LAST=<last proving run's headSha>
+git log --oneline "$FIRST".."$LAST" -- \
   .github/workflows/dogfood.yml scripts/ci-dogfood.sh tests/fixtures/ \
   .claude-plugin/ agents/ skills/
 ```
+
+*(Corrected 2026-08-17 — this block still ran an endpoint `git diff --quiet` tree comparison, directly beneath prose insisting on a range check and a `git log` that does it correctly. A land-and-revert vanishes from an endpoint diff, so the weaker of the two commands would have qualified a sequence the stronger one disqualifies. I rejected this exact finding one round earlier after checking only the `git log` and never scrolling to the second command.)*
 
 **Deliberately over-approximated** *(corrected 2026-08-12 — the previous derivation listed the workflow, the harness, the fixtures, the two pipeline files, and whichever `skills/shared/*.md` those two currently grep out. It omitted every other runtime input the scenarios actually execute: the `agents/*.md` definitions each pipeline dispatches at Stages 2, 5b/5c and 6; the coordinator skills those stages invoke, `skills/review/SKILL.md` and `skills/review-plan/SKILL.md`; and `.claude-plugin/plugin.json`, which determines what `--plugin-dir` loads at all. A change to any of those alters what the six scenarios do while the old diff reported clean.)* Taking whole `agents/`, `skills/` and `.claude-plugin/` trees over-approximates — it includes skills no scenario invokes — and that is the correct direction of error: an over-broad set can only force an unnecessary re-run, while an under-broad one produces a **false CLOSE**, which is the failure this whole story exists to prevent. It is also closed-world by construction, so an input added later is covered without anyone remembering to add it.
 
@@ -349,22 +362,30 @@ Bundled because both changes edit the same Stage 4 section in the same two files
 - **AC5 — Verdict-persistence convention codified.** Add the rule to `CONTRIBUTING.md` `## AC authoring conventions`: a gate outcome cited as evidence must exist as an artifact, not as an attestation in prose. Names the plan-file verdict block as the canonical instance and cross-references E06 audit cross-cutting finding #4.
 - **AC6 — Line caps held, with an off-ramp.** `skills/build/SKILL.md` 281/300 and `skills/fix/SKILL.md` 286/300 at story start. Post-merge both ≤300. If either would exceed, extract the Stage 4 verdict-persistence prose to `skills/shared/stage-4-verdict.md` and reference it via a runtime `Read` directive using `${CLAUDE_PLUGIN_ROOT}`, per ADR-012 — the off-ramp is pre-authorized by this AC and does not require a new decision mid-build. **If taken, register the new shared file in `.claude/hooks/verify-all.sh`'s existing shared-reference machinery in the same change** *(added 2026-08-13 — the off-ramp as written created a fourth runtime-shared file entirely outside the repo's ADR-012 drift protection, so a missing, misanchored or divergent reference to it would go undetected: exactly the class of break that machinery exists to catch, and the reason E07.S6.AC7/AC9 treat their own extraction so carefully)*. Add it to the `for shared in …` list if its `Read` directive sits within the loop's `grep -A 3`-of-a-heading window; if the directive's position rules that out — as it does for S6's intake-granularity case — add a scoped check alongside, and say which shape shipped in the CHANGELOG. Verify: `wc -l` on both ≤300.
 
-**Verification.** `diff` parity check per AC1; the two greps in AC3 and AC2; `wc -l` per AC6. **Plus an artifact assertion, because prose parity does not prove the block is ever written** *(added 2026-08-12 — AC1's checks confirm the two pipelines carry identical instructions and that a plan file exists; nothing confirmed a generated plan actually contains the verdict block, leaving the story's primary behavior untested)*: the block must be present **and well-formed** — heading, ISO date, and the verdict text **diffed against what the subagent returned**. Any date plus any occurrence of `PASS` would satisfy a looser check while the block held a paraphrase, which is the attestation-vs-artifact failure this AC exists to close *(strengthened 2026-08-13 — the check was `grep -c '^## Review-plan verdict' ≥ 1`, which a bare heading with nothing beneath it satisfies; counting a heading does not verify the artifact the AC is about)*:
+**Verification.** `diff` parity check per AC1; the two greps in AC3 and AC2; `wc -l` per AC6. **Plus an artifact assertion, because prose parity does not prove the block is ever written** *(added 2026-08-12 — AC1's checks confirm the two pipelines carry identical instructions and that a plan file exists; nothing confirmed a generated plan actually contains the verdict block, leaving the story's primary behavior untested)*: the block must be present **and well-formed** — heading, ISO date, and the verdict text **diffed against what the subagent returned**. **Capture that verdict to a file during the run**, at the moment Stage 4 displays it: it is the only source for "verbatim," and no post-hoc inspection of the tree can reconstruct it. *(Both the plan path and the comparison source were unresolved placeholders until 2026-08-17 — `<the slug this run used>` is invalid shell, and `$VERDICT_AS_RETURNED` was referenced but never defined or populated, so the primary check could not run.)* Any date plus any occurrence of `PASS` would satisfy a looser check while the block held a paraphrase, which is the attestation-vs-artifact failure this AC exists to close *(strengthened 2026-08-13 — the check was `grep -c '^## Review-plan verdict' ≥ 1`, which a bare heading with nothing beneath it satisfies; counting a heading does not verify the artifact the AC is about)*:
 
 ```sh
 # PLAN is the path Stage 3 wrote and Stage 4 appended to — .roughly/plans/<slug>-plan.md.
 # Take it from the run's own output; do not guess. (`<plan file>` was shell redirection
 # syntax, so the command could not run at all — fixed 2026-08-13.)
-PLAN=.roughly/plans/<the slug this run used>-plan.md
+# Resolve PLAN from the tree, not from a placeholder: the newest plan file is the
+# one this run just wrote. Confirm it before asserting against it.
+PLAN=$(ls -t .roughly/plans/*-plan.md 2>/dev/null | head -1)
+[ -n "$PLAN" ] || { echo 'FAIL: no plan file found under .roughly/plans/'; exit 1; }
+
+# VERDICT_AS_RETURNED is captured during the run, before this check: when Stage 4
+# displays the review-plan verdict, save that text to a file. It is the only
+# source for "verbatim" — nothing in the tree can reconstruct it afterwards.
+VERDICT_AS_RETURNED=${VERDICT_AS_RETURNED:?capture the Stage 4 verdict to a file during the run}
+
 block=$(awk '/^## Review-plan verdict/{f=1} f{if(!NF && n)exit; if(NF)n++; print}' "$PLAN")
 [ -n "$block" ]                                    || { echo 'FAIL: no verdict block'; exit 1; }
 grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}' <<<"$block" || { echo 'FAIL: no ISO date on its own line'; exit 1; }
-# Verbatim means diffed against what the subagent returned — not "contains PASS".
 diff <(sed -n '3,$p' <<<"$block") "$VERDICT_AS_RETURNED" \
   || { echo 'FAIL: block is not the verbatim verdict'; exit 1; }
 ```
 
-**Run it on both trigger paths, not just PASS** *(added 2026-08-13 — AC1 requires persistence "on PASS (or on confirmed override)" and the check covered only PASS, so an override could proceed without writing the block and nothing would notice)*. The `plan-clean` and `plan-revision` scenarios both reach Stage 4 PASS, so S2's Phase 1 dispatch supplies the PASS-path evidence for the build side free — capture it there rather than paying for a separate run. **The override path has no scenario**, since no fixture drives a human override: verify it locally alongside S6.AC8's arms — run interactively, decline the review, say "override" at the override protocol, and assert the same well-formed block. Record both paths in the CHANGELOG. **Behavioral verification of the fix-side recovery loop has no scenario** *(corrected 2026-08-12)*. The `plan-revision` scenario drives `/roughly:build`, so it exercises the build loop this AC leaves unchanged; the one fix scenario reaches Stage 4 PASS and never emits NEEDS REVISION. So the behavior AC3 actually changes — fix `--ci` recovering from a first NEEDS REVISION instead of halting — is unexercised by every existing scenario, and three green proving runs would not catch it broken. Adding a fix-side negative-path scenario is out of scope (it is already a v0.1.10 candidate, withheld under the no-new-paid-scenarios constraint). **Verify it locally instead**, mirroring S6.AC8's pattern: run `/roughly:fix --ci` against the `hello-roughly-plan-revision` fixture's trigger conditions from a throwaway worktree, and assert two `[--ci] plan review verdict:` markers appear — a NEEDS REVISION followed by a PASS — rather than a halt on the first. **Then exercise the cap's terminal branch, which the recovery case does not reach** *(added 2026-08-13 — AC3 ports build's whole contract, and the cap is half of it: a fix pipeline that loops forever, or halts at the wrong count, passes a NEEDS-REVISION-then-PASS check unchanged)*. Drive a second run whose plan cannot be repaired into a PASS, and assert **two** NEEDS REVISION verdicts followed by the halt marker `Stage 4 plan-review cannot proceed: 2 NEEDS REVISION verdicts.` — byte-identical to build's, since AC3's point is that the two contracts are now one. **Then assert the artifact on the fix side too**, using the same well-formed-block check above against the plan path that run reported — not a heading count. *(Added 2026-08-12 — the build-side artifact assertion comes free off S2's Phase 1 dispatch, but nothing covered fix: this run could emit both markers and still never write the block, which is AC1's actual deliverable.)* **Record a hand-written summary, not a raw transcript** — fixture contents, tool request/response bodies and local paths are not CHANGELOG material; state the two marker lines observed and the grep result. Note the residual: this is a one-off pre-merge check with no CI regression coverage, the same posture as S6.AC8/AC9. `bash .claude/hooks/verify-all.sh` clean.
+**Run it on both trigger paths, not just PASS** *(added 2026-08-13 — AC1 requires persistence "on PASS (or on confirmed override)" and the check covered only PASS, so an override could proceed without writing the block and nothing would notice)*. The `plan-clean` and `plan-revision` scenarios both reach Stage 4 PASS, so S2's Phase 1 dispatch supplies the PASS-path evidence for the build side free — capture it there rather than paying for a separate run. **The override path has no scenario**, since no fixture drives a human override: verify it locally alongside S6.AC8's arms — run interactively, decline the review, say "override" at the override protocol, and assert the same well-formed block. Record both paths in the CHANGELOG. **Behavioral verification of the fix-side recovery loop has no scenario** *(corrected 2026-08-12)*. The `plan-revision` scenario drives `/roughly:build`, so it exercises the build loop this AC leaves unchanged; the one fix scenario reaches Stage 4 PASS and never emits NEEDS REVISION. So the behavior AC3 actually changes — fix `--ci` recovering from a first NEEDS REVISION instead of halting — is unexercised by every existing scenario, and three green proving runs would not catch it broken. Adding a fix-side negative-path scenario is out of scope (it is already a v0.1.10 candidate, withheld under the no-new-paid-scenarios constraint). **Verify it locally instead**, mirroring S6.AC8's pattern, **with a stated setup rather than "the fixture's trigger conditions"** *(corrected 2026-08-17 — that phrase named no invocation and no plan mutation, so this could be marked verified without the recovery loop ever running; `hello-roughly-plan-revision` is a build fixture and does not transfer unmodified)*. From a throwaway worktree: copy `tests/fixtures/hello-roughly-bug/` aside and drive `/roughly:fix --ci` with an issue description whose plan trips review-plan on the first pass — reuse the plan-revision fixture's mechanism, a task whose Verify command is a co-located-hazard `grep -Fc` assertion. **Confirm the first pass actually emits NEEDS REVISION before relying on the run**; a PASS means the setup did not reproduce and the branch has not been exercised, and assert two `[--ci] plan review verdict:` markers appear — a NEEDS REVISION followed by a PASS — rather than a halt on the first. **Then exercise the cap's terminal branch, which the recovery case does not reach** *(added 2026-08-13 — AC3 ports build's whole contract, and the cap is half of it: a fix pipeline that loops forever, or halts at the wrong count, passes a NEEDS-REVISION-then-PASS check unchanged)*. Drive a second run whose plan cannot be repaired into a PASS, and assert **two** NEEDS REVISION verdicts followed by the halt marker `Stage 4 plan-review cannot proceed: 2 NEEDS REVISION verdicts.` — byte-identical to build's, since AC3's point is that the two contracts are now one. **Then assert the artifact on the fix side too**, using the same well-formed-block check above against the plan path that run reported — not a heading count. *(Added 2026-08-12 — the build-side artifact assertion comes free off S2's Phase 1 dispatch, but nothing covered fix: this run could emit both markers and still never write the block, which is AC1's actual deliverable.)* **Record a hand-written summary, not a raw transcript** — fixture contents, tool request/response bodies and local paths are not CHANGELOG material; state the two marker lines observed and the grep result. Note the residual: this is a one-off pre-merge check with no CI regression coverage, the same posture as S6.AC8/AC9. `bash .claude/hooks/verify-all.sh` clean.
 
 **Dependencies:** none blocking. Sequence before S6 within Track B so S6 inherits a known line budget (R3).
 
@@ -462,7 +483,7 @@ diff <(sed -n '3,$p' <<<"$block") "$VERDICT_AS_RETURNED" \
   - **`QUESTION`** — `Narrow to one story, or confirm monolithic treatment?`, the sub-gate's own prompt. Asserting it is what proves the gate was raised rather than the session merely printing the marker and stopping.
   - **`PROCEEDED`** — the existing Stage 1 gate question, verified present today at `skills/build/SKILL.md:31` and `skills/fix/SKILL.md:40`: `Is this the correct scope?` (build) and `Is this the correct issue?` (fix). Its appearance is the positive signal that Stage 1 actually ran *past* the classifier, rather than the session having stopped for an unrelated reason.
 
-  Pass conditions — **positive arms (1–5, 7–8):** `CLASSIFIER` **and** `QUESTION` present, `PROCEEDED` absent — the classifier ran, the gate was raised, and it held. **Negative arms (6, 9):** `CLASSIFIER` absent **and** `PROCEEDED` present, so there is no false positive *and* Stage 1 demonstrably proceeded. **Arms 10 and 11:** `CLASSIFIER` ∧ `QUESTION` on turn 1, `PROCEEDED` after the monolithic confirmation.
+  Pass conditions — **every arm additionally requires the session to have exited cleanly**: capture `$?` and reject 124 (timeout) or any non-zero, since a session that printed the strings and then died satisfies a string-presence test while proving nothing about the gate *(added 2026-08-17)*. **Positive arms (1–5, 7–8):** exit 0, `CLASSIFIER` **and** `QUESTION` present, `PROCEEDED` absent — the classifier ran, the gate was raised, and it held. **Negative arms (6, 9):** `CLASSIFIER` absent **and** `PROCEEDED` present, so there is no false positive *and* Stage 1 demonstrably proceeded. **Arms 10 and 11:** `CLASSIFIER` ∧ `QUESTION` on turn 1, `PROCEEDED` after the monolithic confirmation.
 
   Match `CLASSIFIER` with `grep -qE '^[^A-Za-z]*Stage 1 intake: epic-shaped input detected'` — line-anchored with a leading-punctuation tolerance for markdown bullets and bold, the `scripts/ci-dogfood.sh` plugin-probe idiom — so a mid-sentence mention of the phrase does not satisfy it. Match `PROCEEDED` with `grep -qF`.
 
@@ -499,16 +520,31 @@ diff <(sed -n '3,$p' <<<"$block") "$VERDICT_AS_RETURNED" \
 
   EPIC_INPUT=docs/planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md
 
-  # Arm 10 — build side.
-  $TIMEOUT 120 env -i HOME="$HOME" PATH="$PATH" TERM="$TERM" ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
-    claude --bare --plugin-dir . --strict-mcp-config --allowed-tools "$ALLOWLIST" \
-           "/roughly:build $EPIC_INPUT"
-  # turn 1: CLASSIFIER + QUESTION -> answer with monolithic confirmation -> PROCEEDED -> exit
+  mkdir -p "$WT/.fakehome"
+  CLASSIFIER='Stage 1 intake: epic-shaped input detected'
+  QUESTION='Narrow to one story, or confirm monolithic treatment?'
 
-  # Arm 11 — fix side, same epic-shaped input (arm 7 uses one of arms 1-4's inputs).
-  $TIMEOUT 120 env -i HOME="$HOME" PATH="$PATH" TERM="$TERM" ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
-    claude --bare --plugin-dir . --strict-mcp-config --allowed-tools "$ALLOWLIST" \
-           "/roughly:fix $EPIC_INPUT"
+  # HOME is the throwaway dir, not the operator's — Read/Grep/Glob are not confined
+  # to cwd, and these arms ingest contributor-modifiable markdown. It also keeps the
+  # persisted sessions inside $WT so cleanup is a single rm.
+  run_interactive() {   # $1 = pipeline, $2 = transcript path
+    $TIMEOUT 120 env -i HOME="$WT/.fakehome" PATH="$PATH" TERM="$TERM" \
+      ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+      claude --bare --plugin-dir . --strict-mcp-config --allowed-tools "$ALLOWLIST" \
+             "/roughly:$1 $EPIC_INPUT" 2>&1 | tee "$2"
+  }
+
+  # Arm 10 — build. Answer the sub-gate with monolithic confirmation on turn 2, then exit.
+  run_interactive build "$WT/arm10.log"
+  # Arm 11 — fix. Same procedure, same input, same assertions.
+  run_interactive fix   "$WT/arm11.log"
+
+  # Assertions — the commands above only produce evidence; these decide pass/fail.
+  for log in "$WT/arm10.log" "$WT/arm11.log"; do
+    grep -qE "^[^A-Za-z]*$CLASSIFIER" "$log" || { echo "FAIL $log: no CLASSIFIER"; exit 1; }
+    grep -qF  "$QUESTION"             "$log" || { echo "FAIL $log: gate never asked";  exit 1; }
+    grep -qF  'Is this the correct'   "$log" || { echo "FAIL $log: did not proceed after confirmation"; exit 1; }
+  done
 
   # Cleanup is REQUIRED, not advisory — these arms persist sessions by construction.
   # There is no CLI session-delete; sessions are files under the HOME the session ran with.
@@ -526,7 +562,7 @@ diff <(sed -n '3,$p' <<<"$block") "$VERDICT_AS_RETURNED" \
 
   **Cleanup is part of the AC, including on the interrupted path** *(added 2026-08-12 — it was previously two trailing comments after a listing command, so an interrupted or abandoned arm silently left repository-derived prompts and model responses in Claude's persisted session storage; `--no-session-persistence` cannot help here, which is the whole reason these two arms differ from the rest)*. If either arm is interrupted, run the cleanup anyway before doing anything else. **Confirm removal rather than asserting it** *(strengthened 2026-08-13 — `claude --resume --list` only lists, and "delete them" was a bare comment with no command, so an interrupted arm left repository-derived prompts and model responses in session storage indefinitely. There is no CLI delete; routing `HOME` into the worktree is what makes removal a single `rm`.)*: after cleanup, `find "$WT" -maxdepth 0 2>/dev/null` must print nothing. Record in the CHANGELOG that both sessions were removed and how it was confirmed.
 
-  **Arm 11 is the same procedure on the fix pipeline** *(spelled out 2026-08-12 — the table said only "same as arm 10," which named no invocation, no assertions, no cleanup)*: same flags, same allowlist, same timeout, arm 7's input, and the same `CLASSIFIER` → confirm → `PROCEEDED` sequence.
+  **Arm 11 is the same procedure on the fix pipeline**: same flags, same allowlist, same timeout, same input, same `CLASSIFIER` → `QUESTION` → confirm → `PROCEEDED` sequence — which is why both run through one shell function rather than two hand-copied command lines. *(Two corrections land here. 2026-08-12: the table said only "same as arm 10," naming no invocation, assertions or cleanup. 2026-08-17: the commands still passed `HOME="$HOME"` — the real home the isolation bullet had already replaced with `$WT/.fakehome` — and they launched sessions without capturing a transcript or asserting anything, so following them produced no pass/fail evidence at all. The transcript `tee` and the three greps are what make these arms checks rather than demonstrations.)*
 
   No `-p`: the positional prompt seeds an **interactive** session, so the gate can be answered on turn 2.
 
@@ -557,6 +593,7 @@ diff <(sed -n '3,$p' <<<"$block") "$VERDICT_AS_RETURNED" \
 
     *(The two non-empty assertions were added 2026-08-12: `diff` of two empty extractions exits 0, so the single check meant to prove the classifier is present in both files reported a clean pass precisely when it had been removed from both — the failure mode it exists to catch.)*
   - **Extracted shape:** `skills/shared/intake-granularity.md` exists, **and it still carries the anchored classifier paragraph** — `**Intake granularity:**` at line-start, followed by non-empty prose — **and** both pipelines carry ``Read `${CLAUDE_PLUGIN_ROOT}/skills/shared/intake-granularity.md` `` at line-start, **and** those two reference lines are byte-identical. *(The payload assertion was added 2026-08-12: existence plus reference parity alone would pass an empty or gutted shared file, so the classifier could be deleted wholesale while every part of Check A stayed green — the inline branch checks content and the extracted branch did not.)* Per AC7, do **not** register this in the existing `for shared in …` / `for pair in …` loop: that loop demands the directive within `grep -A 3` of a `## ` heading, while AC1's insertion point sits several lines into `## STAGE 1: INTAKE`. Scope the search to the Stage 1 section instead — `awk '/^## STAGE 1: INTAKE$/{f=1;next} /^## /{f=0} f'` piped to a fixed-string `index($0,p) == 1` test, mirroring the loop's line-start discipline so regex metacharacters in the path cannot bypass it.
+  - **Both shapes present** → report drift *(added 2026-08-17)*. Check A takes the inline branch whenever both files carry the inline anchor and never asserts the extracted directives are gone, so an edit leaving inline prose **and** a shared-file `Read` in place passes as clean parity while the pipelines carry duplicated, independently driftable runtime instructions. Assert the unselected shape is absent: inline shape → neither pipeline may `Read` `intake-granularity.md`; extracted shape → neither may carry the inline anchor.
   - **Neither shape detected** → report drift. A missing shared file with live `Read` references in both pipelines is the same class of structural break as the missing-hook case; report it as such rather than falling through silently.
 
   **Check B — ordering, enforcing AC1's positional requirement.** Byte-identity does not stop a later edit from moving the block **above** the `CI_MODE=true` assignment, which hangs every `--ci` run at the new gate — precisely the failure AC1's positional insertion point exists to prevent, and one no parity `diff` can see. Assert, for **both** files (build's resolution and `CI_MODE` share one sentence today, but a later split would make ordering load-bearing there too), that the anchor sits **strictly between** the `CI_MODE=true` assignment and the existing Stage 1 `Ask:` gate. **Both bounds, not just the lower one** *(corrected 2026-08-12 — AC1 specifies "after the `CI_MODE=true` assignment and before the existing `Ask:` gate," and Check B enforced only the first half; a relocation below the gate would classify after the human had already been asked to confirm scope, and still pass)*:
