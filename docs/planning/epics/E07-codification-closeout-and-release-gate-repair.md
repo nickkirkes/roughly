@@ -69,60 +69,53 @@ Deferred (body hashes `249e19a6c783` / `0a150b346b18` / `af624acc5eb1`): [#100](
 EPIC=docs/planning/epics/E07-codification-closeout-and-release-gate-repair.md
 fail=0
 
-# 1. Every restatement of the Phase 2 predecessor set must name exactly S1, S5, S6.
-#    AC1 is authoritative; the diagram, the Constraint column and the prose are derived.
-# Compare tagged markers, not prose. Every site that restates the Phase 2
-# predecessor set carries an AUTHORITATIVE marker (AC1) or a DERIVED one; the
-# check asserts every DERIVED value equals the AUTHORITATIVE value. The value
-# must be non-empty, so this comment cannot match itself.
-#
-# Three regex attempts preceded this and all failed differently: [^.] hid dotted
-# forms; a trailing-S6 substring accepted 'S1,S5,S6,and S7' and missed sets that
-# drop S6; and a set-comparison over any line mentioning "Phase 2" flagged S3/S4,
-# 'S5 and S6' and the wave-4 grouping, none of which are predecessor restatements.
-# Prose cannot tell a restatement from a nearby list — so tag the sites instead.
-# (Fixed 2026-08-18.)
-auth=$(grep -o 'predecessor-set:AUTHORITATIVE=[A-Za-z0-9,]\+' "$EPIC" | cut -d= -f2 | sort -u)
-[ "$(printf '%s' "$auth" | wc -l)" -eq 0 ] && [ -n "$auth" ] \
-  || { echo "FAIL: expected exactly one AUTHORITATIVE predecessor-set marker"; fail=1; }
-while read -r d; do
-  [ "$d" = "$auth" ] || { echo "FAIL: derived predecessor set '$d' != authoritative '$auth'"; fail=1; }
-done < <(grep -o 'predecessor-set:DERIVED=[A-Za-z0-9,]\+' "$EPIC" | cut -d= -f2)
-[ "$bad" -eq 0 ] || { echo "FAIL: $bad predecessor restatement(s) disagree with AC1"; fail=1; }
+# 1. Predecessor set. Every site that restates it carries a marker comment; AC1's is
+#    AUTHORITATIVE, the rest DERIVED. Four regex attempts preceded this and each failed
+#    differently — prose cannot tell a restatement from a nearby story list — so the
+#    sites are tagged instead. Values must be non-empty so this comment cannot match
+#    itself. (Reworked 2026-08-18.)
+auth=$(grep -oh 'predecessor-set:AUTHORITATIVE=[A-Za-z0-9,]\+' "$EPIC" | cut -d= -f2 | sort -u)
+[ "$(printf '%s\n' "$auth" | grep -c .)" -eq 1 ] \
+  || { echo "FAIL: expected exactly one AUTHORITATIVE marker, got: $auth"; fail=1; }
 
-# 2. Every table row's stamp must equal what that row's issue actually carries.
-#    Rows may legitimately differ from EACH OTHER — staleness is per story.
+# 1b. A marker can agree while the sentence it annotates says something else, so also
+#     compare the story IDs visible on the marker's own line. (Added 2026-08-18.)
+while IFS= read -r line; do
+  claimed=$(printf '%s' "$line" | grep -o 'predecessor-set:[A-Z]*=[A-Za-z0-9,]\+' | cut -d= -f2)
+  # The LAST enumeration (2+ ids) before the marker is the restatement it annotates.
+  # Taking every id on the line instead swept in 'S4 not required' and 'S2.AC1'.
+  visible=$(printf '%s' "$line" | sed 's/<!--.*//' \
+            | grep -oE '(E07\.)?S[0-9]([,/]| and )[ ]*(E07\.)?S[0-9](([,/]| and )[ ]*(E07\.)?S[0-9])*' \
+            | tail -1 | grep -oE 'S[0-9]' | paste -sd, -)
+  [ "$claimed" = "$visible" ] \
+    || { echo "FAIL: marker says $claimed but the restatement reads $visible -- ${line:0:60}"; fail=1; }
+done < <(grep -h 'predecessor-set:' "$EPIC" | grep -v 'grep -o')
+
+# 2. Stamps: each table row against the stamp its issue actually carries.
 while read -r issue stamp; do
-  live=$(gh issue view "$issue" --json body -q .body | grep -oE 'epic commit `[0-9a-f]{7}`' | tail -1 | tr -d '`' | awk '{print $3}')
+  live=$(gh issue view "$issue" --json body -q .body \
+         | grep -oE 'epic commit `[0-9a-f]{7}`' | tail -1 | tr -d '`' | awk '{print $3}')
   [ "$stamp" = "$live" ] || { echo "FAIL: #$issue table=$stamp issue=${live:-none}"; fail=1; }
 done < <(grep -oE 'issues/[0-9]+\) [|] `[0-9a-f]{7}`' "$EPIC" \
          | sed -E 's#issues/([0-9]+)\) [|] `([0-9a-f]{7})`#\1 \2#' | sort -u)
 
-# 2b. Body hash: a stamp is metadata, so an edited brief keeps a matching SHA.
-#     This is the only part of the obligation that detects tampering. (Added 2026-08-18.)
+# 2b. Body hash: a stamp is metadata, so an edited brief keeps a matching SHA. This is
+#     the only part of the obligation that detects tampering rather than staleness.
 while read -r issue want; do
   got=$(gh issue view "$issue" --json body -q .body | shasum -a 256 | cut -c1-12)
   [ "$want" = "$got" ] || { echo "FAIL: #$issue body hash $got != recorded $want"; fail=1; }
 done < <(grep -oE 'issues/[0-9]+\) [|] `[0-9a-f]{7}` [|] `[0-9a-f]{12}`' "$EPIC" \
          | sed -E 's#issues/([0-9]+)\).*`([0-9a-f]{12})`#\1 \2#' | sort -u)
-# NB: delimiter is '#', and the literal pipe is [|]. Using '|' as the s### delimiter
-# while also writing \| inside the pattern terminates the expression early — the
-# stamp then keeps its '| `' prefix and never compares equal. (Fixed 2026-08-13,
-# caught by this check's own first real run.)
 
-# 3. Stale-but-matching: table and issues can agree while both trail the epic.
-#    Any commit after the stamp that touched this file must be shown to be editorial.
-# Bound by the OLDEST stamp, not row 1's. Rows legitimately differ, so a global
-# watermark taken from whichever row happens to be first fails any valid story-only
-# update that advanced a different row — the exact divergence the convention permits.
-# (Fixed 2026-08-17.)
-oldest=$(grep -oE '\| `[0-9a-f]{7}` \|' "$EPIC" | tr -d '| `' | sort -u \
-         | while read -r s; do printf '%s %s\n' "$(git log -1 --format=%ct "$s" 2>/dev/null)" "$s"; done \
-         | sort -n | head -1 | awk '{print $2}')
-# Re-stamp commits touch the epic but are editorial by definition, so exclude them —
-# otherwise this warns by exactly one in the normal steady state and gets ignored.
-since=$(git log --oneline --invert-grep --grep='^docs(planning): re-stamp' "$oldest"..HEAD -- "$EPIC" | wc -l | tr -d ' ')
-[ "$since" -eq 0 ] || { echo "WARN: $since commit(s) touched the epic since the oldest stamp ($oldest) — confirm each is editorial for the rows still on it, or re-stamp those rows"; git log --oneline --invert-grep --grep='^docs(planning): re-stamp' "$oldest"..HEAD -- "$EPIC"; fail=1; }
+# 3. Stale-but-matching, per stamp and ADVISORY ONLY. Rows legitimately hold different
+#    SHAs, so any watermark — row 1's or the oldest — reports valid partial re-stamps as
+#    failures; both were tried and both were wrong. This lists what each stamp may have
+#    missed and never sets fail: deciding whether a commit was editorial for a given
+#    story is judgement the script cannot make. (Downgraded 2026-08-18.)
+for s in $(grep -oE '\| `[0-9a-f]{7}` \|' "$EPIC" | tr -d '| `' | sort -u); do
+  n=$(git log --oneline --invert-grep --grep='^docs(planning): re-stamp' "$s"..HEAD -- "$EPIC" | grep -c .)
+  [ "$n" -eq 0 ] || echo "NOTE: $n non-re-stamp commit(s) since $s — confirm each is editorial for the rows still on it"
+done
 
 exit $fail
 ```
@@ -178,8 +171,7 @@ Run it before pushing any epic change. A mismatch between a row and its issue me
 
   **Phase 2 — proving runs, last.** Run three dispatches against `main` with **no input-affecting change between them** — the canonical reset criterion, not a byte-identical tree. Verification defines the test. Only these three count.
 
-  <!-- predecessor-set:AUTHORITATIVE=S1,S5,S6 -->
-  **Predecessor set — E07.S1, E07.S5, E07.S6** *(named exactly, corrected 2026-08-10; an earlier draft said "every other E07 story," which was both cyclic and over-broad — it swept in S7, which depends on this phase, and imposed a constraint on S3/S4, which do not touch inputs at all)*. The set follows mechanically from the reset rule: S1 edits `scripts/ci-dogfood.sh` (the harness itself), S5 and S6 edit `skills/build/SKILL.md` and `skills/fix/SKILL.md` (scenario inputs). **S3 and S4 are not gating** — S3 writes only `CHANGELOG.md`, S4 only docs and the E06 epic; neither resets the counter, though landing both first is still preferable so nothing rebases mid-phase. **S7 is explicitly excluded** and runs after — that ordering is the whole reason, and it is sufficient: S7 lands only once this story's disposition is recorded, so its commits fall outside the first-to-last proving range the input check examines. *(Corrected 2026-08-13 — this previously argued that S7's `plugin.json` bump "is not a behavioral input," which directly contradicts Verification's deliberately over-approximated input set, `.claude-plugin/` included. The over-approximation is correct and stays; the justification was the wrong one. Nothing needs carving out of the input set, because ordering already keeps S7 out of the range.)*
+  **Predecessor set — E07.S1, E07.S5, E07.S6** <!-- predecessor-set:AUTHORITATIVE=S1,S5,S6 --> *(named exactly, corrected 2026-08-10; an earlier draft said "every other E07 story," which was both cyclic and over-broad — it swept in S7, which depends on this phase, and imposed a constraint on S3/S4, which do not touch inputs at all)*. The set follows mechanically from the reset rule: S1 edits `scripts/ci-dogfood.sh` (the harness itself), S5 and S6 edit `skills/build/SKILL.md` and `skills/fix/SKILL.md` (scenario inputs). **S3 and S4 are not gating** — S3 writes only `CHANGELOG.md`, S4 only docs and the E06 epic; neither resets the counter, though landing both first is still preferable so nothing rebases mid-phase. **S7 is explicitly excluded** and runs after — that ordering is the whole reason, and it is sufficient: S7 lands only once this story's disposition is recorded, so its commits fall outside the first-to-last proving range the input check examines. *(Corrected 2026-08-13 — this previously argued that S7's `plugin.json` bump "is not a behavioral input," which directly contradicts Verification's deliberately over-approximated input set, `.claude-plugin/` included. The over-approximation is correct and stays; the justification was the wrong one. Nothing needs carving out of the input set, because ordering already keeps S7 out of the range.)*
 
   **The three dispositions** *(lifted out of the predecessor paragraph 2026-08-11 — they were appended to a paragraph about sequencing, which is where the BLOCKED branch's missing control flow hid)*:
 
@@ -395,16 +387,30 @@ Bundled because both changes edit the same Stage 4 section in the same two files
 # PLAN is the path Stage 3 wrote and Stage 4 appended to — .roughly/plans/<slug>-plan.md.
 # Take it from the run's own output; do not guess. (`<plan file>` was shell redirection
 # syntax, so the command could not run at all — fixed 2026-08-13.)
-# Both inputs are captured DURING the run, not reconstructed afterwards.
-# "newest plan file" is not the run under test: a concurrent or prior run, or a
-# re-run after a failure, silently retargets the check at the wrong artifact.
-# Stage 3 prints the plan path it wrote and Stage 4 prints the verdict — save both
-# as the run proceeds, keyed to a run id you choose. (Fixed 2026-08-17.)
-RUN=e07s5-$(git rev-parse --short HEAD)-$$
-PLAN=$(cat "$WT/$RUN.planpath")        # written when Stage 3 reports its path
-VERDICT_AS_RETURNED="$WT/$RUN.verdict" # written when Stage 4 displays the verdict
-[ -f "$PLAN" ]                 || { echo "FAIL: plan $PLAN from run $RUN not found"; exit 1; }
-[ -s "$VERDICT_AS_RETURNED" ]  || { echo "FAIL: no verdict captured for run $RUN"; exit 1; }
+# Capture protocol — do this BEFORE the run, not after. "Newest plan file" is not the
+# run under test: a concurrent run, an earlier run, or a retry after failure all leave
+# newer files. (Capture defined 2026-08-18; the previous snippet referenced $WT and two
+# capture files without defining either, so it could not run.)
+CAP=$(mktemp -d -t e07s5-capture.XXXXXX) || { echo 'FAIL: mktemp'; exit 1; }
+#   During the run, paste into these two files as the pipeline reports them:
+#     Stage 3 "Plan written at <path>"        -> printf '%s' '<path>'    > "$CAP/planpath"
+#     Stage 4 verdict block, exactly as shown -> pbpaste (or paste)      > "$CAP/verdict"
+PLAN=$(cat "$CAP/planpath" 2>/dev/null)
+VERDICT_AS_RETURNED="$CAP/verdict"
+[ -n "$PLAN" ]                || { echo 'FAIL: no plan path captured'; exit 1; }
+[ -s "$VERDICT_AS_RETURNED" ] || { echo 'FAIL: no verdict captured'; exit 1; }
+
+# The captured path is operator-pasted, so confine it before feeding it to awk/diff:
+# an absolute or ../-escaping path would make this read arbitrary local files, and a
+# failing diff prints their contents. (Added 2026-08-18.)
+PLANS_DIR=$(cd .roughly/plans && pwd -P)
+PLAN_ABS=$(cd "$(dirname "$PLAN")" 2>/dev/null && pwd -P)/$(basename "$PLAN")
+case "$PLAN_ABS" in
+  "$PLANS_DIR"/*-plan.md) : ;;
+  *) echo "FAIL: $PLAN resolves outside $PLANS_DIR"; exit 1 ;;
+esac
+PLAN=$PLAN_ABS
+[ -f "$PLAN" ] || { echo "FAIL: plan $PLAN not found"; exit 1; }
 
 block=$(awk '/^## Review-plan verdict/{f=1} f{if(!NF && n)exit; if(NF)n++; print}' "$PLAN")
 [ -n "$block" ]                                    || { echo 'FAIL: no verdict block'; exit 1; }
@@ -468,7 +474,12 @@ diff <(sed -n '3,$p' <<<"$block") "$VERDICT_AS_RETURNED" \
   - **Throwaway checkout.** Commit the S6 work locally first (Stage 8 does this anyway — the pipeline ends at local commits), then create a **fresh, uniquely-named** worktree and verify it was created before running anything *(hardened 2026-08-12 — a fixed `/tmp/e07s6-verify` can pre-exist or be raced, and an unchecked `git worktree add` followed by `cd` runs the arms in whatever was already there, with the `--force` removal afterwards deleting state that was never yours)*:
 
     ```sh
-    WT=$(mktemp -d -t e07s6-verify.XXXXXX) && rmdir "$WT"     # reserve a unique name
+    # Keep the mktemp dir and put the worktree INSIDE it. Creating a unique name,
+    # deleting it, then asking git to recreate it leaves a window where another process
+    # can take the path — after which the arms run somewhere unowned and cleanup
+    # recursively removes it. (Fixed 2026-08-18.)
+    OWNED=$(mktemp -d -t e07s6-verify.XXXXXX) || { echo 'FAIL: mktemp'; exit 1; }
+    WT="$OWNED/wt"
     git worktree add "$WT" HEAD || { echo 'FAIL: worktree not created'; exit 1; }
     cd "$WT" || exit 1
     ```
@@ -492,7 +503,17 @@ diff <(sed -n '3,$p' <<<"$block") "$VERDICT_AS_RETURNED" \
     env -i HOME="$WT/.fakehome" PATH="$PATH" TERM="$TERM" ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" claude …
     ```
 
-    **A relocated `HOME` is not filesystem confinement — say so and sandbox properly** *(corrected 2026-08-17)*. Nothing in `--allowed-tools 'Read,Grep,Glob'` scopes those tools to the working directory: an injection in the ingested markdown can still name `~/.ssh/id_ed25519`, `~/.aws/credentials` or any absolute path, and the fake `HOME` does not move those files. What relocating `HOME` actually buys is narrower and worth keeping — the session's own config and persisted transcripts land inside `$WT`, so cleanup is one `rm`. Treat it as hygiene, not as the mitigation. **Confinement requires an OS-level sandbox**: run the arms under a `sandbox-exec` profile (macOS) or a container that mounts only `$WT` and the plugin dir. If neither is available, the operator must state in the CHANGELOG that the arms ran unconfined, and must have read the input files first — they are epic files from this repo at a known commit, not third-party content, which is what makes running unconfined a defensible-but-declared choice rather than an unexamined one.
+    **A relocated `HOME` is not filesystem confinement — say so and sandbox properly** *(corrected 2026-08-17)*. Nothing in `--allowed-tools 'Read,Grep,Glob'` scopes those tools to the working directory: an injection in the ingested markdown can still name `~/.ssh/id_ed25519`, `~/.aws/credentials` or any absolute path, and the fake `HOME` does not move those files. What relocating `HOME` actually buys is narrower and worth keeping — the session's own config and persisted transcripts land inside `$WT`, so cleanup is one `rm`. Treat it as hygiene, not as the mitigation. **Confinement is mandatory, not best-effort** *(hardened 2026-08-18 — the previous wording let the arms run unconfined provided the operator said so in the CHANGELOG. Declaring an exposure is not mitigating it: the threat is a session with unrestricted `Read` being steered to `~/.ssh/id_ed25519` and putting it in an API request, and a CHANGELOG line does not stop that.)* `sandbox-exec` ships with macOS at `/usr/bin/sandbox-exec`, so this is available everywhere the repo is developed and there is no reason to make it optional. Deny reads outside the worktree and plugin dir:
+
+    ```scheme
+    ;; $OWNED/deny-home.sb
+    (version 1)
+    (allow default)
+    (deny file-read* (subpath (param "HOMEDIR")))
+    (allow file-read* (subpath (param "WORKTREE")) (subpath (param "PLUGINDIR")))
+    ```
+
+    Wrap every arm: `sandbox-exec -f "$OWNED/deny-home.sb" -D HOMEDIR="$REAL_HOME" -D WORKTREE="$OWNED" -D PLUGINDIR="$PWD" env -i …`. **If the sandbox cannot be established, the arm does not run** — AC8 is a local pre-merge check, so blocking is cheap, and the alternative is shipping a known credential-exfiltration path as procedure. Prove the profile before trusting it: inside the sandbox, `cat "$REAL_HOME/.ssh/known_hosts"` must fail.
 
     **`HOME` points at a throwaway directory, not the operator's** *(corrected 2026-08-13 — `env -i HOME="$HOME"` was described as making the isolation claim "true by construction," which it does for the environment and not at all for the filesystem: `Read`, `Grep` and `Glob` are not confined to the working directory, so a prompt injection in the contributor-modifiable markdown these arms deliberately feed in could read `~/.ssh/id_*`, `~/.aws/credentials`, or `~/.claude/.credentials.json` and put the contents in a model request. Scrubbing four env vars did nothing about that.)* The fake home also keeps the arms' sessions out of the operator's real session store. Add variables only if an arm demonstrably needs them, and say which in the CHANGELOG.
   - **Stop at the observation.** Arms 1–9 are single-turn and end themselves. Arm 10 ends the moment the gate's behavior is observed: confirm monolithic, check the `PROCEEDED` assertion, exit. Do not let it run into Stage 2.
@@ -560,7 +581,7 @@ diff <(sed -n '3,$p' <<<"$block") "$VERDICT_AS_RETURNED" \
   # the cleanup requirement is for. (Fixed 2026-08-17.)
   cleanup() {
     git worktree remove --force "$WT" 2>/dev/null || echo "WARN: remove $WT by hand"
-    rm -rf "$WT" 2>/dev/null
+    rm -rf "$OWNED" 2>/dev/null
   }
   trap cleanup EXIT INT TERM
 
@@ -574,11 +595,15 @@ diff <(sed -n '3,$p' <<<"$block") "$VERDICT_AS_RETURNED" \
   # claude times out (124) or dies. The AC's "every arm must exit cleanly" is
   # unenforceable through an unguarded pipe. (Fixed 2026-08-17.)
   set -o pipefail
-  run_interactive() {   # $1 = pipeline, $2 = transcript path; returns claude's status
+  # Persist ONLY the three marker lines, never the full stream *(changed 2026-08-18 — a
+  # `tee` of stdout+stderr writes whatever the session read or emitted, including file
+  # contents, paths and model-request material, to a file that survives a forced kill)*.
+  run_interactive() {   # $1 = pipeline, $2 = marker-capture path; returns claude's status
     $TIMEOUT 120 env -i HOME="$WT/.fakehome" PATH="$PATH" TERM="$TERM" \
       ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
       claude --bare --plugin-dir . --strict-mcp-config --allowed-tools "$ALLOWLIST" \
-             "/roughly:$1 $EPIC_INPUT" 2>&1 | tee "$2"
+             "/roughly:$1 $EPIC_INPUT" 2>&1 \
+      | grep -E "$CLASSIFIER|$QUESTION|Is this the correct" > "$2"
     local rc=${PIPESTATUS[0]}
     [ "$rc" -eq 124 ] && { echo "FAIL $2: timed out"; return 1; }
     [ "$rc" -eq 0 ]   || { echo "FAIL $2: claude exited $rc"; return 1; }
