@@ -51,12 +51,17 @@ Each story is filed as a GitHub issue carrying a self-contained implementer brie
 | E07.S5 — Stage 4 contract | [#96](https://github.com/nickkirkes/roughly/issues/96) | `72baff5` | 4 | After S3; before S6 (line budget, R3) |
 | E07.S6 — Granularity guard + ADR-021 | [#97](https://github.com/nickkirkes/roughly/issues/97) | `72baff5` | 4 | After S5 |
 | E07.S4 — Intra-epic AC codifier | [#98](https://github.com/nickkirkes/roughly/issues/98) | `72baff5` | 4 | Unordered within the wave; **optional** — first cut if the dispatch budget compresses |
-| E07.S2 **Phase 2** — 3 proving runs | [#95](https://github.com/nickkirkes/roughly/issues/95) | `72baff5` | 5 | After S1, S5, S6 have merged (AC1's predecessor set). S4 not required |
+| E07.S2 **Phase 2** — 3 proving runs | [#95](https://github.com/nickkirkes/roughly/issues/95) | `72baff5` | 5 | After S1, S5, S6 have merged (AC1's predecessor set). S4 not required <!-- predecessor-set:DERIVED=S1,S5,S6 --> |
 | E07.S7 — Tag-prep wrap | [#99](https://github.com/nickkirkes/roughly/issues/99) | `72baff5` | 6 | Last; after S2's disposition is recorded |
 
 Deferred: [#100](https://github.com/nickkirkes/roughly/issues/100) (B3, v0.1.10) · [#101](https://github.com/nickkirkes/roughly/issues/101) (DI-001, v0.2.0-adjacent) · [#102](https://github.com/nickkirkes/roughly/issues/102) (ADR-009/010 cleanup, v0.2.0) — all three briefs derived from `72baff5`, same as the story rows above.
 
 **Wave** groups stories that may proceed concurrently; **Constraint** states the actual dependency. Waves are a partial order, not a queue — everything in wave 4 is unordered except S5-before-S6, and S2 Phase 1 (wave 3) overlaps all of wave 4 rather than blocking it. `# Sequencing` holds the authoritative graph; this table summarizes it. *(Replaced a single integer "Sequence"/"Dispatch order" column 2026-08-10. Integers implied a total order that contradicts the overlap — and read as paid-dispatch numbering besides, making S2's "7" look like a seventh dispatch against a six-dispatch budget. Paid dispatches are counted only in E07.S2.AC1.)*
+
+**A stamp is metadata; it says nothing about what the brief now contains** *(added 2026-08-17)*. Anyone can edit an issue body without touching its stamp, and the check would still pass while the brief directed implementation somewhere else entirely. Two things bound that, and neither is a guarantee:
+
+- **The epic is canonical for acceptance criteria and the briefs link rather than duplicate them.** A drifted brief can mislead about scope or sequencing; it cannot silently change an AC, because the AC is not there to change.
+- **Record a content hash next to the stamp.** When syncing, `gh issue view N --json body -q .body | shasum -a 256 | cut -c1-12` and put that in the row. The consistency check then compares hashes, not just SHAs, and an edited body fails even with a matching stamp. This is the only part of the obligation that detects tampering rather than staleness.
 
 **Brief derived from** is the staleness check. **Scope is that story's own section *plus* the epic's shared normative sections** — not the epic's overall tip (too broad: every row goes stale on any change), and not the story section alone (too narrow: it misses policy that governs the story from outside it). *(Both errors were made in turn — global watermark 2026-08-10, then section-only in the same day's correction. This is the scope that is actually right.)* The shared sections are `# Sequencing`, this `## Story tracking` block, the `## Risk register`, and E07.S2.AC1's class table and dispatch budget — a change to any of them can alter a story's ordering, scope, or cost without touching its section, and re-stamps **every** brief it governs. To check one row: `git log --oneline <sha>..HEAD -- <epic path>` for candidates, then `git diff <sha>..HEAD -- <epic path>` and look for changes inside that story's `## E07.SN` block; changes confined to other stories do not make this brief stale. **One command checks both derived-view classes** *(added 2026-08-13, answering two standing objections: that the Phase 2 predecessor set is restated in the diagram, the `Constraint` column and the prose with nothing keeping them in step, and that this whole obligation is manual judgement with no failure signal. It does not make either automatic — no CI runs it — but it converts "read carefully and hope" into one runnable check with a visible result.)*
 
@@ -66,10 +71,23 @@ fail=0
 
 # 1. Every restatement of the Phase 2 predecessor set must name exactly S1, S5, S6.
 #    AC1 is authoritative; the diagram, the Constraint column and the prose are derived.
-# Match dotted and undotted forms, and 'and' wording; [^.] previously excluded
-# every 'E07.S1, E07.S5, E07.S6' restatement from the scan entirely. (Fixed 2026-08-13.)
-bad=$(grep -oE '(E07\.)?S1[,/ ][^|]{0,40}(E07\.)?S6' "$EPIC" \
-      | grep -vcE '^(E07\.)?S1(, | and |/)(E07\.)?S5(, | and |/)(E07\.)?S6$')
+# Compare tagged markers, not prose. Every site that restates the Phase 2
+# predecessor set carries an AUTHORITATIVE marker (AC1) or a DERIVED one; the
+# check asserts every DERIVED value equals the AUTHORITATIVE value. The value
+# must be non-empty, so this comment cannot match itself.
+#
+# Three regex attempts preceded this and all failed differently: [^.] hid dotted
+# forms; a trailing-S6 substring accepted 'S1,S5,S6,and S7' and missed sets that
+# drop S6; and a set-comparison over any line mentioning "Phase 2" flagged S3/S4,
+# 'S5 and S6' and the wave-4 grouping, none of which are predecessor restatements.
+# Prose cannot tell a restatement from a nearby list — so tag the sites instead.
+# (Fixed 2026-08-18.)
+auth=$(grep -o 'predecessor-set:AUTHORITATIVE=[A-Za-z0-9,]\+' "$EPIC" | cut -d= -f2 | sort -u)
+[ "$(printf '%s' "$auth" | wc -l)" -eq 0 ] && [ -n "$auth" ] \
+  || { echo "FAIL: expected exactly one AUTHORITATIVE predecessor-set marker"; fail=1; }
+while read -r d; do
+  [ "$d" = "$auth" ] || { echo "FAIL: derived predecessor set '$d' != authoritative '$auth'"; fail=1; }
+done < <(grep -o 'predecessor-set:DERIVED=[A-Za-z0-9,]\+' "$EPIC" | cut -d= -f2)
 [ "$bad" -eq 0 ] || { echo "FAIL: $bad predecessor restatement(s) disagree with AC1"; fail=1; }
 
 # 2. Every table row's stamp must equal what that row's issue actually carries.
@@ -152,6 +170,7 @@ Run it before pushing any epic change. A mismatch between a row and its issue me
 
   **Phase 2 — proving runs, last.** Run three dispatches against `main` with **no input-affecting change between them** — the canonical reset criterion, not a byte-identical tree. Verification defines the test. Only these three count.
 
+  <!-- predecessor-set:AUTHORITATIVE=S1,S5,S6 -->
   **Predecessor set — E07.S1, E07.S5, E07.S6** *(named exactly, corrected 2026-08-10; an earlier draft said "every other E07 story," which was both cyclic and over-broad — it swept in S7, which depends on this phase, and imposed a constraint on S3/S4, which do not touch inputs at all)*. The set follows mechanically from the reset rule: S1 edits `scripts/ci-dogfood.sh` (the harness itself), S5 and S6 edit `skills/build/SKILL.md` and `skills/fix/SKILL.md` (scenario inputs). **S3 and S4 are not gating** — S3 writes only `CHANGELOG.md`, S4 only docs and the E06 epic; neither resets the counter, though landing both first is still preferable so nothing rebases mid-phase. **S7 is explicitly excluded** and runs after — that ordering is the whole reason, and it is sufficient: S7 lands only once this story's disposition is recorded, so its commits fall outside the first-to-last proving range the input check examines. *(Corrected 2026-08-13 — this previously argued that S7's `plugin.json` bump "is not a behavioral input," which directly contradicts Verification's deliberately over-approximated input set, `.claude-plugin/` included. The over-approximation is correct and stays; the justification was the wrong one. Nothing needs carving out of the input set, because ordering already keeps S7 out of the range.)*
 
   **The three dispositions** *(lifted out of the predecessor paragraph 2026-08-11 — they were appended to a paragraph about sequencing, which is where the BLOCKED branch's missing control flow hid)*:
@@ -257,7 +276,7 @@ The disposition record itself is verifiable by inspection — for each of the fi
 
 **Precondition:** `ANTHROPIC_API_KEY` funded (confirmed 2026-07-30). On mid-story depletion, AC1's BLOCKED-NO-EVIDENCE disposition applies rather than an open-ended stall.
 
-**Dependencies.** *Phase 1 (discovery):* E07.S1 (its diagnostics are what make a failed dispatch legible); E07.S3 for the AC5 surface-1 CHANGELOG lines. Begin as soon as S1 merges — this is the long pole, and a dispatch that surfaces defects needs runway before tag. *Phase 2 (proving runs):* **the predecessor set named in AC1 — E07.S1, E07.S5, E07.S6 — and only those.** AC1 is the single source for that set; do not restate it here or in the Sequencing section. S3/S4 are non-gating and S7 is excluded (it depends on this story). This story therefore opens early and closes last.
+**Dependencies.** *Phase 1 (discovery):* E07.S1 (its diagnostics are what make a failed dispatch legible); E07.S3 for the AC5 surface-1 CHANGELOG lines. Begin as soon as S1 merges — this is the long pole, and a dispatch that surfaces defects needs runway before tag. *Phase 2 (proving runs):* **the predecessor set named in AC1 — E07.S1, E07.S5, E07.S6 — and only those.** <!-- predecessor-set:DERIVED=S1,S5,S6 --> AC1 is the single source for that set; do not restate it here or in the Sequencing section. S3/S4 are non-gating and S7 is excluded (it depends on this story). This story therefore opens early and closes last.
 
 **Out of scope for this story.** Feature work of any kind. Adding scenarios. Class C stage-logic repair absent an explicit human rescope (AC1). Closing a window on evidence that does not exist — CARRY is the correct answer when the evidence is absent, and an honest CARRY beats a green asserted from a synthetic re-run.
 
@@ -362,21 +381,22 @@ Bundled because both changes edit the same Stage 4 section in the same two files
 - **AC5 — Verdict-persistence convention codified.** Add the rule to `CONTRIBUTING.md` `## AC authoring conventions`: a gate outcome cited as evidence must exist as an artifact, not as an attestation in prose. Names the plan-file verdict block as the canonical instance and cross-references E06 audit cross-cutting finding #4.
 - **AC6 — Line caps held, with an off-ramp.** `skills/build/SKILL.md` 281/300 and `skills/fix/SKILL.md` 286/300 at story start. Post-merge both ≤300. If either would exceed, extract the Stage 4 verdict-persistence prose to `skills/shared/stage-4-verdict.md` and reference it via a runtime `Read` directive using `${CLAUDE_PLUGIN_ROOT}`, per ADR-012 — the off-ramp is pre-authorized by this AC and does not require a new decision mid-build. **If taken, register the new shared file in `.claude/hooks/verify-all.sh`'s existing shared-reference machinery in the same change** *(added 2026-08-13 — the off-ramp as written created a fourth runtime-shared file entirely outside the repo's ADR-012 drift protection, so a missing, misanchored or divergent reference to it would go undetected: exactly the class of break that machinery exists to catch, and the reason E07.S6.AC7/AC9 treat their own extraction so carefully)*. Add it to the `for shared in …` list if its `Read` directive sits within the loop's `grep -A 3`-of-a-heading window; if the directive's position rules that out — as it does for S6's intake-granularity case — add a scoped check alongside, and say which shape shipped in the CHANGELOG. Verify: `wc -l` on both ≤300.
 
-**Verification.** `diff` parity check per AC1; the two greps in AC3 and AC2; `wc -l` per AC6. **Plus an artifact assertion, because prose parity does not prove the block is ever written** *(added 2026-08-12 — AC1's checks confirm the two pipelines carry identical instructions and that a plan file exists; nothing confirmed a generated plan actually contains the verdict block, leaving the story's primary behavior untested)*: the block must be present **and well-formed** — heading, ISO date, and the verdict text **diffed against what the subagent returned**. **Capture that verdict to a file during the run**, at the moment Stage 4 displays it: it is the only source for "verbatim," and no post-hoc inspection of the tree can reconstruct it. *(Both the plan path and the comparison source were unresolved placeholders until 2026-08-17 — `<the slug this run used>` is invalid shell, and `$VERDICT_AS_RETURNED` was referenced but never defined or populated, so the primary check could not run.)* Any date plus any occurrence of `PASS` would satisfy a looser check while the block held a paraphrase, which is the attestation-vs-artifact failure this AC exists to close *(strengthened 2026-08-13 — the check was `grep -c '^## Review-plan verdict' ≥ 1`, which a bare heading with nothing beneath it satisfies; counting a heading does not verify the artifact the AC is about)*:
+**Verification.** `diff` parity check per AC1; the two greps in AC3 and AC2; `wc -l` per AC6. **Plus an artifact assertion, because prose parity does not prove the block is ever written** *(added 2026-08-12 — AC1's checks confirm the two pipelines carry identical instructions and that a plan file exists; nothing confirmed a generated plan actually contains the verdict block, leaving the story's primary behavior untested)*: the block must be present **and well-formed** — heading, ISO date, and the verdict text **diffed against what the subagent returned**. **Capture both the plan path and the verdict during the run**, keyed to a run id: Stage 3 reports the path it wrote, Stage 4 displays the verdict. Neither can be recovered afterwards — and picking "the newest plan file" is not the same thing, since a concurrent run, an earlier run, or a retry after failure all leave newer files that would silently become the subject of the check. *(Both the plan path and the comparison source were unresolved placeholders until 2026-08-17 — `<the slug this run used>` is invalid shell, and `$VERDICT_AS_RETURNED` was referenced but never defined or populated, so the primary check could not run.)* Any date plus any occurrence of `PASS` would satisfy a looser check while the block held a paraphrase, which is the attestation-vs-artifact failure this AC exists to close *(strengthened 2026-08-13 — the check was `grep -c '^## Review-plan verdict' ≥ 1`, which a bare heading with nothing beneath it satisfies; counting a heading does not verify the artifact the AC is about)*:
 
 ```sh
 # PLAN is the path Stage 3 wrote and Stage 4 appended to — .roughly/plans/<slug>-plan.md.
 # Take it from the run's own output; do not guess. (`<plan file>` was shell redirection
 # syntax, so the command could not run at all — fixed 2026-08-13.)
-# Resolve PLAN from the tree, not from a placeholder: the newest plan file is the
-# one this run just wrote. Confirm it before asserting against it.
-PLAN=$(ls -t .roughly/plans/*-plan.md 2>/dev/null | head -1)
-[ -n "$PLAN" ] || { echo 'FAIL: no plan file found under .roughly/plans/'; exit 1; }
-
-# VERDICT_AS_RETURNED is captured during the run, before this check: when Stage 4
-# displays the review-plan verdict, save that text to a file. It is the only
-# source for "verbatim" — nothing in the tree can reconstruct it afterwards.
-VERDICT_AS_RETURNED=${VERDICT_AS_RETURNED:?capture the Stage 4 verdict to a file during the run}
+# Both inputs are captured DURING the run, not reconstructed afterwards.
+# "newest plan file" is not the run under test: a concurrent or prior run, or a
+# re-run after a failure, silently retargets the check at the wrong artifact.
+# Stage 3 prints the plan path it wrote and Stage 4 prints the verdict — save both
+# as the run proceeds, keyed to a run id you choose. (Fixed 2026-08-17.)
+RUN=e07s5-$(git rev-parse --short HEAD)-$$
+PLAN=$(cat "$WT/$RUN.planpath")        # written when Stage 3 reports its path
+VERDICT_AS_RETURNED="$WT/$RUN.verdict" # written when Stage 4 displays the verdict
+[ -f "$PLAN" ]                 || { echo "FAIL: plan $PLAN from run $RUN not found"; exit 1; }
+[ -s "$VERDICT_AS_RETURNED" ]  || { echo "FAIL: no verdict captured for run $RUN"; exit 1; }
 
 block=$(awk '/^## Review-plan verdict/{f=1} f{if(!NF && n)exit; if(NF)n++; print}' "$PLAN")
 [ -n "$block" ]                                    || { echo 'FAIL: no verdict block'; exit 1; }
@@ -454,13 +474,17 @@ diff <(sed -n '3,$p' <<<"$block") "$VERDICT_AS_RETURNED" \
 
     ```
     --allowed-tools 'Read,Grep,Glob,Bash(git diff --name-only HEAD),Bash(git branch --show-current)'
-    ``` Never bypass the permission prompt. In arm 10, a permission request for anything outside the allowlist **fails the arm** — decline it and end the session rather than approving to "get past it".
+    ```
+
+    Never bypass the permission prompt. In arm 10, a permission request for anything outside the allowlist **fails the arm** — decline it and end the session rather than approving to "get past it".
   - **No inherited credentials or servers.** `--bare` forces `ANTHROPIC_API_KEY`-only auth with no keychain/OAuth fallback; `--strict-mcp-config` (with no `--mcp-config`) stops any project or user MCP server loading. For the environment, **use an allowlist — `env -i` — not a denylist** *(corrected 2026-08-12: the previous form unset four variables and then claimed "the API key should be the only secret reachable," which the shell it inherits flatly contradicts — every other provider key, cloud profile, database URL, npm/registry token and custom `*_TOKEN` in the operator's environment stayed reachable)*:
 
     ```sh
     mkdir -p "$WT/.fakehome"
     env -i HOME="$WT/.fakehome" PATH="$PATH" TERM="$TERM" ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" claude …
     ```
+
+    **A relocated `HOME` is not filesystem confinement — say so and sandbox properly** *(corrected 2026-08-17)*. Nothing in `--allowed-tools 'Read,Grep,Glob'` scopes those tools to the working directory: an injection in the ingested markdown can still name `~/.ssh/id_ed25519`, `~/.aws/credentials` or any absolute path, and the fake `HOME` does not move those files. What relocating `HOME` actually buys is narrower and worth keeping — the session's own config and persisted transcripts land inside `$WT`, so cleanup is one `rm`. Treat it as hygiene, not as the mitigation. **Confinement requires an OS-level sandbox**: run the arms under a `sandbox-exec` profile (macOS) or a container that mounts only `$WT` and the plugin dir. If neither is available, the operator must state in the CHANGELOG that the arms ran unconfined, and must have read the input files first — they are epic files from this repo at a known commit, not third-party content, which is what makes running unconfined a defensible-but-declared choice rather than an unexamined one.
 
     **`HOME` points at a throwaway directory, not the operator's** *(corrected 2026-08-13 — `env -i HOME="$HOME"` was described as making the isolation claim "true by construction," which it does for the environment and not at all for the filesystem: `Read`, `Grep` and `Glob` are not confined to the working directory, so a prompt injection in the contributor-modifiable markdown these arms deliberately feed in could read `~/.ssh/id_*`, `~/.aws/credentials`, or `~/.claude/.credentials.json` and put the contents in a model request. Scrubbing four env vars did nothing about that.)* The fake home also keeps the arms' sessions out of the operator's real session store. Add variables only if an arm demonstrably needs them, and say which in the CHANGELOG.
   - **Stop at the observation.** Arms 1–9 are single-turn and end themselves. Arm 10 ends the moment the gate's behavior is observed: confirm monolithic, check the `PROCEEDED` assertion, exit. Do not let it run into Stage 2.
@@ -521,23 +545,41 @@ diff <(sed -n '3,$p' <<<"$block") "$VERDICT_AS_RETURNED" \
   EPIC_INPUT=docs/planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md
 
   mkdir -p "$WT/.fakehome"
+
+  # Cleanup must run on EVERY exit path, including the assertion failures below and
+  # a Ctrl-C. Without a trap the `exit 1`s skip it entirely and leave the worktree —
+  # and the session transcripts inside it — behind, which is the opposite of what
+  # the cleanup requirement is for. (Fixed 2026-08-17.)
+  cleanup() {
+    git worktree remove --force "$WT" 2>/dev/null || echo "WARN: remove $WT by hand"
+    rm -rf "$WT" 2>/dev/null
+  }
+  trap cleanup EXIT INT TERM
+
   CLASSIFIER='Stage 1 intake: epic-shaped input detected'
   QUESTION='Narrow to one story, or confirm monolithic treatment?'
 
   # HOME is the throwaway dir, not the operator's — Read/Grep/Glob are not confined
   # to cwd, and these arms ingest contributor-modifiable markdown. It also keeps the
   # persisted sessions inside $WT so cleanup is a single rm.
-  run_interactive() {   # $1 = pipeline, $2 = transcript path
+  # set -o pipefail is REQUIRED: without it $? is tee's status, which is 0 even when
+  # claude times out (124) or dies. The AC's "every arm must exit cleanly" is
+  # unenforceable through an unguarded pipe. (Fixed 2026-08-17.)
+  set -o pipefail
+  run_interactive() {   # $1 = pipeline, $2 = transcript path; returns claude's status
     $TIMEOUT 120 env -i HOME="$WT/.fakehome" PATH="$PATH" TERM="$TERM" \
       ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
       claude --bare --plugin-dir . --strict-mcp-config --allowed-tools "$ALLOWLIST" \
              "/roughly:$1 $EPIC_INPUT" 2>&1 | tee "$2"
+    local rc=${PIPESTATUS[0]}
+    [ "$rc" -eq 124 ] && { echo "FAIL $2: timed out"; return 1; }
+    [ "$rc" -eq 0 ]   || { echo "FAIL $2: claude exited $rc"; return 1; }
   }
 
   # Arm 10 — build. Answer the sub-gate with monolithic confirmation on turn 2, then exit.
-  run_interactive build "$WT/arm10.log"
+  run_interactive build "$WT/arm10.log" || exit 1
   # Arm 11 — fix. Same procedure, same input, same assertions.
-  run_interactive fix   "$WT/arm11.log"
+  run_interactive fix   "$WT/arm11.log" || exit 1
 
   # Assertions — the commands above only produce evidence; these decide pass/fail.
   for log in "$WT/arm10.log" "$WT/arm11.log"; do
@@ -554,13 +596,12 @@ diff <(sed -n '3,$p' <<<"$block") "$VERDICT_AS_RETURNED" \
   # If an arm was run with the real HOME by mistake, delete its session dir explicitly:
   #   ls -dt ~/.claude/projects/*/ | head -3        # locate the most recent
   #   rm -rf ~/.claude/projects/<the-one-for-this-worktree>
-  # --force is required: the arms create scratch inputs and a .fakehome inside
-  # the worktree by instruction, and plain `git worktree remove` refuses a dirty tree.
-  git worktree remove --force "$WT" || { echo "FAIL: worktree $WT not removed — clean it up by hand"; exit 1; }
-  rm -rf "$WT" 2>/dev/null   # harmless if git already removed it
+  # Removal itself is the trap's job (it must also run on the failure paths above);
+  # --force is required because the arms leave scratch inputs and .fakehome behind.
+  # Nothing to do here — just confirm afterwards that it happened.
   ```
 
-  **Cleanup is part of the AC, including on the interrupted path** *(added 2026-08-12 — it was previously two trailing comments after a listing command, so an interrupted or abandoned arm silently left repository-derived prompts and model responses in Claude's persisted session storage; `--no-session-persistence` cannot help here, which is the whole reason these two arms differ from the rest)*. If either arm is interrupted, run the cleanup anyway before doing anything else. **Confirm removal rather than asserting it** *(strengthened 2026-08-13 — `claude --resume --list` only lists, and "delete them" was a bare comment with no command, so an interrupted arm left repository-derived prompts and model responses in session storage indefinitely. There is no CLI delete; routing `HOME` into the worktree is what makes removal a single `rm`.)*: after cleanup, `find "$WT" -maxdepth 0 2>/dev/null` must print nothing. Record in the CHANGELOG that both sessions were removed and how it was confirmed.
+  **Cleanup is part of the AC, including on the interrupted path** *(added 2026-08-12 — it was previously two trailing comments after a listing command, so an interrupted or abandoned arm silently left repository-derived prompts and model responses in Claude's persisted session storage; `--no-session-persistence` cannot help here, which is the whole reason these two arms differ from the rest)*. If either arm is interrupted, run the cleanup anyway before doing anything else. **Confirm removal rather than asserting it** *(strengthened 2026-08-13 — `claude --resume --list` only lists, and "delete them" was a bare comment with no command, so an interrupted arm left repository-derived prompts and model responses in session storage indefinitely. There is no CLI delete; routing `HOME` into the worktree is what makes removal a single `rm`.)*: after the trap fires, `find "$WT" -maxdepth 0 2>/dev/null` must print nothing and `git worktree list` must not mention it. Record in the CHANGELOG that both sessions were removed and how it was confirmed.
 
   **Arm 11 is the same procedure on the fix pipeline**: same flags, same allowlist, same timeout, same input, same `CLASSIFIER` → `QUESTION` → confirm → `PROCEEDED` sequence — which is why both run through one shell function rather than two hand-copied command lines. *(Two corrections land here. 2026-08-12: the table said only "same as arm 10," naming no invocation, assertions or cleanup. 2026-08-17: the commands still passed `HOME="$HOME"` — the real home the isolation bullet had already replaced with `$WT/.fakehome` — and they launched sessions without capturing a transcript or asserting anything, so following them produced no pass/fail evidence at all. The transcript `tee` and the three greps are what make these arms checks rather than demonstrations.)*
 
@@ -674,7 +715,7 @@ S3 ──► S1 ──┬──► S2 Phase 1 ·················
              └──► S4 codifier ·····► optional — NOT a Phase 2 predecessor;
                                      may be cut entirely
 
-Phase 2 predecessors are S1, S5, S6 and nothing else (S2.AC1 is the source).
+Phase 2 predecessors are S1, S5, S6 and nothing else (S2.AC1 is the source). <!-- predecessor-set:DERIVED=S1,S5,S6 -->
 S3 precedes every story. S4 gates nothing. S7 runs after Phase 2 and can
 never be a predecessor of it.
 ```
