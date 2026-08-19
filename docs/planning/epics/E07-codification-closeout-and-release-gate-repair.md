@@ -125,6 +125,13 @@ done < <(grep -oE 'issues/[0-9]+\) [|] `[0-9a-f]{7}` [|] `[0-9a-f]{12}`' "$EPIC"
 #    failures; both were tried and both were wrong. This lists what each stamp may have
 #    missed and never sets fail: deciding whether a commit was editorial for a given
 #    story is judgement the script cannot make. (Downgraded 2026-08-18.)
+# Uncommitted edits first: this runs BEFORE pushing, so `git log …HEAD` is blind to
+# exactly the change being reviewed — a story section could be edited, its issue left
+# alone, the check report clean, and the stale pair then committed. (Added 2026-08-18.)
+if ! git diff --quiet -- "$EPIC" || ! git diff --cached --quiet -- "$EPIC"; then
+  echo "NOTE: $EPIC has uncommitted changes — re-sync any issue whose story they touch before pushing"
+fi
+
 for s in $(grep -oE '\| `[0-9a-f]{7}` \|' "$EPIC" | tr -d '| `' | sort -u); do
   n=$(git log --oneline --invert-grep --grep='^docs(planning): re-stamp' "$s"..HEAD -- "$EPIC" | grep -c .)
   [ "$n" -eq 0 ] || echo "NOTE: $n non-re-stamp commit(s) since $s — confirm each is editorial for the rows still on it"
@@ -196,7 +203,7 @@ Run it before pushing any epic change. A mismatch between a row and its issue me
 
   **BLOCKED-NO-EVIDENCE: stopping rule, evidence, and where it can land** *(specified 2026-08-11 — the disposition previously said only "key depletion mid-story," which left a block occurring after Phase 1 had already spent dispatches with no spend total, no stopping rule, and no branch at all for a reserved Phase 2 run that cannot execute)*:
 
-  - **Declared when** a dispatch terminates on S1.AC1's `ci-dogfood: FAIL — API account state: <classification>` marker, or when `gh workflow run` fails to create a run **for an account-state reason**. *(Narrowed 2026-08-12 — "fails to create a run" swept in every creation failure. Invalid workflow YAML, a missing or malformed `workflow_dispatch` trigger, insufficient permissions, a bad ref, and transient GitHub 5xx are **not** account state; the first two are Class H defects this epic puts explicitly IN SCOPE, so classifying them as BLOCKED would terminate discovery and CARRY a defect the plan says to fix.)* Triage before declaring: a `gh` error naming billing, quota, or credit is account state; anything naming the workflow, the ref, permissions, or an HTTP 5xx is not. A workflow/ref/permission error is **Class H** — repair it and re-dispatch within Phase 1's cap. A transient 5xx is neither: retry once, and it does not consume the cap.
+  - **Declared when** a dispatch terminates on S1.AC1's `ci-dogfood: FAIL — API account state: <classification>` marker, or when `gh workflow run` fails to create a run **for an account-state reason**. *(Narrowed 2026-08-12 — "fails to create a run" swept in every creation failure. Invalid workflow YAML, a missing or malformed `workflow_dispatch` trigger, insufficient permissions, a bad ref, and transient GitHub 5xx are **not** account state; the first two are Class H defects this epic puts explicitly IN SCOPE, so classifying them as BLOCKED would terminate discovery and CARRY a defect the plan says to fix.)* Triage before declaring: a `gh` error naming billing, quota, or credit is account state; anything naming the workflow, the ref, permissions, or an HTTP 5xx is not. A workflow/ref/permission error is **Class H** — repair it and re-dispatch within Phase 1's cap. A transient 5xx is neither: retry once, and it does not consume the cap. **If the retry also fails, that is BLOCKED-NO-EVIDENCE → CARRY, terminal** *(added 2026-08-18 — the retry allowance had no failure branch, so a run that could not dispatch twice fell through every stopping rule and the release was left with no disposition at all, which AC5 requires and S7 gates on)*. Record it like any other block: classification (`transient dispatch failure, retried once`), both attempts' exit status, and the v0.1.10 stub naming a re-dispatch as the gating action. Neither attempt bills, so the branch costs ~$0 and does not consume Phase 1's cap.
   - **One attempt, then stop.** Do not re-dispatch against a broken account — the retry buys nothing and the first attempt already consumed a run slot.
   - **Terminal for v0.1.9 wherever it lands.** In Phase 1, the phase ends and Phase 2 does not run. In Phase 2, the proving sequence is **void, not partial**: CLOSE needs three qualifying runs and fewer than three exist. Greens already banked are recorded as evidence and close nothing.
   - **Evidence is the same as for any other run** — the failed run's ID, URL, `headSha`, and the account-state marker text; or, if no run was created, the error's **classification, exit status, and any run ID**, plus a redacted excerpt. **Do not paste `gh` output verbatim into the CHANGELOG** *(added 2026-08-12)*: `gh` errors can carry request IDs, `Authorization` header fragments, and token prefixes, and the CHANGELOG is a permanent public artifact. **Redact by allowlist, not by pattern** *(tightened 2026-08-12 — "anything token-shaped" leaves request IDs, session identifiers, hostnames, paths, and raw error context free to land in a permanent public file)*: record only the fields named above — classification, exit status, run ID — plus, if an excerpt genuinely aids diagnosis, a hand-written one-line paraphrase. Never paste captured output and then remove what looks sensitive; write only what you have decided to publish. Dispatches already made keep their Phase 1 record (see Verification); the block does not erase them.
@@ -416,14 +423,20 @@ VERDICT_AS_RETURNED="$CAP/verdict"
 # The captured path is operator-pasted, so confine it before feeding it to awk/diff:
 # an absolute or ../-escaping path would make this read arbitrary local files, and a
 # failing diff prints their contents. (Added 2026-08-18.)
+# Canonicalise the FILE, not just its parent: a symlink at
+# .roughly/plans/x-plan.md passes a lexical check on the directory and still resolves
+# anywhere on disk, after which awk reads it. Messages carry the basename only —
+# absolute paths embed the operator's username and local layout, and these
+# diagnostics can end up in logs. (Both fixed 2026-08-18.)
 PLANS_DIR=$(cd .roughly/plans && pwd -P)
-PLAN_ABS=$(cd "$(dirname "$PLAN")" 2>/dev/null && pwd -P)/$(basename "$PLAN")
-case "$PLAN_ABS" in
+PLAN_REAL=$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$PLAN")
+case "$PLAN_REAL" in
   "$PLANS_DIR"/*-plan.md) : ;;
-  *) echo "FAIL: $PLAN resolves outside $PLANS_DIR"; exit 1 ;;
+  *) echo "FAIL: $(basename "$PLAN") resolves outside the plans directory"; exit 1 ;;
 esac
-PLAN=$PLAN_ABS
-[ -f "$PLAN" ] || { echo "FAIL: plan $PLAN not found"; exit 1; }
+PLAN=$PLAN_REAL
+[ -f "$PLAN" ] && [ ! -L "$PLAN" ] \
+  || { echo "FAIL: $(basename "$PLAN") missing, or is a symlink"; exit 1; }
 
 block=$(awk '/^## Review-plan verdict/{f=1} f{if(!NF && n)exit; if(NF)n++; print}' "$PLAN")
 [ -n "$block" ]                                    || { echo 'FAIL: no verdict block'; exit 1; }

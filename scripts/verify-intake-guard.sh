@@ -21,19 +21,37 @@ cd "$REPO" || exit 1
 # ── preconditions ────────────────────────────────────────────────────────────
 [ -n "${ANTHROPIC_API_KEY:-}" ] || { echo 'FAIL: ANTHROPIC_API_KEY unset'; exit 1; }
 
-if   command -v timeout  >/dev/null; then TIMEOUT=$(command -v timeout)
-elif command -v gtimeout >/dev/null; then TIMEOUT=$(command -v gtimeout)
+TRUSTED_PATH=/usr/bin:/bin:/usr/sbin:/sbin
+REAL_HOME=$HOME
+
+# Resolve every binary we will run, then check nobody but the owner can rewrite it.
+# Resolving from the caller's PATH and only *later* handing the child a trusted PATH
+# is backwards: the shadowed binary runs first, with the API key already in the
+# environment. `claude` legitimately lives outside the trusted PATH (nvm, homebrew),
+# so it cannot simply be looked up there — it is resolved, then vetted.
+vet() {   # vet <path> — reject if it or its dir is group/other-writable
+  local f=$1 d; d=$(dirname "$f")
+  [ -x "$f" ] || { echo "FAIL: $(basename "$f") not executable"; return 1; }
+  [ -z "$(find "$f" -perm -o+w -o -perm -g+w 2>/dev/null)" ] \
+    || { echo "FAIL: $(basename "$f") is group/other-writable"; return 1; }
+  [ -z "$(find "$d" -maxdepth 0 -perm -o+w 2>/dev/null)" ] \
+    || { echo "FAIL: directory holding $(basename "$f") is world-writable"; return 1; }
+}
+
+if   TIMEOUT=$(PATH=$TRUSTED_PATH command -v timeout);  then :
+elif TIMEOUT=$(command -v timeout || command -v gtimeout); then :
 else echo 'FAIL: install coreutils (brew install coreutils) — arms cannot be time-boxed'; exit 1; fi
+vet "$TIMEOUT" || exit 1
 
 SANDBOX=/usr/bin/sandbox-exec
 [ -x "$SANDBOX" ] || { echo 'FAIL: sandbox-exec unavailable — no sandbox, no arm'; exit 1; }
 
 CLAUDE=$(command -v claude) || { echo 'FAIL: claude not on PATH'; exit 1; }
-
-# A fixed, trusted PATH. Inheriting the caller's PATH while handing the child an API key
-# lets any writable PATH entry shadow `claude` or `timeout` and capture the key.
-TRUSTED_PATH=/usr/bin:/bin:/usr/sbin:/sbin
-REAL_HOME=$HOME
+CLAUDE=$(cd "$(dirname "$CLAUDE")" && pwd -P)/$(basename "$CLAUDE")
+vet "$CLAUDE" || exit 1
+# The sandbox denies /Users wholesale, but claude itself usually lives there (nvm,
+# homebrew). Allow exactly its own tree back, nothing wider.
+CLAUDE_TREE=$(dirname "$(dirname "$CLAUDE")")
 
 # ── owned scratch, cleaned on every exit path ────────────────────────────────
 OWNED=$(cd "$(mktemp -d -t e07s6-verify.XXXXXX)" && pwd -P) || { echo 'FAIL: mktemp'; exit 1; }
@@ -62,8 +80,9 @@ cat > "$OWNED/confine.sb" <<'SBEOF'
 (allow process* signal sysctl-read mach-lookup mach-register ipc-posix-shm)
 (allow network-outbound (remote ip))
 (allow file-read*)
-(deny  file-read* (subpath "/Users") (subpath "/private/tmp"))
-(allow file-read* (subpath (param "PLUGINDIR")))
+(deny  file-read* (subpath "/Users") (subpath "/private/tmp")
+                  (subpath "/private/var") (subpath "/private/etc") (subpath "/etc"))
+(allow file-read* (subpath (param "PLUGINDIR")) (subpath (param "CLAUDETREE")))
 (allow file-read* file-write* (subpath (param "OWNED")))
 (allow file-write* (literal "/dev/null") (literal "/dev/tty")
                    (literal "/dev/stdout") (literal "/dev/stderr"))
@@ -71,7 +90,7 @@ SBEOF
 
 confined() {   # confined <prompt>  → runs claude sandboxed, prints combined output
   "$TIMEOUT" 120 "$SANDBOX" -f "$OWNED/confine.sb" \
-      -D OWNED="$OWNED" -D PLUGINDIR="$REPO" \
+      -D OWNED="$OWNED" -D PLUGINDIR="$REPO" -D CLAUDETREE="$CLAUDE_TREE" \
       env -i PATH="$TRUSTED_PATH" HOME="$OWNED/home" TERM=dumb \
              ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
       "$CLAUDE" --bare --plugin-dir "$REPO" --no-session-persistence \
@@ -81,7 +100,7 @@ confined() {   # confined <prompt>  → runs claude sandboxed, prints combined o
 mkdir -p "$OWNED/home"
 
 # Prove the profile before trusting it. If this can read the real home, stop.
-sb() { "$SANDBOX" -f "$OWNED/confine.sb" -D OWNED="$OWNED" -D PLUGINDIR="$REPO" "$@"; }
+sb() { "$SANDBOX" -f "$OWNED/confine.sb" -D OWNED="$OWNED" -D PLUGINDIR="$REPO" -D CLAUDETREE="$CLAUDE_TREE" "$@"; }
 sb /bin/echo probe >/dev/null 2>&1 \
   || { echo 'FAIL: sandbox profile cannot exec — refusing to run'; exit 1; }
 ! sb /bin/ls "$REAL_HOME" >/dev/null 2>&1 \
@@ -94,8 +113,11 @@ CLASSIFIER='Stage 1 intake: epic-shaped input detected'
 QUESTION='Narrow to one story, or confirm monolithic treatment?'
 PROCEEDED='Is this the correct'
 
-# Resolve once by dry run, then frozen for every arm (see AC8).
-ALLOWLIST=${ALLOWLIST:-'Read,Grep,Glob'}
+# Frozen here, deliberately NOT read from the environment: an exported ALLOWLIST
+# containing Bash would let the model run commands in a process that holds the API
+# key and has outbound network. Widening is a reviewable edit to this line, not a
+# caller-side override.
+readonly ALLOWLIST='Read,Grep,Glob'
 
 # ── inputs ───────────────────────────────────────────────────────────────────
 E06=docs/planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md
@@ -126,10 +148,19 @@ arm() {   # arm <n> <pipeline> <input> <expect: pos|neg>
   out=$(confined "/roughly:$pipe $input"); rc=$?
   if [ "$rc" -eq 124 ]; then echo "FAIL arm $n: timed out"; failed=$((failed+1)); return; fi
   if [ "$rc" -ne 0 ];   then echo "FAIL arm $n: claude exited $rc"; failed=$((failed+1)); return; fi
-  local hasC hasQ hasP
-  grep -qE "^[^A-Za-z]*$CLASSIFIER" <<<"$out" && hasC=1 || hasC=0
-  grep -qF  "$QUESTION"             <<<"$out" && hasQ=1 || hasQ=0
-  grep -qF  "$PROCEEDED"            <<<"$out" && hasP=1 || hasP=0
+  # Line numbers, not booleans: the classifier must come BEFORE the question, or the
+  # gate was not the classifier's. Independent substring hits also pass on reordered
+  # or incidental prose. (Added 2026-08-18.)
+  local lc lq lp hasC hasQ hasP
+  lc=$(grep -nE "^[^A-Za-z]*$CLASSIFIER" <<<"$out" | head -1 | cut -d: -f1)
+  lq=$(grep -nF  "$QUESTION"             <<<"$out" | head -1 | cut -d: -f1)
+  lp=$(grep -nF  "$PROCEEDED"            <<<"$out" | head -1 | cut -d: -f1)
+  hasC=$([ -n "$lc" ] && echo 1 || echo 0)
+  hasQ=$([ -n "$lq" ] && echo 1 || echo 0)
+  hasP=$([ -n "$lp" ] && echo 1 || echo 0)
+  if [ "$expect" = pos ] && [ -n "$lc" ] && [ -n "$lq" ] && [ "$lc" -ge "$lq" ]; then
+    echo "FAIL arm $n: question precedes classifier (lines $lq, $lc)"; failed=$((failed+1)); return
+  fi
   if [ "$expect" = pos ]; then
     [ "$hasC$hasQ$hasP" = "110" ] \
       && { echo "pass arm $n"; pass=$((pass+1)); } \
@@ -152,7 +183,14 @@ arm 7 fix   "$E06"               pos    # fix side: insertion points differ stru
 arm 8 fix   "$WT/id-enum.md"     pos
 arm 9 fix   "$WT/one-story.md"   neg
 
+interactive_incomplete=0
 if [ "${1:-}" = --interactive ]; then
+  # Arms 10-11 cannot be automated: answering a gate needs a second turn, which print
+  # mode has no way to supply. Printing instructions and then exiting 0 would report a
+  # complete verification with two required arms unrun — so this marks the run
+  # INCOMPLETE and the script exits non-zero unless the operator confirms both arms
+  # passed by re-invoking with ARMS_10_11_PASSED=yes. (Fixed 2026-08-18.)
+  interactive_incomplete=1
   cat <<'EOF'
 
 Arms 10-11 (confirm path) are interactive: a gate needs a second turn, which print
@@ -167,3 +205,13 @@ fi
 echo "---"
 echo "arms passed: $pass, failed: $failed"
 [ "$failed" -eq 0 ] || exit 1
+
+if [ "$interactive_incomplete" -eq 1 ]; then
+  if [ "${ARMS_10_11_PASSED:-}" = yes ]; then
+    echo 'arms 10-11: operator-confirmed pass (manual)'
+  else
+    echo 'INCOMPLETE: arms 10-11 were not executed. Run them by hand as described'
+    echo 'above, then re-invoke with ARMS_10_11_PASSED=yes to record the result.'
+    exit 2
+  fi
+fi
