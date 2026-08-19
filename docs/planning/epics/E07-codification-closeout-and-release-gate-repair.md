@@ -89,11 +89,24 @@ while IFS= read -r line; do
             | tail -1 | grep -oE 'S[0-9]' | paste -sd, -)
   [ "$claimed" = "$visible" ] \
     || { echo "FAIL: marker says $claimed but the restatement reads $visible -- ${line:0:60}"; fail=1; }
+  # …and every DERIVED value must equal the AUTHORITATIVE one. Checking each marker only
+  # against its own line let all derived views agree on the same WRONG set and pass.
+  # (The comparison existed before 1b was added and was dropped in that rewrite; restored
+  # 2026-08-18.)
+  case "$line" in *DERIVED=*)
+    [ "$claimed" = "$auth" ] \
+      || { echo "FAIL: derived '$claimed' != authoritative '$auth'"; fail=1; } ;;
+  esac
 done < <(grep -h 'predecessor-set:' "$EPIC" | grep -v 'grep -o')
 
 # 2. Stamps: each table row against the stamp its issue actually carries.
+# gh stderr can carry request ids and authorization fragments; keep it out of the
+# terminal and report only a classification. (Added 2026-08-18.)
+ghbody() { gh issue view "$1" --json body -q .body 2>"$errlog" || { echo "GH-ERROR"; }; }
+errlog=$(mktemp); trap 'rm -f "$errlog"' EXIT
+
 while read -r issue stamp; do
-  live=$(gh issue view "$issue" --json body -q .body \
+  live=$(ghbody "$issue" \
          | grep -oE 'epic commit `[0-9a-f]{7}`' | tail -1 | tr -d '`' | awk '{print $3}')
   [ "$stamp" = "$live" ] || { echo "FAIL: #$issue table=$stamp issue=${live:-none}"; fail=1; }
 done < <(grep -oE 'issues/[0-9]+\) [|] `[0-9a-f]{7}`' "$EPIC" \
@@ -102,7 +115,7 @@ done < <(grep -oE 'issues/[0-9]+\) [|] `[0-9a-f]{7}`' "$EPIC" \
 # 2b. Body hash: a stamp is metadata, so an edited brief keeps a matching SHA. This is
 #     the only part of the obligation that detects tampering rather than staleness.
 while read -r issue want; do
-  got=$(gh issue view "$issue" --json body -q .body | shasum -a 256 | cut -c1-12)
+  got=$(ghbody "$issue" | shasum -a 256 | cut -c1-12)
   [ "$want" = "$got" ] || { echo "FAIL: #$issue body hash $got != recorded $want"; fail=1; }
 done < <(grep -oE 'issues/[0-9]+\) [|] `[0-9a-f]{7}` [|] `[0-9a-f]{12}`' "$EPIC" \
          | sed -E 's#issues/([0-9]+)\).*`([0-9a-f]{12})`#\1 \2#' | sort -u)
@@ -415,8 +428,14 @@ PLAN=$PLAN_ABS
 block=$(awk '/^## Review-plan verdict/{f=1} f{if(!NF && n)exit; if(NF)n++; print}' "$PLAN")
 [ -n "$block" ]                                    || { echo 'FAIL: no verdict block'; exit 1; }
 grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}' <<<"$block" || { echo 'FAIL: no ISO date on its own line'; exit 1; }
-diff <(sed -n '3,$p' <<<"$block") "$VERDICT_AS_RETURNED" \
-  || { echo 'FAIL: block is not the verbatim verdict'; exit 1; }
+# Compare by hash, not by printing both sides: a failing `diff` dumps the full captured
+# model response — local paths, whatever the session read — into the terminal and any
+# log capturing it. The verdict must be persisted verbatim (that IS the deliverable, so
+# it is not redactable), but nothing requires re-displaying it to report a mismatch.
+# (Changed 2026-08-18.)
+a=$(sed -n '3,$p' <<<"$block" | shasum -a 256 | cut -c1-12)
+b=$(shasum -a 256 < "$VERDICT_AS_RETURNED" | cut -c1-12)
+[ "$a" = "$b" ] || { echo "FAIL: persisted verdict ($a) != returned verdict ($b)"; exit 1; }
 ```
 
 **Run it on both trigger paths, not just PASS** *(added 2026-08-13 — AC1 requires persistence "on PASS (or on confirmed override)" and the check covered only PASS, so an override could proceed without writing the block and nothing would notice)*. The `plan-clean` and `plan-revision` scenarios both reach Stage 4 PASS, so S2's Phase 1 dispatch supplies the PASS-path evidence for the build side free — capture it there rather than paying for a separate run. **The override path has no scenario**, since no fixture drives a human override: verify it locally alongside S6.AC8's arms — run interactively, decline the review, say "override" at the override protocol, and assert the same well-formed block. Record both paths in the CHANGELOG. **Behavioral verification of the fix-side recovery loop has no scenario** *(corrected 2026-08-12)*. The `plan-revision` scenario drives `/roughly:build`, so it exercises the build loop this AC leaves unchanged; the one fix scenario reaches Stage 4 PASS and never emits NEEDS REVISION. So the behavior AC3 actually changes — fix `--ci` recovering from a first NEEDS REVISION instead of halting — is unexercised by every existing scenario, and three green proving runs would not catch it broken. Adding a fix-side negative-path scenario is out of scope (it is already a v0.1.10 candidate, withheld under the no-new-paid-scenarios constraint). **Verify it locally instead**, mirroring S6.AC8's pattern, **with a stated setup rather than "the fixture's trigger conditions"** *(corrected 2026-08-17 — that phrase named no invocation and no plan mutation, so this could be marked verified without the recovery loop ever running; `hello-roughly-plan-revision` is a build fixture and does not transfer unmodified)*. From a throwaway worktree: copy `tests/fixtures/hello-roughly-bug/` aside and drive `/roughly:fix --ci` with an issue description whose plan trips review-plan on the first pass — reuse the plan-revision fixture's mechanism, a task whose Verify command is a co-located-hazard `grep -Fc` assertion. **Confirm the first pass actually emits NEEDS REVISION before relying on the run**; a PASS means the setup did not reproduce and the branch has not been exercised, and assert two `[--ci] plan review verdict:` markers appear — a NEEDS REVISION followed by a PASS — rather than a halt on the first. **Then exercise the cap's terminal branch, which the recovery case does not reach** *(added 2026-08-13 — AC3 ports build's whole contract, and the cap is half of it: a fix pipeline that loops forever, or halts at the wrong count, passes a NEEDS-REVISION-then-PASS check unchanged)*. Drive a second run whose plan cannot be repaired into a PASS, and assert **two** NEEDS REVISION verdicts followed by the halt marker `Stage 4 plan-review cannot proceed: 2 NEEDS REVISION verdicts.` — byte-identical to build's, since AC3's point is that the two contracts are now one. **Then assert the artifact on the fix side too**, using the same well-formed-block check above against the plan path that run reported — not a heading count. *(Added 2026-08-12 — the build-side artifact assertion comes free off S2's Phase 1 dispatch, but nothing covered fix: this run could emit both markers and still never write the block, which is AC1's actual deliverable.)* **Record a hand-written summary, not a raw transcript** — fixture contents, tool request/response bodies and local paths are not CHANGELOG material; state the two marker lines observed and the grep result. Note the residual: this is a one-off pre-merge check with no CI regression coverage, the same posture as S6.AC8/AC9. `bash .claude/hooks/verify-all.sh` clean.
@@ -433,7 +452,7 @@ diff <(sed -n '3,$p' <<<"$block") "$VERDICT_AS_RETURNED" \
 
 **Maps to:** B2 granularity guard (ROADMAP Cluster B) · **Issue:** [#97](https://github.com/nickkirkes/roughly/issues/97)
 
-**Files touched:** `skills/build/SKILL.md` · `skills/fix/SKILL.md` · `skills/help/SKILL.md` · `skills/shared/gate-protocol.md` (Rule 3 exemption list, per AC3b) · `.claude/hooks/verify-all.sh` (AC9's two drift checks) · `README.md` · `docs/adrs/ADR-021-epic-vs-story-intake-guard.md` (new) · `CLAUDE.md` (ADR table row + ADR-020 reserved-list correction) · `docs/adrs/README.md` (ADR index) · `.roughly/known-pitfalls.md` (capture the `--ci`-hang-on-gate-ordering pitfall AC1's positional rule exists to prevent) · `CHANGELOG.md` · *conditional:* `skills/shared/intake-granularity.md` (new — only if AC7's line-cap off-ramp is taken). *(Swept 2026-08-11: `verify-all.sh` was missing though AC9 edits it, and `known-pitfalls.md` was listed with no AC directing the write — now scoped to a named entry.)*
+**Files touched:** `skills/build/SKILL.md` · `skills/fix/SKILL.md` · `skills/help/SKILL.md` · `skills/shared/gate-protocol.md` (Rule 3 exemption list, per AC3b) · `.claude/hooks/verify-all.sh` (AC9's two drift checks) · `scripts/verify-intake-guard.sh` (new — AC8's procedure, extracted from prose 2026-08-18) · `README.md` · `docs/adrs/ADR-021-epic-vs-story-intake-guard.md` (new) · `CLAUDE.md` (ADR table row + ADR-020 reserved-list correction) · `docs/adrs/README.md` (ADR index) · `.roughly/known-pitfalls.md` (capture the `--ci`-hang-on-gate-ordering pitfall AC1's positional rule exists to prevent) · `CHANGELOG.md` · *conditional:* `skills/shared/intake-granularity.md` (new — only if AC7's line-cap off-ramp is taken). *(Swept 2026-08-11: `verify-all.sh` was missing though AC9 edits it, and `known-pitfalls.md` was listed with no AC directing the write — now scoped to a named entry.)*
 
 **Acceptance criteria**
 
@@ -469,180 +488,16 @@ diff <(sed -n '3,$p' <<<"$block") "$VERDICT_AS_RETURNED" \
 
   **Both pipelines, not just build.** AC1 requires equivalent behavior in `skills/build/SKILL.md` and `skills/fix/SKILL.md`, and the parity `diff` alone does not prove it: the insertion points differ structurally between the two files (build shares one sentence for resolution and `CI_MODE`; fix has them in separate paragraphs), so byte-identical prose can still behave differently.
 
-  **Isolation — applies to all eleven arms** *(added 2026-08-11)*. Every arm feeds repository-controlled markdown into a funded session, and arm 10 then proceeds past a confirmation gate in a multi-turn session. These are files a contributor can modify, so treat them as untrusted input for the duration of the check. This is a local check on a repo the operator owns — the measures below are cheap, not a threat model:
+  **The procedure lives in [`scripts/verify-intake-guard.sh`](../../../scripts/verify-intake-guard.sh), not in this AC** *(extracted 2026-08-18)*. Twelve review rounds put **nine** defects in it while it was prose: a sandbox mandated in one paragraph and absent from the command two paragraphs down; `--max-budget-usd` and `--no-session-persistence` passed to an interactive arm that cannot honour them; cleanup unreachable behind `exit 1`; `$WT`, `$ALLOWLIST` and `$RUN` referenced without definition; `<plan file>` parsed as shell redirection; an uninitialised `$bad`. None of that survives `bash -n`, `shellcheck`, or a single execution — and prose gets none of those. The script is the artifact; this AC states what it must satisfy.
 
-  - **Throwaway checkout.** Commit the S6 work locally first (Stage 8 does this anyway — the pipeline ends at local commits), then create a **fresh, uniquely-named** worktree and verify it was created before running anything *(hardened 2026-08-12 — a fixed `/tmp/e07s6-verify` can pre-exist or be raced, and an unchecked `git worktree add` followed by `cd` runs the arms in whatever was already there, with the `--force` removal afterwards deleting state that was never yours)*:
+  **What the script must do**, and what a reviewer checks it still does:
 
-    ```sh
-    # Keep the mktemp dir and put the worktree INSIDE it. Creating a unique name,
-    # deleting it, then asking git to recreate it leaves a window where another process
-    # can take the path — after which the arms run somewhere unowned and cleanup
-    # recursively removes it. (Fixed 2026-08-18.)
-    OWNED=$(mktemp -d -t e07s6-verify.XXXXXX) || { echo 'FAIL: mktemp'; exit 1; }
-    WT="$OWNED/wt"
-    git worktree add "$WT" HEAD || { echo 'FAIL: worktree not created'; exit 1; }
-    cd "$WT" || exit 1
-    ```
-
-    Run every arm from inside `$WT` with `--plugin-dir .`. Scratch inputs for arms 4–6 are created there and never committed. When finished, `git -C "$WT" status --porcelain --untracked-files=no` must be **empty** *(path corrected 2026-08-13 — this read `/tmp/e07s6-verify`, the fixed path the same bullet had just replaced with a `mktemp` unique one, so it inspected a directory the arms never ran in and, in the cleanup step, force-removed a path that could belong to someone else's checkout)* — anything else means a session wrote to a *tracked* file, and every arm's result is suspect until explained. *(The `--untracked-files=no` is load-bearing: arms 4–6 create scratch files there by instruction, and a bare `--porcelain` reports them as `??`, so the check would fail on every run and its remedy would fire unconditionally.)* Separately, list the scratch files you created and confirm the untracked set contains those and nothing else. Then `git worktree remove --force /tmp/e07s6-verify`.
-  - **Read-only tool allowlist, fixed before the arms run.** Both pipeline files open with a `## Context` block that shells out *before* Stage 1 — `!`git diff --name-only HEAD`` and `!`git branch --show-current`` at `skills/build/SKILL.md:14-15` and `skills/fix/SKILL.md:14-15` — so `'Read,Grep,Glob'` alone may not survive skill load, and `scripts/ci-dogfood.sh` passes no `--allowed-tools` at all, so this configuration has never been exercised.
-
-    **Resolve it once, then freeze it** *(corrected 2026-08-12 — the previous wording offered two fallbacks, "widen the allowlist" or "treat the denial as benign," while arm 10 separately said any out-of-allowlist permission request fails the arm. Those cannot all hold: the procedure had no deterministic pass/fail.)* Dry-run one arm before the real ones. Whatever allowlist results is **recorded in the CHANGELOG and used verbatim for every arm**, and from then on a permission request outside it fails that arm. One allowlist, decided up front, no per-arm judgement.
-
-    **If widening is needed, name the exact commands — never a wildcard** *(corrected 2026-08-12)*. `Bash(git diff:*)` and `Bash(git branch:*)` are **not read-only**: the first admits `git diff --output=/path` (writes a file), the second admits `git branch -D` (destroys refs), and this check deliberately feeds contributor-modifiable markdown into the session. Widen only to the two literal invocations the Context block makes:
-
-    ```
-    --allowed-tools 'Read,Grep,Glob,Bash(git diff --name-only HEAD),Bash(git branch --show-current)'
-    ```
-
-    Never bypass the permission prompt. In arm 10, a permission request for anything outside the allowlist **fails the arm** — decline it and end the session rather than approving to "get past it".
-  - **No inherited credentials or servers.** `--bare` forces `ANTHROPIC_API_KEY`-only auth with no keychain/OAuth fallback; `--strict-mcp-config` (with no `--mcp-config`) stops any project or user MCP server loading. For the environment, **use an allowlist — `env -i` — not a denylist** *(corrected 2026-08-12: the previous form unset four variables and then claimed "the API key should be the only secret reachable," which the shell it inherits flatly contradicts — every other provider key, cloud profile, database URL, npm/registry token and custom `*_TOKEN` in the operator's environment stayed reachable)*:
-
-    ```sh
-    mkdir -p "$WT/.fakehome"
-    env -i HOME="$WT/.fakehome" PATH="$PATH" TERM="$TERM" ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" claude …
-    ```
-
-    **A relocated `HOME` is not filesystem confinement — say so and sandbox properly** *(corrected 2026-08-17)*. Nothing in `--allowed-tools 'Read,Grep,Glob'` scopes those tools to the working directory: an injection in the ingested markdown can still name `~/.ssh/id_ed25519`, `~/.aws/credentials` or any absolute path, and the fake `HOME` does not move those files. What relocating `HOME` actually buys is narrower and worth keeping — the session's own config and persisted transcripts land inside `$WT`, so cleanup is one `rm`. Treat it as hygiene, not as the mitigation. **Confinement is mandatory, not best-effort** *(hardened 2026-08-18 — the previous wording let the arms run unconfined provided the operator said so in the CHANGELOG. Declaring an exposure is not mitigating it: the threat is a session with unrestricted `Read` being steered to `~/.ssh/id_ed25519` and putting it in an API request, and a CHANGELOG line does not stop that.)* `sandbox-exec` ships with macOS at `/usr/bin/sandbox-exec`, so this is available everywhere the repo is developed and there is no reason to make it optional. Deny reads outside the worktree and plugin dir:
-
-    ```scheme
-    ;; $OWNED/deny-home.sb
-    (version 1)
-    (allow default)
-    (deny file-read* (subpath (param "HOMEDIR")))
-    (allow file-read* (subpath (param "WORKTREE")) (subpath (param "PLUGINDIR")))
-    ```
-
-    Wrap every arm: `sandbox-exec -f "$OWNED/deny-home.sb" -D HOMEDIR="$REAL_HOME" -D WORKTREE="$OWNED" -D PLUGINDIR="$PWD" env -i …`. **If the sandbox cannot be established, the arm does not run** — AC8 is a local pre-merge check, so blocking is cheap, and the alternative is shipping a known credential-exfiltration path as procedure. Prove the profile before trusting it: inside the sandbox, `cat "$REAL_HOME/.ssh/known_hosts"` must fail.
-
-    **`HOME` points at a throwaway directory, not the operator's** *(corrected 2026-08-13 — `env -i HOME="$HOME"` was described as making the isolation claim "true by construction," which it does for the environment and not at all for the filesystem: `Read`, `Grep` and `Glob` are not confined to the working directory, so a prompt injection in the contributor-modifiable markdown these arms deliberately feed in could read `~/.ssh/id_*`, `~/.aws/credentials`, or `~/.claude/.credentials.json` and put the contents in a model request. Scrubbing four env vars did nothing about that.)* The fake home also keeps the arms' sessions out of the operator's real session store. Add variables only if an arm demonstrably needs them, and say which in the CHANGELOG.
-  - **Stop at the observation.** Arms 1–9 are single-turn and end themselves. Arm 10 ends the moment the gate's behavior is observed: confirm monolithic, check the `PROCEEDED` assertion, exit. Do not let it run into Stage 2.
-
-  **Invocation.** Arms 1–9 (print mode):
-
-  ```
-  --bare --plugin-dir . --no-session-persistence --max-budget-usd 0.50 --strict-mcp-config --allowed-tools 'Read,Grep,Glob' -p '<prompt>'
-  ```
-
-  **Arm 10 cannot carry two of those flags, and pretending otherwise is worse than admitting it** *(corrected 2026-08-11)*. `claude --help` documents both `--max-budget-usd` and `--no-session-persistence` as **"(only works with --print)"**, and arm 10 deliberately has no `-p` because a gate needs a second turn. Passing them there is inert — the arm runs **uncapped and session-persisting**, which is precisely the arm where that matters, since it is the only one proceeding past a gate. A prior revision "fixed" arm 10 by adding flags that cannot take effect. Substitute controls that do:
-
-  - **Wall-clock bound instead of a dollar cap:** `timeout 120 claude …`. End the session the moment `PROCEEDED` is observed; do not let it reach Stage 2.
-  - **Watch the spend directly** — `/cost` in-session, or reconcile against the API console afterwards. Use a dedicated low-limit key for this arm if one is available.
-  - **Clean up the persisted session** afterwards, since `--no-session-persistence` will not.
-
-  **Assertions** *(strengthened 2026-08-11 — "prompt present" / "prompt absent" is not runnable and admits two false passes: a print-mode reply that merely mentions the prompt text without the classifier having run, and a negative arm that emits nothing because the session died early for an unrelated reason. The repo convention is assertion on exact transcript markers paired with a discriminating positive signal, per `.roughly/known-pitfalls.md` and the #82 structural-plus-behavioral CI convention.)* Two fixed strings carry every arm:
-
-  - **`CLASSIFIER`** — `Stage 1 intake: epic-shaped input detected`. AC1's prose must emit this verbatim as the **first line** of the sub-gate, before the question. The form deliberately matches the existing Stage 1 marker family in both files (`Stage 1 intake aborted: [reason]`).
-  - **`QUESTION`** — `Narrow to one story, or confirm monolithic treatment?`, the sub-gate's own prompt. Asserting it is what proves the gate was raised rather than the session merely printing the marker and stopping.
-  - **`PROCEEDED`** — the existing Stage 1 gate question, verified present today at `skills/build/SKILL.md:31` and `skills/fix/SKILL.md:40`: `Is this the correct scope?` (build) and `Is this the correct issue?` (fix). Its appearance is the positive signal that Stage 1 actually ran *past* the classifier, rather than the session having stopped for an unrelated reason.
-
-  Pass conditions — **every arm additionally requires the session to have exited cleanly**: capture `$?` and reject 124 (timeout) or any non-zero, since a session that printed the strings and then died satisfies a string-presence test while proving nothing about the gate *(added 2026-08-17)*. **Positive arms (1–5, 7–8):** exit 0, `CLASSIFIER` **and** `QUESTION` present, `PROCEEDED` absent — the classifier ran, the gate was raised, and it held. **Negative arms (6, 9):** `CLASSIFIER` absent **and** `PROCEEDED` present, so there is no false positive *and* Stage 1 demonstrably proceeded. **Arms 10 and 11:** `CLASSIFIER` ∧ `QUESTION` on turn 1, `PROCEEDED` after the monolithic confirmation.
-
-  Match `CLASSIFIER` with `grep -qE '^[^A-Za-z]*Stage 1 intake: epic-shaped input detected'` — line-anchored with a leading-punctuation tolerance for markdown bullets and bold, the `scripts/ci-dogfood.sh` plugin-probe idiom — so a mid-sentence mention of the phrase does not satisfy it. Match `PROCEEDED` with `grep -qF`.
-
-  | # | Pipeline | Arm | Input | Pass condition |
-  |---|---|---|---|---|
-  | 1 | build | `#### E06.SN:` | `docs/planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md` (7 headings, verified 2026-08-11) | `CLASSIFIER` ∧ `QUESTION` ∧ ¬`PROCEEDED` |
-  | 2 | build | `## E07.SN —` | the E07 epic file (7 headings, verified) | `CLASSIFIER` ∧ `QUESTION` ∧ ¬`PROCEEDED` |
-  | 3 | build | `### E06.SN —` | `…-ci-coverage-audit.md` (7 headings, verified) | `CLASSIFIER` ∧ `QUESTION` ∧ ¬`PROCEEDED` |
-  | 4 | build | `## Story N:` | scratch file reproducing the **pre-AC4 two-story** README example verbatim — do **not** read it from the tree, since AC4 reduces the in-tree example to one story, which by AC1's two-or-more rule is arm 6's input, not this one | `CLASSIFIER` ∧ `QUESTION` ∧ ¬`PROCEEDED` |
-  | 5 | build | story-ID enumeration | scratch file listing story IDs, no story-form headings | `CLASSIFIER` ∧ `QUESTION` ∧ ¬`PROCEEDED` |
-  | 6 | build | negative control | scratch file, single story | ¬`CLASSIFIER` ∧ `PROCEEDED` |
-  | 7 | fix | heading form | any input from arms 1–4 | `CLASSIFIER` ∧ `QUESTION` ∧ ¬`PROCEEDED` |
-  | 8 | fix | story-ID enumeration | arm 5's input | `CLASSIFIER` ∧ `QUESTION` ∧ ¬`PROCEEDED` |
-  | 9 | fix | negative control | arm 6's input | ¬`CLASSIFIER` ∧ `PROCEEDED` |
-  | 10 | build, **interactive** | confirm path | arm 1's input | `CLASSIFIER` ∧ `QUESTION` on turn 1; answer with monolithic confirmation; `PROCEEDED` after |
-  | 11 | fix, **interactive** | confirm path | arm 7's input | same as arm 10 *(added 2026-08-12 — arm 10 was build-only, so the fix pipeline's ability to accept confirmation and proceed was unverified. Fix arms 7–9 are print-mode and only observe the prompt. AC1 requires equivalent behavior in both pipelines, and fix is the file where the `CI_MODE`/resolution split makes gate ordering load-bearing — the very hazard this arm would catch.)* |
-
-  **Arm 10, complete command line** *(added 2026-08-11 — the previous `claude --plugin-dir .` dropped `--bare`, `--no-session-persistence`, and the budget cap that this AC's own invocation rule requires)*. Run from `/tmp/e07s6-verify`:
-
-  ```sh
-  # Portable timeout — macOS ships neither `timeout` nor `gtimeout` by default.
-  # Same selection scripts/ci-dogfood.sh:15-17 already makes; coreutils is the dependency.
-  if command -v timeout >/dev/null; then TIMEOUT=timeout
-  elif command -v gtimeout >/dev/null; then TIMEOUT=gtimeout
-  else echo 'FAIL: install coreutils (brew install coreutils) — arm cannot be time-boxed'; exit 1; fi
-
-  cd "$WT" || exit 1
-
-  # ALLOWLIST is whatever the dry run settled on, recorded in the CHANGELOG and
-  # frozen for every arm. Start from the read-only set; widen ONLY to the two
-  # literal Context-block commands if the dry run shows they are required.
-  ALLOWLIST='Read,Grep,Glob'
-  # ALLOWLIST='Read,Grep,Glob,Bash(git diff --name-only HEAD),Bash(git branch --show-current)'
-
-  EPIC_INPUT=docs/planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md
-
-  mkdir -p "$WT/.fakehome"
-
-  # Cleanup must run on EVERY exit path, including the assertion failures below and
-  # a Ctrl-C. Without a trap the `exit 1`s skip it entirely and leave the worktree —
-  # and the session transcripts inside it — behind, which is the opposite of what
-  # the cleanup requirement is for. (Fixed 2026-08-17.)
-  cleanup() {
-    git worktree remove --force "$WT" 2>/dev/null || echo "WARN: remove $WT by hand"
-    rm -rf "$OWNED" 2>/dev/null
-  }
-  trap cleanup EXIT INT TERM
-
-  CLASSIFIER='Stage 1 intake: epic-shaped input detected'
-  QUESTION='Narrow to one story, or confirm monolithic treatment?'
-
-  # HOME is the throwaway dir, not the operator's — Read/Grep/Glob are not confined
-  # to cwd, and these arms ingest contributor-modifiable markdown. It also keeps the
-  # persisted sessions inside $WT so cleanup is a single rm.
-  # set -o pipefail is REQUIRED: without it $? is tee's status, which is 0 even when
-  # claude times out (124) or dies. The AC's "every arm must exit cleanly" is
-  # unenforceable through an unguarded pipe. (Fixed 2026-08-17.)
-  set -o pipefail
-  # Persist ONLY the three marker lines, never the full stream *(changed 2026-08-18 — a
-  # `tee` of stdout+stderr writes whatever the session read or emitted, including file
-  # contents, paths and model-request material, to a file that survives a forced kill)*.
-  run_interactive() {   # $1 = pipeline, $2 = marker-capture path; returns claude's status
-    $TIMEOUT 120 env -i HOME="$WT/.fakehome" PATH="$PATH" TERM="$TERM" \
-      ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
-      claude --bare --plugin-dir . --strict-mcp-config --allowed-tools "$ALLOWLIST" \
-             "/roughly:$1 $EPIC_INPUT" 2>&1 \
-      | grep -E "$CLASSIFIER|$QUESTION|Is this the correct" > "$2"
-    local rc=${PIPESTATUS[0]}
-    [ "$rc" -eq 124 ] && { echo "FAIL $2: timed out"; return 1; }
-    [ "$rc" -eq 0 ]   || { echo "FAIL $2: claude exited $rc"; return 1; }
-  }
-
-  # Arm 10 — build. Answer the sub-gate with monolithic confirmation on turn 2, then exit.
-  run_interactive build "$WT/arm10.log" || exit 1
-  # Arm 11 — fix. Same procedure, same input, same assertions.
-  run_interactive fix   "$WT/arm11.log" || exit 1
-
-  # Assertions — the commands above only produce evidence; these decide pass/fail.
-  for log in "$WT/arm10.log" "$WT/arm11.log"; do
-    grep -qE "^[^A-Za-z]*$CLASSIFIER" "$log" || { echo "FAIL $log: no CLASSIFIER"; exit 1; }
-    grep -qF  "$QUESTION"             "$log" || { echo "FAIL $log: gate never asked";  exit 1; }
-    grep -qF  'Is this the correct'   "$log" || { echo "FAIL $log: did not proceed after confirmation"; exit 1; }
-  done
-
-  # Cleanup is REQUIRED, not advisory — these arms persist sessions by construction.
-  # There is no CLI session-delete; sessions are files under the HOME the session ran with.
-  # Because HOME was "$WT/.fakehome", removing the worktree removes them with it —
-  # but verify, do not assume:
-  find "$WT/.fakehome" -name '*.jsonl' 2>/dev/null   # the arms' transcripts, if any
-  # If an arm was run with the real HOME by mistake, delete its session dir explicitly:
-  #   ls -dt ~/.claude/projects/*/ | head -3        # locate the most recent
-  #   rm -rf ~/.claude/projects/<the-one-for-this-worktree>
-  # Removal itself is the trap's job (it must also run on the failure paths above);
-  # --force is required because the arms leave scratch inputs and .fakehome behind.
-  # Nothing to do here — just confirm afterwards that it happened.
-  ```
-
-  **Cleanup is part of the AC, including on the interrupted path** *(added 2026-08-12 — it was previously two trailing comments after a listing command, so an interrupted or abandoned arm silently left repository-derived prompts and model responses in Claude's persisted session storage; `--no-session-persistence` cannot help here, which is the whole reason these two arms differ from the rest)*. If either arm is interrupted, run the cleanup anyway before doing anything else. **Confirm removal rather than asserting it** *(strengthened 2026-08-13 — `claude --resume --list` only lists, and "delete them" was a bare comment with no command, so an interrupted arm left repository-derived prompts and model responses in session storage indefinitely. There is no CLI delete; routing `HOME` into the worktree is what makes removal a single `rm`.)*: after the trap fires, `find "$WT" -maxdepth 0 2>/dev/null` must print nothing and `git worktree list` must not mention it. Record in the CHANGELOG that both sessions were removed and how it was confirmed.
-
-  **Arm 11 is the same procedure on the fix pipeline**: same flags, same allowlist, same timeout, same input, same `CLASSIFIER` → `QUESTION` → confirm → `PROCEEDED` sequence — which is why both run through one shell function rather than two hand-copied command lines. *(Two corrections land here. 2026-08-12: the table said only "same as arm 10," naming no invocation, assertions or cleanup. 2026-08-17: the commands still passed `HOME="$HOME"` — the real home the isolation bullet had already replaced with `$WT/.fakehome` — and they launched sessions without capturing a transcript or asserting anything, so following them produced no pass/fail evidence at all. The transcript `tee` and the three greps are what make these arms checks rather than demonstrations.)*
-
-  No `-p`: the positional prompt seeds an **interactive** session, so the gate can be answered on turn 2.
-
-  **`--no-session-persistence` and `--max-budget-usd` are deliberately absent from this command** *(corrected 2026-08-12 — a prior revision explained in prose that both are print-mode-only and then left them in the command anyway, so the arm still read as capped and non-persisting while being neither)*. `timeout 120` is the enforceable bound that replaces the budget cap, and the session must be removed by hand afterwards. Everything else matches arms 1–9.
-
-  **Ceiling is a formula, not a constant** *(corrected 2026-08-11 — three places asserted a flat "$5.00 across ten arms" while this same AC says to add or drop arms to match OQ8, so an OQ8 accepting five forms silently invalidated all three)*: **$0.50 × (5 + one arm per accepted OQ8 heading form)** for the print-mode arms — nine arms and **$4.50** at four accepted forms — plus arms 10 and 11's time-boxed interactive sessions (~$0.50 each, unenforceable by flag), for **~$5.50** total. *(Corrected 2026-08-12: the formula said `6 + forms`, which claims ten print-mode arms when arms 1–9 are the print set — five fixed (ID enumeration, negative control, and the three fix-side arms) plus one per form. The old "$5.00" only reconciled by silently folding arm 10's cost into a print-mode count.)* Actual spend lands well under $2, since every session stops at or just past Stage 1. **This AC is the single source for that figure;** the header line and the Precondition are derived pointers. Arms 1–4 are one per accepted heading form — add or drop rows to match OQ8 exactly, and **a form OQ8 declares accepted without a passing arm here fails this AC**. Arm 5 exists because AC1 specifies two triggers and a headings-only detector would otherwise pass everything while violating AC1. Arm 10 exists because arms 1–9 never exercise AC3's advisory-not-abort guarantee — they observe a prompt or its absence, never an answer.
+  - **Confine, or refuse to run.** Default-deny `sandbox-exec` profile; reads outside the repo and the scratch dir denied, including `/Users` and `/private/tmp`. The script self-tests the profile before any paid call — it must be able to exec, must fail to read the real home, and must be able to read the repo — and exits if any of those is wrong. A relocated `HOME` is hygiene, not confinement.
+  - **Own its scratch.** Worktree inside a `mktemp -d` the script keeps (no create-delete-recreate race), resolved with `pwd -P` because the sandbox matches resolved paths, removed by a `trap` on `EXIT INT TERM` so the failure paths clean up too.
+  - **Fixed trusted `PATH`, `env -i`, absolute `claude`.** Handing an API key to a child while inheriting `PATH` lets any writable entry shadow the binary.
+  - **Eleven arms** — 1–4 one per accepted OQ8 heading form, 5 story-ID enumeration, 6 negative control, 7–9 the fix-side mirror, 10–11 the interactive confirm path on both pipelines. Arms 1–9 assert `CLASSIFIER` ∧ `QUESTION` ∧ ¬`PROCEEDED` (positive) or the inverse (negative), **and a clean exit** — 124 or any non-zero fails the arm.
+  - **Persist markers, not transcripts.** Only the three assertion strings; never the raw stream, which carries whatever the session read.
+  - **Report status, not paths.** Cleanup evidence is pass/fail; a path carries the operator's username.
 
   Scratch files only; do **not** commit a fixture. Record **each arm's** outcome in the CHANGELOG entry, naming the two match strings used. **Local check, not a CI scenario** — nothing is added to `scripts/ci-dogfood.sh` or the dogfood budget.
 - **AC9 — Durable regression coverage via a Stop-hook drift check** *(added 2026-08-11; rewritten same day — as drafted it was unsatisfiable whenever AC7's extraction off-ramp was taken, and it did not enforce the ordering AC1 exists to guarantee)*. AC8 is a one-off run at merge time; nothing then prevents a later edit from deleting, diverging, or **relocating** the classifier, and the dogfood proving runs cannot catch it (they pass inline descriptions, so neither classification path executes). Add the checks below to `.claude/hooks/verify-all.sh`, using the existing `issues="${issues}- …"` accumulation and the plan-mode-gate hook-pair check as the pattern. Free — no session, no dispatch.
