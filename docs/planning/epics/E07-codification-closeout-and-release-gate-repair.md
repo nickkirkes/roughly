@@ -65,7 +65,9 @@ Deferred (body hashes `249e19a6c783` / `0a150b346b18` / `af624acc5eb1`): [#100](
 
 **Brief derived from** is the staleness check. **Scope is that story's own section *plus* the epic's shared normative sections** — not the epic's overall tip (too broad: every row goes stale on any change), and not the story section alone (too narrow: it misses policy that governs the story from outside it). *(Both errors were made in turn — global watermark 2026-08-10, then section-only in the same day's correction. This is the scope that is actually right.)* The shared sections are `# Sequencing`, this `## Story tracking` block, the `## Risk register`, and E07.S2.AC1's class table and dispatch budget — a change to any of them can alter a story's ordering, scope, or cost without touching its section, and re-stamps **every** brief it governs. To check one row: `git log --oneline <sha>..HEAD -- <epic path>` for candidates, then `git diff <sha>..HEAD -- <epic path>` and look for changes inside that story's `## E07.SN` block; changes confined to other stories do not make this brief stale. **One command checks both derived-view classes** *(added 2026-08-13, answering two standing objections: that the Phase 2 predecessor set is restated in the diagram, the `Constraint` column and the prose with nothing keeping them in step, and that this whole obligation is manual judgement with no failure signal. It does not make either automatic — no CI runs it — but it converts "read carefully and hope" into one runnable check with a visible result.)*
 
-```sh
+```bash
+# Requires bash: uses process substitution and ${var:0:n}. Fenced `sh` until
+# 2026-08-19, which would fail under /bin/sh before validating anything.
 EPIC=docs/planning/epics/E07-codification-closeout-and-release-gate-repair.md
 fail=0
 
@@ -93,9 +95,17 @@ while IFS= read -r line; do
   # against its own line let all derived views agree on the same WRONG set and pass.
   # (The comparison existed before 1b was added and was dropped in that rewrite; restored
   # 2026-08-18.)
-  case "$line" in *DERIVED=*)
-    [ "$claimed" = "$auth" ] \
-      || { echo "FAIL: derived '$claimed' != authoritative '$auth'"; fail=1; } ;;
+  # Reject unknown types outright. Matching [A-Z]* accepted anything, and only
+  # DERIVED was compared to $auth — so a typo'd or invented type (RESTATED=S1,S5,S7)
+  # passed on its own line's agreement alone and never met the authoritative set.
+  # (Fixed 2026-08-19.)
+  kind=$(printf '%s' "$line" | grep -o 'predecessor-set:[A-Za-z]*' | cut -d: -f2)
+  case "$kind" in
+    AUTHORITATIVE) : ;;
+    DERIVED)
+      [ "$claimed" = "$auth" ] \
+        || { echo "FAIL: derived '$claimed' != authoritative '$auth'"; fail=1; } ;;
+    *) echo "FAIL: unknown predecessor-set marker type '$kind' — use AUTHORITATIVE or DERIVED"; fail=1 ;;
   esac
 done < <(grep -h 'predecessor-set:' "$EPIC" | grep -v 'grep -o')
 

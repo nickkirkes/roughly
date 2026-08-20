@@ -52,6 +52,12 @@ vet "$CLAUDE" || exit 1
 # The sandbox denies /Users wholesale, but claude itself usually lives there (nvm,
 # homebrew). Allow exactly its own tree back, nothing wider.
 CLAUDE_TREE=$(dirname "$(dirname "$CLAUDE")")
+# The child PATH gets claude's own bin dir prepended. On this machine claude is a native
+# binary and runs on the system PATH alone, but npm/nvm/homebrew installs ship a JS shim
+# whose `node` sits in that same dir — with a system-only PATH those launchers cannot
+# resolve their runtime and every arm dies before reaching the plugin. The dir is already
+# vetted above and already read-allowed in the profile, so this widens nothing new.
+CHILD_PATH="$(dirname "$CLAUDE"):$TRUSTED_PATH"
 
 # ── owned scratch, cleaned on every exit path ────────────────────────────────
 OWNED=$(cd "$(mktemp -d -t e07s6-verify.XXXXXX)" && pwd -P) || { echo 'FAIL: mktemp'; exit 1; }
@@ -88,25 +94,32 @@ cat > "$OWNED/confine.sb" <<'SBEOF'
                    (literal "/dev/stdout") (literal "/dev/stderr"))
 SBEOF
 
-confined() {   # confined <prompt>  → runs claude sandboxed, prints combined output
-  "$TIMEOUT" 120 "$SANDBOX" -f "$OWNED/confine.sb" \
-      -D OWNED="$OWNED" -D PLUGINDIR="$REPO" -D CLAUDETREE="$CLAUDE_TREE" \
-      env -i PATH="$TRUSTED_PATH" HOME="$OWNED/home" TERM=dumb \
+# Arms run INSIDE the worktree, against the worktree's own plugin copy. Running them
+# from $REPO with --plugin-dir "$REPO" made the worktree dead weight: the sessions saw
+# the live checkout, and since the profile only permits writes under $OWNED, any
+# pipeline write would have been denied against the wrong tree anyway. The worktree is
+# at HEAD, which is what AC8 means by "commit the S6 work locally first".
+# (Fixed 2026-08-19.)
+confined() {   # confined <prompt>  → runs claude sandboxed in $WT, prints combined output
+  ( cd "$WT" || exit 1
+    "$TIMEOUT" 120 "$SANDBOX" -f "$OWNED/confine.sb" \
+      -D OWNED="$OWNED" -D PLUGINDIR="$WT" -D CLAUDETREE="$CLAUDE_TREE" \
+      env -i PATH="$CHILD_PATH" HOME="$OWNED/home" TERM=dumb \
              ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
-      "$CLAUDE" --bare --plugin-dir "$REPO" --no-session-persistence \
+      "$CLAUDE" --bare --plugin-dir "$WT" --no-session-persistence \
                 --max-budget-usd 0.50 --strict-mcp-config \
-                --allowed-tools "$ALLOWLIST" -p "$1" 2>&1
+                --allowed-tools "$ALLOWLIST" -p "$1" 2>&1 )
 }
 mkdir -p "$OWNED/home"
 
 # Prove the profile before trusting it. If this can read the real home, stop.
-sb() { "$SANDBOX" -f "$OWNED/confine.sb" -D OWNED="$OWNED" -D PLUGINDIR="$REPO" -D CLAUDETREE="$CLAUDE_TREE" "$@"; }
+sb() { "$SANDBOX" -f "$OWNED/confine.sb" -D OWNED="$OWNED" -D PLUGINDIR="$WT" -D CLAUDETREE="$CLAUDE_TREE" "$@"; }
 sb /bin/echo probe >/dev/null 2>&1 \
   || { echo 'FAIL: sandbox profile cannot exec — refusing to run'; exit 1; }
 ! sb /bin/ls "$REAL_HOME" >/dev/null 2>&1 \
   || { echo 'FAIL: sandbox does not deny the real home — refusing to run'; exit 1; }
-sb /bin/cat "$REPO/CLAUDE.md" >/dev/null 2>&1 \
-  || { echo 'FAIL: sandbox denies the repo — arms could not read their inputs'; exit 1; }
+sb /bin/cat "$WT/CLAUDE.md" >/dev/null 2>&1 \
+  || { echo 'FAIL: sandbox denies the worktree — arms could not read their inputs'; exit 1; }
 
 # ── assertion strings, owned by E07.S6.AC1 ───────────────────────────────────
 CLASSIFIER='Stage 1 intake: epic-shaped input detected'
@@ -120,9 +133,13 @@ PROCEEDED='Is this the correct'
 readonly ALLOWLIST='Read,Grep,Glob'
 
 # ── inputs ───────────────────────────────────────────────────────────────────
+# Repo-relative: resolved inside $WT, which is where the arms now run.
 E06=docs/planning/epics/complete/E06-anchoring-closure-and-ci-coverage.md
 E06A=docs/planning/epics/complete/E06-anchoring-closure-and-ci-coverage-audit.md
 E07=docs/planning/epics/E07-codification-closeout-and-release-gate-repair.md
+for f in "$E06" "$E06A" "$E07"; do
+  [ -f "$WT/$f" ] || { echo "FAIL: input missing from the worktree: $(basename "$f")"; exit 1; }
+done
 
 # Arm 4 needs the PRE-AC4 two-story README form; AC4 reduces the in-tree example to one.
 cat > "$WT/two-story.md" <<'EOF'
@@ -176,12 +193,12 @@ arm() {   # arm <n> <pipeline> <input> <expect: pos|neg>
 arm 1 build "$E06"               pos
 arm 2 build "$E07"               pos
 arm 3 build "$E06A"              pos
-arm 4 build "$WT/two-story.md"   pos
-arm 5 build "$WT/id-enum.md"     pos    # AC1's second trigger: story-ID enumeration
-arm 6 build "$WT/one-story.md"   neg    # negative control
+arm 4 build "two-story.md"       pos
+arm 5 build "id-enum.md"         pos    # AC1's second trigger: story-ID enumeration
+arm 6 build "one-story.md"       neg    # negative control
 arm 7 fix   "$E06"               pos    # fix side: insertion points differ structurally
-arm 8 fix   "$WT/id-enum.md"     pos
-arm 9 fix   "$WT/one-story.md"   neg
+arm 8 fix   "id-enum.md"         pos
+arm 9 fix   "one-story.md"       neg
 
 interactive_incomplete=0
 if [ "${1:-}" = --interactive ]; then
@@ -207,11 +224,33 @@ echo "arms passed: $pass, failed: $failed"
 [ "$failed" -eq 0 ] || exit 1
 
 if [ "$interactive_incomplete" -eq 1 ]; then
-  if [ "${ARMS_10_11_PASSED:-}" = yes ]; then
-    echo 'arms 10-11: operator-confirmed pass (manual)'
-  else
-    echo 'INCOMPLETE: arms 10-11 were not executed. Run them by hand as described'
-    echo 'above, then re-invoke with ARMS_10_11_PASSED=yes to record the result.'
-    exit 2
-  fi
+  # Evidence, not an assertion by the operator. ARMS_10_11_PASSED=yes was an
+  # honour-system flag: it recorded a pass without anything having run, which is the
+  # failure mode arms 10-11 exist to prevent. The manual runs must leave their marker
+  # lines in two files, and those are asserted here exactly as arms 1-9 are.
+  # (Fixed 2026-08-19.)
+  ev=${ARMS_10_11_EVIDENCE:-}
+  [ -n "$ev" ] && [ -d "$ev" ] || {
+    echo 'INCOMPLETE: arms 10-11 not executed.'
+    echo 'Run each by hand as described above, capturing the session output to'
+    echo '  <dir>/arm10.log and <dir>/arm11.log, then re-invoke with'
+    echo '  ARMS_10_11_EVIDENCE=<dir>'
+    exit 2; }
+  for a in 10 11; do
+    f="$ev/arm$a.log"
+    [ -s "$f" ] || { echo "FAIL arm $a: no evidence at arm$a.log"; failed=$((failed+1)); continue; }
+    lc=$(grep -nE "^[^A-Za-z]*$CLASSIFIER" "$f" | head -1 | cut -d: -f1)
+    lq=$(grep -nF  "$QUESTION"             "$f" | head -1 | cut -d: -f1)
+    lp=$(grep -nF  "$PROCEEDED"            "$f" | head -1 | cut -d: -f1)
+    if [ -z "$lc" ] || [ -z "$lq" ] || [ -z "$lp" ]; then
+      echo "FAIL arm $a: evidence lacks classifier/question/proceeded"; failed=$((failed+1))
+    elif [ "$lc" -ge "$lq" ] || [ "$lq" -ge "$lp" ]; then
+      echo "FAIL arm $a: markers out of order (classifier $lc, question $lq, proceeded $lp)"
+      failed=$((failed+1))
+    else
+      echo "pass arm $a (manual, evidence asserted)"; pass=$((pass+1))
+    fi
+  done
+  echo "arms passed: $pass, failed: $failed"
+  [ "$failed" -eq 0 ] || exit 1
 fi
