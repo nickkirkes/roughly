@@ -45,16 +45,16 @@ Each story is filed as a GitHub issue carrying a self-contained implementer brie
 
 | Story | Issue | Brief derived from | Body hash | Wave | Constraint |
 |---|---|---|---|---|---|
-| E07.S3 — CHANGELOG backfill + heading revert | [#93](https://github.com/nickkirkes/roughly/issues/93) | `047f442` | `22df29218bd1` | 1 | Before every other story (rewrites the heading their entries land under) |
-| E07.S1 — Dogfood harness diagnostics | [#94](https://github.com/nickkirkes/roughly/issues/94) | `047f442` | `501a40e62532` | 2 | After S3 |
-| E07.S2 **Phase 1** — discovery dispatch | [#95](https://github.com/nickkirkes/roughly/issues/95) | `047f442` | `b272658621e9` | 3 | Opens once S1 merges; **runs concurrently with wave 4** |
-| E07.S5 — Stage 4 contract | [#96](https://github.com/nickkirkes/roughly/issues/96) | `047f442` | `52cb8016e38f` | 4 | After S3; before S6 (line budget, R3) |
-| E07.S6 — Granularity guard + ADR-021 | [#97](https://github.com/nickkirkes/roughly/issues/97) | `047f442` | `b1937368124e` | 4 | After S5 |
-| E07.S4 — Intra-epic AC codifier | [#98](https://github.com/nickkirkes/roughly/issues/98) | `047f442` | `2982287fa3b9` | 4 | Unordered within the wave; **optional** — first cut if the dispatch budget compresses |
-| E07.S2 **Phase 2** — 3 proving runs | [#95](https://github.com/nickkirkes/roughly/issues/95) | `047f442` | `b272658621e9` | 5 | After S1, S5, S6 have merged (AC1's predecessor set). S4 not required <!-- predecessor-set:DERIVED=S1,S5,S6 --> |
-| E07.S7 — Tag-prep wrap | [#99](https://github.com/nickkirkes/roughly/issues/99) | `047f442` | `08ebf60082a6` | 6 | Last; after S2's disposition is recorded |
+| E07.S3 — CHANGELOG backfill + heading revert | [#93](https://github.com/nickkirkes/roughly/issues/93) | `5e4f05d` | `db3a4b455e52` | 1 | Before every other story (rewrites the heading their entries land under) |
+| E07.S1 — Dogfood harness diagnostics | [#94](https://github.com/nickkirkes/roughly/issues/94) | `5e4f05d` | `70899a64e8a0` | 2 | After S3 |
+| E07.S2 **Phase 1** — discovery dispatch | [#95](https://github.com/nickkirkes/roughly/issues/95) | `5e4f05d` | `0299d5f65f24` | 3 | Opens once S1 merges; **runs concurrently with wave 4** |
+| E07.S5 — Stage 4 contract | [#96](https://github.com/nickkirkes/roughly/issues/96) | `5e4f05d` | `0882d53eb599` | 4 | After S3; before S6 (line budget, R3) |
+| E07.S6 — Granularity guard + ADR-021 | [#97](https://github.com/nickkirkes/roughly/issues/97) | `5e4f05d` | `54ff220870d0` | 4 | After S5 |
+| E07.S4 — Intra-epic AC codifier | [#98](https://github.com/nickkirkes/roughly/issues/98) | `5e4f05d` | `2d5856a7f773` | 4 | Unordered within the wave; **optional** — first cut if the dispatch budget compresses |
+| E07.S2 **Phase 2** — 3 proving runs | [#95](https://github.com/nickkirkes/roughly/issues/95) | `5e4f05d` | `0299d5f65f24` | 5 | After S1, S5, S6 have merged (AC1's predecessor set). S4 not required <!-- predecessor-set:DERIVED=S1,S5,S6 --> |
+| E07.S7 — Tag-prep wrap | [#99](https://github.com/nickkirkes/roughly/issues/99) | `5e4f05d` | `ef219079b32d` | 6 | Last; after S2's disposition is recorded |
 
-Deferred (body hashes `249e19a6c783` / `0a150b346b18` / `af624acc5eb1`): [#100](https://github.com/nickkirkes/roughly/issues/100) (B3, v0.1.10) · [#101](https://github.com/nickkirkes/roughly/issues/101) (DI-001, v0.2.0-adjacent) · [#102](https://github.com/nickkirkes/roughly/issues/102) (ADR-009/010 cleanup, v0.2.0) — all three briefs derived from `047f442`, same as the story rows above.
+Deferred (body hashes `249e19a6c783` / `0a150b346b18` / `af624acc5eb1`): [#100](https://github.com/nickkirkes/roughly/issues/100) (B3, v0.1.10) · [#101](https://github.com/nickkirkes/roughly/issues/101) (DI-001, v0.2.0-adjacent) · [#102](https://github.com/nickkirkes/roughly/issues/102) (ADR-009/010 cleanup, v0.2.0) — all three briefs derived from `5e4f05d`, same as the story rows above.
 
 **Wave** groups stories that may proceed concurrently; **Constraint** states the actual dependency. Waves are a partial order, not a queue — everything in wave 4 is unordered except S5-before-S6, and S2 Phase 1 (wave 3) overlaps all of wave 4 rather than blocking it. `# Sequencing` holds the authoritative graph; this table summarizes it. *(Replaced a single integer "Sequence"/"Dispatch order" column 2026-08-10. Integers implied a total order that contradicts the overlap — and read as paid-dispatch numbering besides, making S2's "7" look like a seventh dispatch against a six-dispatch budget. Paid dispatches are counted only in E07.S2.AC1.)*
 
