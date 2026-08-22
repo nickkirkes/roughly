@@ -15,6 +15,14 @@
 
 set -uo pipefail
 
+# Host-side commands run BEFORE the child's env -i, with ANTHROPIC_API_KEY already in
+# this process's environment — so git, mktemp, find, cat, rm and the rest were as
+# capable of exfiltrating it as claude was, and only claude and timeout were vetted.
+# Fix the PATH for everything, first thing. (Fixed 2026-08-21.)
+CALLER_PATH=$PATH          # only used to LOCATE claude, which lives outside the
+PATH=/usr/bin:/bin:/usr/sbin:/sbin   # trusted PATH by design (nvm/homebrew)
+export PATH
+
 REPO=$(cd "$(git rev-parse --show-toplevel)" && pwd -P) || { echo 'FAIL: not in a git repo'; exit 1; }
 cd "$REPO" || exit 1
 
@@ -34,30 +42,36 @@ vet() {   # vet <path> — reject if it or its dir is group/other-writable
   [ -x "$f" ] || { echo "FAIL: $(basename "$f") not executable"; return 1; }
   [ -z "$(find "$f" -perm -o+w -o -perm -g+w 2>/dev/null)" ] \
     || { echo "FAIL: $(basename "$f") is group/other-writable"; return 1; }
-  [ -z "$(find "$d" -maxdepth 0 -perm -o+w 2>/dev/null)" ] \
-    || { echo "FAIL: directory holding $(basename "$f") is world-writable"; return 1; }
+  # Group-writable counts too: on a shared box a group member can swap the binary.
+  # (-maxdepth works fine on BSD find — verified; the gap was the missing -g+w.)
+  [ -z "$(find "$d" -maxdepth 0 \( -perm -o+w -o -perm -g+w \) 2>/dev/null)" ] \
+    || { echo "FAIL: directory holding $(basename "$f") is group/world-writable"; return 1; }
 }
 
-if   TIMEOUT=$(PATH=$TRUSTED_PATH command -v timeout);  then :
-elif TIMEOUT=$(command -v timeout || command -v gtimeout); then :
+if   TIMEOUT=$(command -v timeout);  then :
+elif TIMEOUT=$(PATH=$CALLER_PATH command -v timeout || PATH=$CALLER_PATH command -v gtimeout); then :
 else echo 'FAIL: install coreutils (brew install coreutils) — arms cannot be time-boxed'; exit 1; fi
 vet "$TIMEOUT" || exit 1
 
 SANDBOX=/usr/bin/sandbox-exec
 [ -x "$SANDBOX" ] || { echo 'FAIL: sandbox-exec unavailable — no sandbox, no arm'; exit 1; }
 
-CLAUDE=$(command -v claude) || { echo 'FAIL: claude not on PATH'; exit 1; }
+CLAUDE=$(PATH=$CALLER_PATH command -v claude) || { echo 'FAIL: claude not on PATH'; exit 1; }
 CLAUDE=$(cd "$(dirname "$CLAUDE")" && pwd -P)/$(basename "$CLAUDE")
 vet "$CLAUDE" || exit 1
 # The sandbox denies /Users wholesale, but claude itself usually lives there (nvm,
 # homebrew). Allow exactly its own tree back, nothing wider.
-CLAUDE_TREE=$(dirname "$(dirname "$CLAUDE")")
+# Just the bin dir, not the whole install root. Reopening dirname(dirname(claude))
+# handed back a user-owned tree (node_modules, caches) that Read/Grep/Glob could then
+# be steered through — broader than the documented repo-and-scratch confinement.
+# Verified claude still loads with only its bin dir readable. (Narrowed 2026-08-21.)
+CLAUDE_BIN=$(dirname "$CLAUDE")
 # The child PATH gets claude's own bin dir prepended. On this machine claude is a native
 # binary and runs on the system PATH alone, but npm/nvm/homebrew installs ship a JS shim
 # whose `node` sits in that same dir — with a system-only PATH those launchers cannot
 # resolve their runtime and every arm dies before reaching the plugin. The dir is already
 # vetted above and already read-allowed in the profile, so this widens nothing new.
-CHILD_PATH="$(dirname "$CLAUDE"):$TRUSTED_PATH"
+CHILD_PATH="$CLAUDE_BIN:$TRUSTED_PATH"
 
 # ── owned scratch, cleaned on every exit path ────────────────────────────────
 OWNED=$(cd "$(mktemp -d -t e07s6-verify.XXXXXX)" && pwd -P) || { echo 'FAIL: mktemp'; exit 1; }
@@ -84,11 +98,11 @@ cat > "$OWNED/confine.sb" <<'SBEOF'
 (version 1)
 (deny default)
 (allow process* signal sysctl-read mach-lookup mach-register ipc-posix-shm)
-(allow network-outbound (remote ip))
+(allow network-outbound (remote tcp "*:443"))   ; TLS only — verified claude still runs
 (allow file-read*)
 (deny  file-read* (subpath "/Users") (subpath "/private/tmp")
                   (subpath "/private/var") (subpath "/private/etc") (subpath "/etc"))
-(allow file-read* (subpath (param "PLUGINDIR")) (subpath (param "CLAUDETREE")))
+(allow file-read* (subpath (param "PLUGINDIR")) (subpath (param "CLAUDEBIN")))
 (allow file-read* file-write* (subpath (param "OWNED")))
 (allow file-write* (literal "/dev/null") (literal "/dev/tty")
                    (literal "/dev/stdout") (literal "/dev/stderr"))
@@ -103,7 +117,7 @@ SBEOF
 confined() {   # confined <prompt>  → runs claude sandboxed in $WT, prints combined output
   ( cd "$WT" || exit 1
     "$TIMEOUT" 120 "$SANDBOX" -f "$OWNED/confine.sb" \
-      -D OWNED="$OWNED" -D PLUGINDIR="$WT" -D CLAUDETREE="$CLAUDE_TREE" \
+      -D OWNED="$OWNED" -D PLUGINDIR="$WT" -D CLAUDEBIN="$CLAUDE_BIN" \
       env -i PATH="$CHILD_PATH" HOME="$OWNED/home" TERM=dumb \
              ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
       "$CLAUDE" --bare --plugin-dir "$WT" --no-session-persistence \
@@ -113,7 +127,7 @@ confined() {   # confined <prompt>  → runs claude sandboxed in $WT, prints com
 mkdir -p "$OWNED/home"
 
 # Prove the profile before trusting it. If this can read the real home, stop.
-sb() { "$SANDBOX" -f "$OWNED/confine.sb" -D OWNED="$OWNED" -D PLUGINDIR="$WT" -D CLAUDETREE="$CLAUDE_TREE" "$@"; }
+sb() { "$SANDBOX" -f "$OWNED/confine.sb" -D OWNED="$OWNED" -D PLUGINDIR="$WT" -D CLAUDEBIN="$CLAUDE_BIN" "$@"; }
 sb /bin/echo probe >/dev/null 2>&1 \
   || { echo 'FAIL: sandbox profile cannot exec — refusing to run'; exit 1; }
 ! sb /bin/ls "$REAL_HOME" >/dev/null 2>&1 \
@@ -123,7 +137,10 @@ sb /bin/cat "$WT/CLAUDE.md" >/dev/null 2>&1 \
 
 # ── assertion strings, owned by E07.S6.AC1 ───────────────────────────────────
 CLASSIFIER='Stage 1 intake: epic-shaped input detected'
-QUESTION='Narrow to one story, or confirm monolithic treatment?'
+# Full string including the options, per AC1. Asserting only the prefix ending in '?'
+# let a prompt that omits '(narrow / monolithic)' pass every positive arm — and the
+# options are what make it answerable. (Fixed 2026-08-21.)
+QUESTION='Narrow to one story, or confirm monolithic treatment? (narrow / monolithic)'
 PROCEEDED='Is this the correct'
 
 # Frozen here, deliberately NOT read from the environment: an exported ALLOWLIST
@@ -200,6 +217,27 @@ arm 7 fix   "$E06"               pos    # fix side: insertion points differ stru
 arm 8 fix   "id-enum.md"         pos
 arm 9 fix   "one-story.md"       neg
 
+# Arms 12-13: --ci must NOT hang. AC1's positional insertion point exists because a
+# gate placed before the CI_MODE assignment blocks every --ci run — yet no arm used
+# --ci at all, so the regression the rule was written to prevent went untested.
+# Under --ci every gate auto-proceeds, so an epic-shaped input must classify AND
+# proceed rather than stop at the sub-gate. A hang surfaces as timeout 124.
+ci_arm() {   # ci_arm <n> <pipeline>
+  local n=$1 pipe=$2 out rc
+  out=$(confined "/roughly:$pipe --ci $E06"); rc=$?
+  if [ "$rc" -eq 124 ]; then
+    echo "FAIL arm $n: --ci hung — classifier is almost certainly above the CI_MODE assignment"
+    failed=$((failed+1)); return
+  fi
+  [ "$rc" -eq 0 ] || { echo "FAIL arm $n: --ci exited $rc"; failed=$((failed+1)); return; }
+  grep -qF "$PROCEEDED" <<<"$out" \
+    && { echo "pass arm $n (--ci proceeded)"; pass=$((pass+1)); } \
+    || { echo "FAIL arm $n: --ci did not reach the Stage 1 gate"; failed=$((failed+1)); }
+}
+ci_arm 12 build
+ci_arm 13 fix
+
+
 interactive_incomplete=0
 if [ "${1:-}" = --interactive ]; then
   # Arms 10-11 cannot be automated: answering a gate needs a second turn, which print
@@ -216,7 +254,28 @@ with monolithic confirmation, and confirm Stage 1 then proceeds. Note that
 --max-budget-usd and --no-session-persistence are print-mode only, so these arms are
 time-boxed instead and their sessions live under $OWNED/home, removed by the trap.
 EOF
-  echo "  worktree: \$WT (printed by: echo \"\$WT\")"
+  echo "  worktree: $WT"
+  # Drive the arms here when a terminal is available, rather than asking the operator
+  # to reproduce the invocation and hand back logs we cannot attribute to a real
+  # session. Raw output stays inside $OWNED (trap-removed); only markers are kept.
+  # (Fixed 2026-08-21.)
+  if [ -t 0 ] && [ -t 1 ]; then
+    for spec in "10 build" "11 fix"; do
+      set -- $spec; a=$1; pipe=$2
+      echo "--- arm $a ($pipe): answer the sub-gate with monolithic confirmation, then exit ---"
+      ( cd "$WT" || exit 1
+        "$TIMEOUT" 300 "$SANDBOX" -f "$OWNED/confine.sb" \
+          -D OWNED="$OWNED" -D PLUGINDIR="$WT" -D CLAUDEBIN="$CLAUDE_BIN" \
+          env -i PATH="$CHILD_PATH" HOME="$OWNED/home" TERM="${TERM:-xterm}" \
+                 ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+          "$CLAUDE" --bare --plugin-dir "$WT" --strict-mcp-config \
+                    --allowed-tools "$ALLOWLIST" "/roughly:$pipe $E06" 2>&1 ) \
+        | tee "$OWNED/raw$a.log" >/dev/null
+      grep -E "$CLASSIFIER|$QUESTION|$PROCEEDED" "$OWNED/raw$a.log" > "$OWNED/arm$a.log" || true
+      rm -f "$OWNED/raw$a.log"
+    done
+    ARMS_10_11_EVIDENCE=$OWNED
+  fi
 fi
 
 echo "---"
@@ -230,6 +289,8 @@ if [ "$interactive_incomplete" -eq 1 ]; then
   # lines in two files, and those are asserted here exactly as arms 1-9 are.
   # (Fixed 2026-08-19.)
   ev=${ARMS_10_11_EVIDENCE:-}
+  # Produced above when a terminal was available; otherwise operator-supplied, which
+  # cannot be attributed to a real session — say which in the CHANGELOG.
   [ -n "$ev" ] && [ -d "$ev" ] || {
     echo 'INCOMPLETE: arms 10-11 not executed.'
     echo 'Run each by hand as described above, capturing the session output to'

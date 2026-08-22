@@ -65,90 +65,10 @@ Deferred (body hashes `249e19a6c783` / `0a150b346b18` / `af624acc5eb1`): [#100](
 
 **Brief derived from** is the staleness check. **Scope is that story's own section *plus* the epic's shared normative sections** — not the epic's overall tip (too broad: every row goes stale on any change), and not the story section alone (too narrow: it misses policy that governs the story from outside it). *(Both errors were made in turn — global watermark 2026-08-10, then section-only in the same day's correction. This is the scope that is actually right.)* The shared sections are `# Sequencing`, this `## Story tracking` block, the `## Risk register`, and E07.S2.AC1's class table and dispatch budget — a change to any of them can alter a story's ordering, scope, or cost without touching its section, and re-stamps **every** brief it governs. To check one row: `git log --oneline <sha>..HEAD -- <epic path>` for candidates, then `git diff <sha>..HEAD -- <epic path>` and look for changes inside that story's `## E07.SN` block; changes confined to other stories do not make this brief stale. **One command checks both derived-view classes** *(added 2026-08-13, answering two standing objections: that the Phase 2 predecessor set is restated in the diagram, the `Constraint` column and the prose with nothing keeping them in step, and that this whole obligation is manual judgement with no failure signal. It does not make either automatic — no CI runs it — but it converts "read carefully and hope" into one runnable check with a visible result.)*
 
-```bash
-# Requires bash: uses process substitution and ${var:0:n}. Fenced `sh` until
-# 2026-08-19, which would fail under /bin/sh before validating anything.
-EPIC=docs/planning/epics/E07-codification-closeout-and-release-gate-repair.md
-fail=0
+Run [`scripts/check-epic-consistency.sh`](../../../scripts/check-epic-consistency.sh) before pushing an epic change. *(Extracted from this section 2026-08-21. Living here made it layout-sensitive and unrunnable by anything that did not first parse markdown out of a fenced block — four of its own bugs reached the branch because nothing executed it: a marker pattern that matched its own documentation, an uninitialised `$bad`, a `sed` delimiter collision, and a watermark that failed every valid partial re-stamp. It is a script now, and `verify-all.sh` is where it should eventually be wired.)*
 
-# 1. Predecessor set. Every site that restates it carries a marker comment; AC1's is
-#    AUTHORITATIVE, the rest DERIVED. Four regex attempts preceded this and each failed
-#    differently — prose cannot tell a restatement from a nearby story list — so the
-#    sites are tagged instead. Values must be non-empty so this comment cannot match
-#    itself. (Reworked 2026-08-18.)
-auth=$(grep -oh 'predecessor-set:AUTHORITATIVE=[A-Za-z0-9,]\+' "$EPIC" | cut -d= -f2 | sort -u)
-[ "$(printf '%s\n' "$auth" | grep -c .)" -eq 1 ] \
-  || { echo "FAIL: expected exactly one AUTHORITATIVE marker, got: $auth"; fail=1; }
+It checks four things: every `predecessor-set:DERIVED` marker equals the `AUTHORITATIVE` one and matches the enumeration visible on its own line, with unknown marker types rejected; each table row's stamp equals the stamp its issue carries; each row's body hash equals the issue body's actual hash; and, advisorily, which commits since each stamp may need a re-sync — plus a warning when the epic has uncommitted changes, since the check runs before pushing.
 
-# 1b. A marker can agree while the sentence it annotates says something else, so also
-#     compare the story IDs visible on the marker's own line. (Added 2026-08-18.)
-while IFS= read -r line; do
-  claimed=$(printf '%s' "$line" | grep -o 'predecessor-set:[A-Z]*=[A-Za-z0-9,]\+' | cut -d= -f2)
-  # The LAST enumeration (2+ ids) before the marker is the restatement it annotates.
-  # Taking every id on the line instead swept in 'S4 not required' and 'S2.AC1'.
-  visible=$(printf '%s' "$line" | sed 's/<!--.*//' \
-            | grep -oE '(E07\.)?S[0-9]([,/]| and )[ ]*(E07\.)?S[0-9](([,/]| and )[ ]*(E07\.)?S[0-9])*' \
-            | tail -1 | grep -oE 'S[0-9]' | paste -sd, -)
-  [ "$claimed" = "$visible" ] \
-    || { echo "FAIL: marker says $claimed but the restatement reads $visible -- ${line:0:60}"; fail=1; }
-  # …and every DERIVED value must equal the AUTHORITATIVE one. Checking each marker only
-  # against its own line let all derived views agree on the same WRONG set and pass.
-  # (The comparison existed before 1b was added and was dropped in that rewrite; restored
-  # 2026-08-18.)
-  # Reject unknown types outright. Matching [A-Z]* accepted anything, and only
-  # DERIVED was compared to $auth — so a typo'd or invented type (RESTATED=S1,S5,S7)
-  # passed on its own line's agreement alone and never met the authoritative set.
-  # (Fixed 2026-08-19.)
-  kind=$(printf '%s' "$line" | grep -o 'predecessor-set:[A-Za-z]*' | cut -d: -f2)
-  case "$kind" in
-    AUTHORITATIVE) : ;;
-    DERIVED)
-      [ "$claimed" = "$auth" ] \
-        || { echo "FAIL: derived '$claimed' != authoritative '$auth'"; fail=1; } ;;
-    *) echo "FAIL: unknown predecessor-set marker type '$kind' — use AUTHORITATIVE or DERIVED"; fail=1 ;;
-  esac
-done < <(grep -h 'predecessor-set:' "$EPIC" | grep -v 'grep -o')
-
-# 2. Stamps: each table row against the stamp its issue actually carries.
-# gh stderr can carry request ids and authorization fragments; keep it out of the
-# terminal and report only a classification. (Added 2026-08-18.)
-ghbody() { gh issue view "$1" --json body -q .body 2>"$errlog" || { echo "GH-ERROR"; }; }
-errlog=$(mktemp); trap 'rm -f "$errlog"' EXIT
-
-while read -r issue stamp; do
-  live=$(ghbody "$issue" \
-         | grep -oE 'epic commit `[0-9a-f]{7}`' | tail -1 | tr -d '`' | awk '{print $3}')
-  [ "$stamp" = "$live" ] || { echo "FAIL: #$issue table=$stamp issue=${live:-none}"; fail=1; }
-done < <(grep -oE 'issues/[0-9]+\) [|] `[0-9a-f]{7}`' "$EPIC" \
-         | sed -E 's#issues/([0-9]+)\) [|] `([0-9a-f]{7})`#\1 \2#' | sort -u)
-
-# 2b. Body hash: a stamp is metadata, so an edited brief keeps a matching SHA. This is
-#     the only part of the obligation that detects tampering rather than staleness.
-while read -r issue want; do
-  got=$(ghbody "$issue" | shasum -a 256 | cut -c1-12)
-  [ "$want" = "$got" ] || { echo "FAIL: #$issue body hash $got != recorded $want"; fail=1; }
-done < <(grep -oE 'issues/[0-9]+\) [|] `[0-9a-f]{7}` [|] `[0-9a-f]{12}`' "$EPIC" \
-         | sed -E 's#issues/([0-9]+)\).*`([0-9a-f]{12})`#\1 \2#' | sort -u)
-
-# 3. Stale-but-matching, per stamp and ADVISORY ONLY. Rows legitimately hold different
-#    SHAs, so any watermark — row 1's or the oldest — reports valid partial re-stamps as
-#    failures; both were tried and both were wrong. This lists what each stamp may have
-#    missed and never sets fail: deciding whether a commit was editorial for a given
-#    story is judgement the script cannot make. (Downgraded 2026-08-18.)
-# Uncommitted edits first: this runs BEFORE pushing, so `git log …HEAD` is blind to
-# exactly the change being reviewed — a story section could be edited, its issue left
-# alone, the check report clean, and the stale pair then committed. (Added 2026-08-18.)
-if ! git diff --quiet -- "$EPIC" || ! git diff --cached --quiet -- "$EPIC"; then
-  echo "NOTE: $EPIC has uncommitted changes — re-sync any issue whose story they touch before pushing"
-fi
-
-for s in $(grep -oE '\| `[0-9a-f]{7}` \|' "$EPIC" | tr -d '| `' | sort -u); do
-  n=$(git log --oneline --invert-grep --grep='^docs(planning): re-stamp' "$s"..HEAD -- "$EPIC" | grep -c .)
-  [ "$n" -eq 0 ] || echo "NOTE: $n non-re-stamp commit(s) since $s — confirm each is editorial for the rows still on it"
-done
-
-exit $fail
-```
 
 *(Rewritten 2026-08-13. The previous version printed `grep` output and issue stamps and compared nothing — it could not fail, so it was a listing dressed as a check. Its comment also said to expect one distinct SHA across the table, contradicting the per-story staleness rule three paragraphs below, under which divergent rows are the normal state. This version compares each row against its own issue and exits non-zero on any mismatch. **Check 3 was added 2026-08-13**: comparing table to issues passes when *both* are stale, which was live on this branch — the table read `5474dce` while `873f5fc` had already changed the shared Story tracking block, and the check reported clean.)*
 
@@ -453,13 +373,15 @@ block=$(awk '/^## Review-plan verdict/{f=1} f{if(!NF && n)exit; if(NF)n++; print
 grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}' <<<"$block" || { echo 'FAIL: no ISO date on its own line'; exit 1; }
 # Compare by hash, not by printing both sides: a failing `diff` dumps the full captured
 # model response — local paths, whatever the session read — into the terminal and any
-# log capturing it. The verdict must be persisted verbatim (that IS the deliverable, so
-# it is not redactable), but nothing requires re-displaying it to report a mismatch.
+# log capturing it. The verdict must be persisted verbatim (that IS the deliverable — the AC exists
+# because attestation-instead-of-artifact is the gap; a redacted verdict is not a verdict), but nothing requires re-displaying it to report a mismatch.
 # (Changed 2026-08-18.)
 a=$(sed -n '3,$p' <<<"$block" | shasum -a 256 | cut -c1-12)
 b=$(shasum -a 256 < "$VERDICT_AS_RETURNED" | cut -c1-12)
 [ "$a" = "$b" ] || { echo "FAIL: persisted verdict ($a) != returned verdict ($b)"; exit 1; }
 ```
+
+**Scan the block before committing it** *(added 2026-08-21)*. The verdict is review-plan's own structured output — a PASS/NEEDS-REVISION plus findings about the plan — not a session transcript, so the exposure is narrow. It is not nothing: `.roughly/plans/` is committed to a public repo, and a verdict can quote a path or a filename from the plan under review. Before the commit that lands it, grep the block for `$HOME`, the operator's username, and any absolute path, and reword the plan rather than the verdict if one appears. Redacting the verdict itself is not an option — a redacted verdict is not the artifact the AC is about.
 
 **Run it on both trigger paths, not just PASS** *(added 2026-08-13 — AC1 requires persistence "on PASS (or on confirmed override)" and the check covered only PASS, so an override could proceed without writing the block and nothing would notice)*. The `plan-clean` and `plan-revision` scenarios both reach Stage 4 PASS, so S2's Phase 1 dispatch supplies the PASS-path evidence for the build side free — capture it there rather than paying for a separate run. **The override path has no scenario**, since no fixture drives a human override: verify it locally alongside S6.AC8's arms — run interactively, decline the review, say "override" at the override protocol, and assert the same well-formed block. Record both paths in the CHANGELOG. **Behavioral verification of the fix-side recovery loop has no scenario** *(corrected 2026-08-12)*. The `plan-revision` scenario drives `/roughly:build`, so it exercises the build loop this AC leaves unchanged; the one fix scenario reaches Stage 4 PASS and never emits NEEDS REVISION. So the behavior AC3 actually changes — fix `--ci` recovering from a first NEEDS REVISION instead of halting — is unexercised by every existing scenario, and three green proving runs would not catch it broken. Adding a fix-side negative-path scenario is out of scope (it is already a v0.1.10 candidate, withheld under the no-new-paid-scenarios constraint). **Verify it locally instead**, mirroring S6.AC8's pattern, **with a stated setup rather than "the fixture's trigger conditions"** *(corrected 2026-08-17 — that phrase named no invocation and no plan mutation, so this could be marked verified without the recovery loop ever running; `hello-roughly-plan-revision` is a build fixture and does not transfer unmodified)*. From a throwaway worktree: copy `tests/fixtures/hello-roughly-bug/` aside and drive `/roughly:fix --ci` with an issue description whose plan trips review-plan on the first pass — reuse the plan-revision fixture's mechanism, a task whose Verify command is a co-located-hazard `grep -Fc` assertion. **Confirm the first pass actually emits NEEDS REVISION before relying on the run**; a PASS means the setup did not reproduce and the branch has not been exercised, and assert two `[--ci] plan review verdict:` markers appear — a NEEDS REVISION followed by a PASS — rather than a halt on the first. **Then exercise the cap's terminal branch, which the recovery case does not reach** *(added 2026-08-13 — AC3 ports build's whole contract, and the cap is half of it: a fix pipeline that loops forever, or halts at the wrong count, passes a NEEDS-REVISION-then-PASS check unchanged)*. Drive a second run whose plan cannot be repaired into a PASS, and assert **two** NEEDS REVISION verdicts followed by the halt marker `Stage 4 plan-review cannot proceed: 2 NEEDS REVISION verdicts.` — byte-identical to build's, since AC3's point is that the two contracts are now one. **Then assert the artifact on the fix side too**, using the same well-formed-block check above against the plan path that run reported — not a heading count. *(Added 2026-08-12 — the build-side artifact assertion comes free off S2's Phase 1 dispatch, but nothing covered fix: this run could emit both markers and still never write the block, which is AC1's actual deliverable.)* **Record a hand-written summary, not a raw transcript** — fixture contents, tool request/response bodies and local paths are not CHANGELOG material; state the two marker lines observed and the grep result. Note the residual: this is a one-off pre-merge check with no CI regression coverage, the same posture as S6.AC8/AC9. `bash .claude/hooks/verify-all.sh` clean.
 
