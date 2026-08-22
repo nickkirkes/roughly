@@ -46,7 +46,13 @@ while IFS= read -r line; do
         || { echo "FAIL: derived '$claimed' != authoritative '$auth'"; fail=1; } ;;
     *) echo "FAIL: unknown predecessor-set marker type '$kind' — use AUTHORITATIVE or DERIVED"; fail=1 ;;
   esac
-done < <(grep -h 'predecessor-set:' "$EPIC" | grep -v 'grep -o')
+# Select only lines carrying a COMPLETE marker (type AND non-empty value). Matching
+# bare 'predecessor-set:' swept in prose that merely names the marker — including the
+# paragraph documenting this very check, whose mention yielded an empty derived value
+# and failed the run. Third self-reference bug in this checker; the pattern is that any
+# selector loose enough to match documentation will eventually match its own.
+# (Fixed 2026-08-21.)
+done < <(grep -hE 'predecessor-set:[A-Za-z]+=[A-Za-z0-9,]+' "$EPIC")
 
 # 2. Stamps: each table row against the stamp its issue actually carries.
 # gh stderr can carry request ids and authorization fragments; keep it out of the
