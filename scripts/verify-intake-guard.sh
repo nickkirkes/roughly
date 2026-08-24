@@ -7,11 +7,19 @@
 # wrappers, inert flags, unreachable cleanup, an uninitialised variable, placeholder paths
 # that were shell redirection. Prose cannot be shellcheck'd or executed. This can.
 #
-# Usage:  bash scripts/verify-intake-guard.sh            # arms 1-9 (print mode)
-#         bash scripts/verify-intake-guard.sh --interactive   # + arms 10-11 (manual)
+# Usage:  bash scripts/verify-intake-guard.sh            # arms 1-9 + 12-13 (print mode)
+#         bash scripts/verify-intake-guard.sh --interactive   # + arms 10-11
+#
+# Arms: 1-4 one per accepted OQ8 heading form · 5 story-ID enumeration · 6 negative
+#       control · 7-9 fix-side mirror · 10-11 interactive confirm path · 12-13 --ci
+#       must-not-hang, run unconditionally in both modes.
 #
 # Requires: coreutils timeout (macOS: brew install coreutils), ANTHROPIC_API_KEY,
-#           /usr/bin/sandbox-exec. Costs ~$5 at four accepted OQ8 heading forms.
+#           /usr/bin/sandbox-exec.
+# Cost: 11 print-mode arms x $0.50 cap = $5.50, plus 2 interactive arms bounded only
+#       by a 180s wall clock (--max-budget-usd is print-mode only) — budget ~$6.50.
+#       Arms 12-13 were added after the "~$5 / eleven arms" figure and it was not
+#       updated; corrected 2026-08-24.
 
 set -uo pipefail
 
@@ -44,8 +52,14 @@ vet() {   # vet <path> — reject if it or its dir is group/other-writable
     || { echo "FAIL: $(basename "$f") is group/other-writable"; return 1; }
   # Group-writable counts too: on a shared box a group member can swap the binary.
   # (-maxdepth works fine on BSD find — verified; the gap was the missing -g+w.)
-  [ -z "$(find "$d" -maxdepth 0 \( -perm -o+w -o -perm -g+w \) 2>/dev/null)" ] \
-    || { echo "FAIL: directory holding $(basename "$f") is group/world-writable"; return 1; }
+  # Walk every ancestor, not just the immediate parent: a writable grandparent lets an
+  # attacker rename the vetted directory out from under us between check and exec.
+  # (Fixed 2026-08-24.)
+  while [ "$d" != / ]; do
+    [ -z "$(find "$d" -maxdepth 0 \( -perm -o+w -o -perm -g+w \) 2>/dev/null)" ] \
+      || { echo "FAIL: $(basename "$f") has a group/world-writable ancestor"; return 1; }
+    d=$(dirname "$d")
+  done
 }
 
 if   TIMEOUT=$(command -v timeout);  then :
@@ -84,7 +98,13 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-git worktree add --detach "$WT" HEAD >/dev/null 2>&1 \
+# Drop the key for the duration of the checkout. Repository-controlled git config —
+# filters, clean/smudge, hooks — executes during `worktree add`, and until now it did
+# so with ANTHROPIC_API_KEY still in this process's environment. -c disables the two
+# config surfaces that run code; env -u removes the key regardless. (Fixed 2026-08-24.)
+env -u ANTHROPIC_API_KEY git -c core.fsmonitor=false -c filter.lfs.smudge= \
+    -c filter.lfs.process= -c core.hooksPath=/dev/null \
+    worktree add --detach "$WT" HEAD >/dev/null 2>&1 \
   || { echo 'FAIL: worktree not created'; exit 1; }
 
 # ── sandbox: default-deny reads, allow only what the arms legitimately touch ──
@@ -98,7 +118,9 @@ cat > "$OWNED/confine.sb" <<'SBEOF'
 (version 1)
 (deny default)
 (allow process* signal sysctl-read mach-lookup mach-register ipc-posix-shm)
-(allow network-outbound (remote tcp "*:443"))   ; TLS only — verified claude still runs
+(allow network-outbound (remote tcp "*:443"))   ; port 443 only — NOT TLS enforcement:
+;; the sandbox cannot inspect the protocol, so plaintext on 443 is still permitted.
+;; Port restriction is the available control, not a guarantee. (Relabelled 2026-08-24.)
 (allow file-read*)
 (deny  file-read* (subpath "/Users") (subpath "/private/tmp")
                   (subpath "/private/var") (subpath "/private/etc") (subpath "/etc"))
@@ -230,9 +252,18 @@ ci_arm() {   # ci_arm <n> <pipeline>
     failed=$((failed+1)); return
   fi
   [ "$rc" -eq 0 ] || { echo "FAIL arm $n: --ci exited $rc"; failed=$((failed+1)); return; }
-  grep -qF "$PROCEEDED" <<<"$out" \
-    && { echo "pass arm $n (--ci proceeded)"; pass=$((pass+1)); } \
-    || { echo "FAIL arm $n: --ci did not reach the Stage 1 gate"; failed=$((failed+1)); }
+  # Both, not just continuation: asserting PROCEEDED alone passes a build where the
+  # classifier was deleted outright, since the pre-existing Stage 1 gate still fires.
+  # Under --ci the sub-gate auto-proceeds, so the marker must appear AND the run go on.
+  # (Fixed 2026-08-24.)
+  if grep -qE "^[^A-Za-z]*$CLASSIFIER" <<<"$out" && grep -qF "$PROCEEDED" <<<"$out"; then
+    echo "pass arm $n (--ci classified and proceeded)"; pass=$((pass+1))
+  elif grep -qF "$PROCEEDED" <<<"$out"; then
+    echo "FAIL arm $n: --ci proceeded but never classified — classifier missing or broken"
+    failed=$((failed+1))
+  else
+    echo "FAIL arm $n: --ci did not reach the Stage 1 gate"; failed=$((failed+1))
+  fi
 }
 ci_arm 12 build
 ci_arm 13 fix
@@ -254,7 +285,7 @@ with monolithic confirmation, and confirm Stage 1 then proceeds. Note that
 --max-budget-usd and --no-session-persistence are print-mode only, so these arms are
 time-boxed instead and their sessions live under $OWNED/home, removed by the trap.
 EOF
-  echo "  worktree: $WT"
+  echo "  worktree: (scratch, removed on exit)"   # path carries the operator's username
   # Drive the arms here when a terminal is available, rather than asking the operator
   # to reproduce the invocation and hand back logs we cannot attribute to a real
   # session. Raw output stays inside $OWNED (trap-removed); only markers are kept.
@@ -263,16 +294,32 @@ EOF
     for spec in "10 build" "11 fix"; do
       set -- $spec; a=$1; pipe=$2
       echo "--- arm $a ($pipe): answer the sub-gate with monolithic confirmation, then exit ---"
+      # 180s, not 300: --max-budget-usd is print-mode only, so wall-clock is the ONLY
+      # ceiling these two arms have. At ~$0.50/arm the advertised total assumes they
+      # are short; an unbounded interactive session breaks that. (Tightened 2026-08-24.)
       ( cd "$WT" || exit 1
-        "$TIMEOUT" 300 "$SANDBOX" -f "$OWNED/confine.sb" \
+        "$TIMEOUT" 180 "$SANDBOX" -f "$OWNED/confine.sb" \
           -D OWNED="$OWNED" -D PLUGINDIR="$WT" -D CLAUDEBIN="$CLAUDE_BIN" \
           env -i PATH="$CHILD_PATH" HOME="$OWNED/home" TERM="${TERM:-xterm}" \
                  ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
           "$CLAUDE" --bare --plugin-dir "$WT" --strict-mcp-config \
                     --allowed-tools "$ALLOWLIST" "/roughly:$pipe $E06" 2>&1 ) \
         | tee "$OWNED/raw$a.log" >/dev/null
-      grep -E "$CLASSIFIER|$QUESTION|$PROCEEDED" "$OWNED/raw$a.log" > "$OWNED/arm$a.log" || true
+      # Exit status of claude, not of tee — a timed-out session that happened to print
+      # the markers was being accepted by the log-only assertions. (Fixed 2026-08-24.)
+      irc=${PIPESTATUS[0]}
+      # Extract the matched marker SUBSTRING, not the whole line: a line can carry a
+      # marker alongside session content, which "markers, not transcripts" forbids.
+      : > "$OWNED/arm$a.log"
+      for m in "$CLASSIFIER" "$QUESTION" "$PROCEEDED"; do
+        grep -oF "$m" "$OWNED/raw$a.log" | head -1 >> "$OWNED/arm$a.log" || true
+      done
       rm -f "$OWNED/raw$a.log"
+      if [ "$irc" -eq 124 ]; then
+        echo "FAIL arm $a: interactive session timed out"; failed=$((failed+1))
+      elif [ "$irc" -ne 0 ]; then
+        echo "FAIL arm $a: interactive session exited $irc"; failed=$((failed+1))
+      fi
     done
     ARMS_10_11_EVIDENCE=$OWNED
   fi
@@ -289,8 +336,12 @@ if [ "$interactive_incomplete" -eq 1 ]; then
   # lines in two files, and those are asserted here exactly as arms 1-9 are.
   # (Fixed 2026-08-19.)
   ev=${ARMS_10_11_EVIDENCE:-}
-  # Produced above when a terminal was available; otherwise operator-supplied, which
-  # cannot be attributed to a real session — say which in the CHANGELOG.
+  # Produced above when a terminal was available; otherwise operator-supplied.
+  # Operator-supplied logs CANNOT be attributed to a real session — hand-written files
+  # containing the three markers in order pass identically. There is no fix inside this
+  # script: attribution would need a session artifact only claude can mint. So the
+  # provenance is recorded and the two paths are not treated as equivalent.
+  if [ "$ev" = "$OWNED" ]; then prov="script-driven"; else prov="operator-supplied (UNATTRIBUTED)"; fi
   [ -n "$ev" ] && [ -d "$ev" ] || {
     echo 'INCOMPLETE: arms 10-11 not executed.'
     echo 'Run each by hand as described above, capturing the session output to'
@@ -309,7 +360,7 @@ if [ "$interactive_incomplete" -eq 1 ]; then
       echo "FAIL arm $a: markers out of order (classifier $lc, question $lq, proceeded $lp)"
       failed=$((failed+1))
     else
-      echo "pass arm $a (manual, evidence asserted)"; pass=$((pass+1))
+      echo "pass arm $a (evidence: $prov)"; pass=$((pass+1))
     fi
   done
   echo "arms passed: $pass, failed: $failed"

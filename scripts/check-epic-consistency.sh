@@ -15,9 +15,13 @@ fail=0
 #    differently — prose cannot tell a restatement from a nearby story list — so the
 #    sites are tagged instead. Values must be non-empty so this comment cannot match
 #    itself. (Reworked 2026-08-18.)
-auth=$(grep -oh 'predecessor-set:AUTHORITATIVE=[A-Za-z0-9,]\+' "$EPIC" | cut -d= -f2 | sort -u)
-[ "$(printf '%s\n' "$auth" | grep -c .)" -eq 1 ] \
-  || { echo "FAIL: expected exactly one AUTHORITATIVE marker, got: $auth"; fail=1; }
+# Count BEFORE de-duplicating: sort -u collapsed two identical AUTHORITATIVE markers
+# into one, so competing canonical sources passed the "exactly one" test as long as
+# they agreed. (Fixed 2026-08-24.)
+authcount=$(grep -ohc 'predecessor-set:AUTHORITATIVE=[A-Za-z0-9,]\+' "$EPIC" | paste -sd+ - | bc)
+[ "${authcount:-0}" -eq 1 ] \
+  || { echo "FAIL: expected exactly one AUTHORITATIVE marker, found ${authcount:-0}"; fail=1; }
+auth=$(grep -oh 'predecessor-set:AUTHORITATIVE=[A-Za-z0-9,]\+' "$EPIC" | cut -d= -f2 | sort -u | head -1)
 
 # 1b. A marker can agree while the sentence it annotates says something else, so also
 #     compare the story IDs visible on the marker's own line. (Added 2026-08-18.)
@@ -29,7 +33,7 @@ while IFS= read -r line; do
             | grep -oE '(E07\.)?S[0-9]([,/]| and )[ ]*(E07\.)?S[0-9](([,/]| and )[ ]*(E07\.)?S[0-9])*' \
             | tail -1 | grep -oE 'S[0-9]' | paste -sd, -)
   [ "$claimed" = "$visible" ] \
-    || { echo "FAIL: marker says $claimed but the restatement reads $visible -- ${line:0:60}"; fail=1; }
+    || { echo "FAIL: marker claims '$claimed' but its restatement reads '$visible'"; fail=1; }
   # …and every DERIVED value must equal the AUTHORITATIVE one. Checking each marker only
   # against its own line let all derived views agree on the same WRONG set and pass.
   # (The comparison existed before 1b was added and was dropped in that rewrite; restored
@@ -53,6 +57,21 @@ while IFS= read -r line; do
 # selector loose enough to match documentation will eventually match its own.
 # (Fixed 2026-08-21.)
 done < <(grep -hE 'predecessor-set:[A-Za-z]+=[A-Za-z0-9,]+' "$EPIC")
+
+# The derived views are the point: table row, dependency prose, diagram. Deleting all
+# three left one valid AUTHORITATIVE marker and an empty loop, which passed.
+# (Fixed 2026-08-24.)
+dcount=$(grep -ohc 'predecessor-set:DERIVED=[A-Za-z0-9,]\+' "$EPIC" | paste -sd+ - | bc)
+[ "${dcount:-0}" -ge 3 ] \
+  || { echo "FAIL: expected >=3 DERIVED markers (table, dependencies, diagram), found ${dcount:-0}"; fail=1; }
+
+# 2a. Every tracking row must be well-formed. Rows were fed through exact extraction
+#     patterns, so a missing issue link, a malformed SHA or an absent body hash made
+#     the row DISAPPEAR from the loop rather than fail it. (Fixed 2026-08-24.)
+rows=$(grep -c '^| E07\.S[0-9]' "$EPIC")
+wellformed=$(grep -cE '^\| E07\.S[0-9].*issues/[0-9]+\) \| `[0-9a-f]{7}` \| `[0-9a-f]{12}` \|' "$EPIC")
+[ "$rows" -eq "$wellformed" ] \
+  || { echo "FAIL: $((rows-wellformed)) of $rows tracking rows are malformed (need issue link, 7-char SHA, 12-char hash)"; fail=1; }
 
 # 2. Stamps: each table row against the stamp its issue actually carries.
 # gh stderr can carry request ids and authorization fragments; keep it out of the
