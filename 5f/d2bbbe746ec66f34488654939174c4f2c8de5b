@@ -1,0 +1,25 @@
+scripts/verify-intake-guard.sh
+  s_e83732b17416b7::t_ebf7c44a8d0fc8 10-15,18-22,288,297-299,301,308-316,318-322,339-344,363
+  s_e83732b17416b7::t_07443fc8d3b93c 55-62,101-107,121-123,255-266
+scripts/check-epic-consistency.sh
+  s_e83732b17416b7::t_92352900cfd546 18-24,36,61-74
+  s_e83732b17416b7::t_f8ff0c7689f61f 75
+docs/planning/epics/E07-codification-closeout-and-release-gate-repair.md
+  s_e83732b17416b7::t_051bda39af4d72 384
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "5fd2bbbe746ec66f34488654939174c4f2c8de5b",
+  "prompts": {},
+  "sessions": {
+    "s_e83732b17416b7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ec71135b-e9c9-4cb8-9584-11a6f17453a8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Nick Kirkes <nick.kirkes@gmail.com>"
+    }
+  }
+}
