@@ -30,7 +30,10 @@ classify_account_state() {
   local msg
   msg="$1"
 
-  # observed — the 2026-07-18 dogfood run; quoted at docs/runbooks/dogfood-ci.md:28.
+  # observed — the 2026-07-18 dogfood run; quoted in docs/runbooks/dogfood-ci.md
+  # under "## Cost" (and again under "## Risk 3 consecutive-green accounting").
+  # Section anchors, not line numbers: this script and that runbook are edited
+  # together, so an absolute line cite goes stale within a single change-set.
   if printf '%s\n' "$msg" | grep -qiE 'credit balance is too low|insufficient credit'; then
     echo "insufficient credit"
     return 0
