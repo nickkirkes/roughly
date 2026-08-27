@@ -125,7 +125,8 @@ fi
 # untouched.
 if [ "$SMOKE_EXIT" != 0 ] && [ "$SMOKE_EXIT" != 124 ] && ACCOUNT_STATE="$(classify_account_state "$SMOKE_OUT")"; then
   echo "ci-dogfood: FAIL — API account state: $ACCOUNT_STATE" >&2
-  echo "ci-dogfood: no Roughly pipeline behavior was exercised — the account failed before any pipeline scenario ran, so this is not a pipeline regression; re-running will reproduce it while the account remains in this state" >&2
+  echo "ci-dogfood: no Roughly pipeline behavior was exercised — no scenario had run when this failed, so a pipeline regression is unlikely; re-running will reproduce it while the account remains in this state" >&2
+  echo "ci-dogfood: NOTE — the classification above is a substring match on the captured output below, not a verdict. If the account is known-good, treat this as a possible misclassification and read the output." >&2
   printf '%s\n' "$SMOKE_OUT" | sed 's/^/    /' >&2
   exit 1
 fi
@@ -169,7 +170,8 @@ fi
 # untouched.
 if [ "$PLUGIN_EXIT" != 0 ] && [ "$PLUGIN_EXIT" != 124 ] && ACCOUNT_STATE="$(classify_account_state "$PLUGIN_OUT")"; then
   echo "ci-dogfood: FAIL — API account state: $ACCOUNT_STATE" >&2
-  echo "ci-dogfood: no Roughly pipeline behavior was exercised — the account failed before any pipeline scenario ran, so this is not a pipeline regression; re-running will reproduce it while the account remains in this state" >&2
+  echo "ci-dogfood: no Roughly pipeline behavior was exercised — no scenario had run when this failed, so a pipeline regression is unlikely; re-running will reproduce it while the account remains in this state" >&2
+  echo "ci-dogfood: NOTE — the classification above is a substring match on the captured output below, not a verdict. If the account is known-good, treat this as a possible misclassification and read the output." >&2
   printf '%s\n' "$PLUGIN_OUT" | sed 's/^/    /' >&2
   exit 1
 fi

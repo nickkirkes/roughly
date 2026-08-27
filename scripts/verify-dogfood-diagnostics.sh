@@ -8,8 +8,8 @@
 # as you like, with no ANTHROPIC_API_KEY billing implications (the key value
 # used below is a placeholder string, never a real credential).
 #
-# Runtime: ~1-3 minutes. This runs the REAL scripts/ci-dogfood.sh end-to-end,
-# six times in sequence, one per case below. Each run pays its own `git
+# Runtime: ~2-4 minutes. This runs the REAL scripts/ci-dogfood.sh end-to-end,
+# nine times in sequence, one per case below. Each run pays its own `git
 # worktree add`/`remove` (ci-dogfood.sh's stale-worktree guard makes repeated
 # same-SHA runs safe), which dominates the wall-clock cost since the stubbed
 # `claude` itself returns instantly.
@@ -37,16 +37,32 @@
 #                                            generic "plugin-load step claude
 #                                            exited" ladder, NOT an account-
 #                                            state marker
+#   7 (plugin, invalid/revoked key)      -> plugin-load-step account-state marker fires
+#   8 (plugin, rate limited)             -> plugin-load-step account-state marker fires
+#   9 (smoke,  exit 0, output != "ok")   -> GUARD REGRESSION CONTROL: a zero-exit
+#                                            wrong response reaches the
+#                                            `grep -qx "ok"` assertion rung and
+#                                            is NOT diverted into the account-
+#                                            state path
 #
 # Cases 4 and 6 are the discriminating negative controls: without them, this
 # suite would pass just as well against a classifier that fires on every
 # failure (a classify_account_state that always matches). They prove the
 # generic non-account-failure ladder still fires unmodified.
 #
-# All six cases set STUB_EXIT=1 (non-zero, non-124) so the classification and
-# generic rungs fire deterministically. This harness deliberately does NOT
-# assert against the 124 timeout rung — a sleeping stub is out of scope for
-# this AC.
+# Cases 1-8 set STUB_EXIT=1 (non-zero, non-124) so the classification and
+# generic rungs fire deterministically. Case 9 is the sole STUB_EXIT=0 case and
+# exists to pin the `$SMOKE_EXIT != 0` guard on the account-state rung: every
+# other case forces a non-zero exit, so without case 9 nothing here could ever
+# reach — or protect — the assertion rung sitting below the new one.
+#
+# Cases 7 and 8 give the plugin-load ladder the same per-classification
+# coverage the smoke ladder has. The rung is byte-identical between ladders and
+# classify_account_state is shared, so they are defence-in-depth, not distinct
+# code paths.
+#
+# This harness deliberately does NOT assert against the 124 timeout rung — a
+# sleeping stub is out of scope for this AC.
 
 set -uo pipefail
 
@@ -178,6 +194,43 @@ run_stub plugin "TypeError: cannot read property of undefined" 1
 assert_contains 6 "plugin-load step claude exited"
 assert_not_contains 6 "API account state"
 assert_exit_nonzero 6
+
+echo "=== case 7: plugin-load / invalid or revoked API key ==="
+# Coverage symmetry with the smoke ladder. The rung condition is byte-identical
+# between the two ladders and classify_account_state is shared, so this is
+# defence-in-depth rather than a distinct code path — but it is near-free, and
+# it means "every classification is proven at every rung" needs no caveat.
+run_stub plugin "Invalid API key · Please run /login" 1
+assert_contains 7 "API account state: invalid or revoked API key"
+assert_exit_nonzero 7
+
+echo "=== case 8: plugin-load / rate limited ==="
+run_stub plugin "rate_limit_error: too many requests" 1
+assert_contains 8 "API account state: rate limited"
+assert_exit_nonzero 8
+
+echo "=== case 9: smoke / exit 0 but wrong output — GUARD REGRESSION CONTROL ==="
+# The only case with STUB_EXIT=0. Exercises the `grep -qx "ok"` assertion rung
+# that sits directly BELOW the new account-state rung, and therefore pins the
+# `$SMOKE_EXIT != 0` guard on that new rung.
+#
+# Why this matters: the account-state rung was inserted above a rung that
+# assumes a zero exit never reaches it. If a future edit drops or reorders that
+# guard, a successful-but-wrong response would be diverted into the
+# account-state path and reported as an API account problem. Without this case
+# the suite would still report green, because every other case forces a
+# non-zero exit and can never reach this rung.
+#
+# The stub text deliberately CONTAINS an account-state phrase ("rate limit")
+# while exiting 0. That is what makes this case discriminating rather than
+# decorative: a neutral string would match no classifier pattern, so dropping
+# the guard would change nothing and the case would pass either way. With this
+# text, removing the `$SMOKE_EXIT != 0` guard makes classify_account_state
+# match and the assert_not_contains below fails — verified by mutation.
+run_stub smoke "I cannot comply; see the rate limit guidance in the docs" 0
+assert_contains 9 "smoke step did not produce expected response"
+assert_not_contains 9 "API account state"
+assert_exit_nonzero 9
 
 echo "---"
 echo "assertions passed: $PASS, failed: $FAILED"
