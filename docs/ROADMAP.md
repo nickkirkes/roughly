@@ -232,7 +232,14 @@ Lights up the live fetch on top of v0.1.9's tool-neutral scaffolding, so externa
 2. **Haiku routing for simple tasks.** Sonnet default; Opus stays exclusive to epic-reviewer (ADR-008).
 3. **Plan format v2.** Activate the v0.1.5 version field. v2 = complexity flag + any small wins surfaced during v0.1.5.
 4. **ADR-009.** Complexity flag, routing rules, plan format v2.
-5. **Pre-compaction trim.** Audit Stages 1-4 burn (~20-40K). Target 5-10K recovery via tighter compaction lists.
+5b. **Cost-audit cluster (new, 2026-08-27).** Four issues from an audit of v0.1.8 against an external consuming project — a PHP/TypeScript monorepo, ~3,000 source files, ~20 stories a month. They share one root: mechanisms that are cheap on Roughly's own small repo scale badly on a large consuming one.
+
+   - **[#106](https://github.com/nickkirkes/roughly/issues/106) — Bound the pitfalls corpus agents read on every dispatch.** Eight of ten subagents read the whole file per run, in fresh contexts, and nothing prunes it. 3,475 lines at the reference project. Needs an ADR (≥022). **Scope with [#101](https://github.com/nickkirkes/roughly/issues/101)** — that asks whether Stage 6 should be *deeper*, and nobody has costed the depth mechanism that already ships.
+   - **[#107](https://github.com/nickkirkes/roughly/issues/107) — Make pipeline-artifact placement configurable.** Wrap-up commits the plan and a pitfalls append to the feature branch; 35% of one reviewed diff was Roughly's own markdown. Needs an ADR; composes with `.roughly/config` ([#100](https://github.com/nickkirkes/roughly/issues/100)).
+   - **[#108](https://github.com/nickkirkes/roughly/issues/108) — Deduplicate the three verification layers.** Type check, lint, build and test run at Stages 5c, 6 and 7. Items 2 and 3 are cheap and shippable ahead of Spec 2a / ADR-020.
+   - **[#109](https://github.com/nickkirkes/roughly/issues/109) — Split review-plan's checklist into a portable core and a project-declared set.** Four of nine checks are about authoring markdown specs, which burn iterations on a plan that ships application code.
+
+5. **Pre-compaction trim.** Audit Stages 1-4 burn. **The original ~20-40K estimate is low by more than an order of magnitude** — corrected 2026-08-27 from a cost audit against an external consuming project, where a single `.roughly/known-pitfalls.md` read is ~30K tokens and eight of ten subagents perform one per run ([#106](https://github.com/nickkirkes/roughly/issues/106)). Re-derive the burn before targeting a recovery figure; the tighter-compaction-list lever is much smaller than the corpus-bounding lever.
 6. **`/roughly:upgrade` migration step** for plan format v1 → v2.
 7. **roughly.dev v0.2.0.** Cost model page; updated commands reference; ADR-009 published.
 
