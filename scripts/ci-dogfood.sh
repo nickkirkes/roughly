@@ -20,6 +20,40 @@ else
   exit 1
 fi
 
+# Classify a failure message into a known account-state category.
+# Echoes a classification string and returns 0 when $1 matches a known
+# account-state failure; returns 1 (no output) otherwise. Never calls exit —
+# callers own control flow. Matching is case-insensitive via grep -qiE against
+# `printf '%s\n' "$1"`, matching this file's existing grep-based idiom rather
+# than `[[ =~ ]]`.
+classify_account_state() {
+  local msg
+  msg="$1"
+
+  # observed — the 2026-07-18 dogfood run; quoted at docs/runbooks/dogfood-ci.md:28.
+  if printf '%s\n' "$msg" | grep -qiE 'credit balance is too low|insufficient credit'; then
+    echo "insufficient credit"
+    return 0
+  fi
+
+  # observed — live-asserted at .github/workflows/dogfood.yml:71. Note: this
+  # pair does not distinguish malformed from revoked API keys.
+  if printf '%s\n' "$msg" | grep -qiE 'invalid api key|not logged in|authentication_error'; then
+    echo "invalid or revoked API key"
+    return 0
+  fi
+
+  # inferred — no captured sample exists in this repo; patterns written from
+  # the documented Anthropic API error taxonomy, not from an observed harness
+  # failure.
+  if printf '%s\n' "$msg" | grep -qiE 'rate limit|rate_limit_error|too many requests'; then
+    echo "rate limited"
+    return 0
+  fi
+
+  return 1
+}
+
 # Guard: ANTHROPIC_API_KEY must be set (the ${VAR:-} form is required because `set -u` is active above).
 if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
   echo "ci-dogfood: FAIL — ANTHROPIC_API_KEY not set or empty (configure in GitHub Settings → Secrets and variables → Actions, or export for local repro)" >&2
@@ -79,6 +113,19 @@ if [ "$SMOKE_EXIT" = 124 ]; then
   printf '%s\n' "$SMOKE_OUT" | sed 's/^/    /' >&2
   exit 1
 fi
+# Account-state rung: fires only when the smoke step failed for a reason
+# other than timeout AND that failure matches a known account-state pattern
+# (insufficient credit, invalid/revoked key, rate limit). Calling
+# classify_account_state inside the `if` condition is errexit-exempt — the
+# intended convention per its own doc comment (this file, ~L25) — so a
+# non-matching failure falls through to the generic non-zero rung below
+# untouched.
+if [ "$SMOKE_EXIT" != 0 ] && [ "$SMOKE_EXIT" != 124 ] && ACCOUNT_STATE="$(classify_account_state "$SMOKE_OUT")"; then
+  echo "ci-dogfood: FAIL — API account state: $ACCOUNT_STATE" >&2
+  echo "ci-dogfood: no Roughly pipeline behavior was exercised — the account failed before any pipeline scenario ran, so this is not a pipeline regression; re-running will reproduce it while the account remains in this state" >&2
+  printf '%s\n' "$SMOKE_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
 if [ "$SMOKE_EXIT" != 0 ]; then
   echo "ci-dogfood: FAIL — smoke step claude exited $SMOKE_EXIT" >&2
   printf '%s\n' "$SMOKE_OUT" | sed 's/^/    /' >&2
@@ -107,6 +154,19 @@ PLUGIN_OUT="$($TIMEOUT 90 claude --bare --plugin-dir "$WORKTREE" \
   -p "/roughly:help" 2>&1)" && PLUGIN_EXIT=0 || PLUGIN_EXIT=$?
 if [ "$PLUGIN_EXIT" = 124 ]; then
   echo "ci-dogfood: FAIL — plugin-load step timed out (claude did not return within 90s)" >&2
+  printf '%s\n' "$PLUGIN_OUT" | sed 's/^/    /' >&2
+  exit 1
+fi
+# Account-state rung: fires only when the plugin-load step failed for a reason
+# other than timeout AND that failure matches a known account-state pattern
+# (insufficient credit, invalid/revoked key, rate limit). Calling
+# classify_account_state inside the `if` condition is errexit-exempt — the
+# intended convention per its own doc comment (this file, ~L25) — so a
+# non-matching failure falls through to the generic non-zero rung below
+# untouched.
+if [ "$PLUGIN_EXIT" != 0 ] && [ "$PLUGIN_EXIT" != 124 ] && ACCOUNT_STATE="$(classify_account_state "$PLUGIN_OUT")"; then
+  echo "ci-dogfood: FAIL — API account state: $ACCOUNT_STATE" >&2
+  echo "ci-dogfood: no Roughly pipeline behavior was exercised — the account failed before any pipeline scenario ran, so this is not a pipeline regression; re-running will reproduce it while the account remains in this state" >&2
   printf '%s\n' "$PLUGIN_OUT" | sed 's/^/    /' >&2
   exit 1
 fi
