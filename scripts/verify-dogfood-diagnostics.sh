@@ -8,11 +8,11 @@
 # as you like, with no ANTHROPIC_API_KEY billing implications (the key value
 # used below is a placeholder string, never a real credential).
 #
-# Runtime: ~2-4 minutes. This runs the REAL scripts/ci-dogfood.sh end-to-end,
-# nine times in sequence, one per case below. Each run pays its own `git
-# worktree add`/`remove` (ci-dogfood.sh's stale-worktree guard makes repeated
-# same-SHA runs safe), which dominates the wall-clock cost since the stubbed
-# `claude` itself returns instantly.
+# Runtime: ~2-5 minutes. This runs the REAL scripts/ci-dogfood.sh end-to-end,
+# once per row in the CASES table below, in sequence. Each run pays its own
+# `git worktree add`/`remove` (ci-dogfood.sh's stale-worktree guard makes
+# repeated same-SHA runs safe), which dominates the wall-clock cost since the
+# stubbed `claude` itself returns instantly.
 #
 # IMPORTANT — this harness tests UNCOMMITTED changes to ci-dogfood.sh. We
 # invoke it as `bash "$ROOT/scripts/ci-dogfood.sh"` (by path, not by SHA/
@@ -23,38 +23,80 @@
 # development: edit ci-dogfood.sh, rerun this harness, see the effect
 # immediately, with no commit required.
 #
-# What each case proves:
-#   1 (smoke,  insufficient credit)      -> smoke-step account-state marker fires
-#   2 (smoke,  invalid/revoked key)      -> smoke-step account-state marker fires
-#   3 (smoke,  rate limited)             -> smoke-step account-state marker fires
-#   4 (smoke,  unrelated TypeError)      -> NEGATIVE CONTROL: a non-account
-#                                            failure produces the existing
-#                                            generic "smoke step claude exited"
-#                                            ladder, NOT an account-state marker
-#   5 (plugin, insufficient credit)      -> plugin-load-step account-state marker fires
-#   6 (plugin, unrelated TypeError)      -> NEGATIVE CONTROL: a non-account
-#                                            failure produces the existing
-#                                            generic "plugin-load step claude
-#                                            exited" ladder, NOT an account-
-#                                            state marker
-#   7 (plugin, invalid/revoked key)      -> plugin-load-step account-state marker fires
-#   8 (plugin, rate limited)             -> plugin-load-step account-state marker fires
-#   9 (smoke,  exit 0, output != "ok")   -> GUARD REGRESSION CONTROL: a zero-exit
-#                                            wrong response reaches the
-#                                            `grep -qx "ok"` assertion rung and
-#                                            is NOT diverted into the account-
-#                                            state path
+# ── Case table format ───────────────────────────────────────────────────────
+# Each row in CASES (below) is a single `|`-delimited string with fields:
+#   target   | smoke | plugin
+#   text     | stub `claude` stdout (must not itself contain `|`)
+#   exit     | stub `claude` exit code
+#   label    | short human label, used verbatim in "=== case N: <label> ==="
+#   expected | substring that MUST appear in ci-dogfood.sh's output
+#   forbid   | optional substring that must NOT appear (blank = skip this
+#            | assertion). This is what makes a row a negative/guard control.
+# The case id (N) is always the row's 1-based position in CASES, assigned by
+# the loop — it is never hand-written into an assertion call, so inserting,
+# removing, or reordering a row cannot desync the id from the assertions.
+#
+# Bash 3.2 (macOS default) has no associative arrays, hence the flat
+# `|`-delimited rows read apart with `IFS='|' read -r` rather than a
+# `declare -A` table.
+#
+# What each case proves (case id = row position in CASES):
+#   1  (smoke,  insufficient credit)      -> smoke-step account-state marker fires
+#   2  (smoke,  invalid/revoked key)      -> smoke-step account-state marker fires
+#   3  (smoke,  rate limited)             -> smoke-step account-state marker fires
+#   4  (smoke,  unrelated TypeError)      -> NEGATIVE CONTROL: a non-account
+#                                             failure produces the existing
+#                                             generic "smoke step claude exited"
+#                                             ladder, NOT an account-state marker
+#   5  (plugin, insufficient credit)      -> plugin-load-step account-state marker fires
+#   6  (plugin, unrelated TypeError)      -> NEGATIVE CONTROL: a non-account
+#                                             failure produces the existing
+#                                             generic "plugin-load step claude
+#                                             exited" ladder, NOT an account-
+#                                             state marker
+#   7  (plugin, invalid/revoked key)      -> plugin-load-step account-state marker fires
+#   8  (plugin, rate limited)             -> plugin-load-step account-state marker fires
+#   9  (smoke,  exit 0, output != "ok")   -> GUARD REGRESSION CONTROL: a zero-exit
+#                                             wrong response reaches the
+#                                             `grep -qx "ok"` assertion rung and
+#                                             is NOT diverted into the account-
+#                                             state path
+#   10 (plugin, exit 0, no /roughly:setup)-> GUARD REGRESSION CONTROL: a zero-exit
+#                                             wrong response reaches the
+#                                             `/roughly:setup` assertion rung and
+#                                             is NOT diverted into the account-
+#                                             state path
 #
 # Cases 4 and 6 are the discriminating negative controls: without them, this
 # suite would pass just as well against a classifier that fires on every
 # failure (a classify_account_state that always matches). They prove the
 # generic non-account-failure ladder still fires unmodified.
 #
-# Cases 1-8 set STUB_EXIT=1 (non-zero, non-124) so the classification and
-# generic rungs fire deterministically. Case 9 is the sole STUB_EXIT=0 case and
-# exists to pin the `$SMOKE_EXIT != 0` guard on the account-state rung: every
-# other case forces a non-zero exit, so without case 9 nothing here could ever
-# reach — or protect — the assertion rung sitting below the new one.
+# Cases 1-8 set exit=1 (non-zero, non-124) so the classification and generic
+# rungs fire deterministically. Cases 9 and 10 are the only exit=0 cases and
+# exist to pin the `$SMOKE_EXIT != 0` / `$PLUGIN_EXIT != 0` guards on the two
+# account-state rungs: every other case forces a non-zero exit, so without
+# cases 9/10 nothing here could ever reach — or protect — the assertion rung
+# sitting below each account-state rung.
+#
+# Case 9 pins the guard on the smoke ladder (protects the `grep -qx "ok"`
+# rung). Case 10 pins the identical guard on the plugin ladder (protects the
+# `/roughly:setup` rung) — the two ladders are structurally identical
+# (timeout rung -> account-state rung -> generic non-zero rung -> success-
+# shape assertion), so case 10 is the plugin-side twin of case 9, closing a
+# gap where the smoke guard was covered but the plugin guard was not.
+#
+# For both, the stub text deliberately CONTAINS an account-state phrase
+# ("rate limit") while exiting 0. That is what makes these cases
+# discriminating rather than decorative: a neutral string would match no
+# classifier pattern, so dropping the guard would change nothing and the case
+# would pass either way. With this text, removing the exit-code guard makes
+# classify_account_state match and the assert_not_contains below fails —
+# verified by mutation (see the harness's own verification notes/commit).
+# Case 10's stub text additionally must NOT contain "/roughly:setup", so that
+# — guard intact — control reaches the real `/roughly:setup` assertion rung
+# and fails there for the expected reason ("plugin loading not verified"),
+# not by accident.
 #
 # Cases 7 and 8 give the plugin-load ladder the same per-classification
 # coverage the smoke ladder has. The rung is byte-identical between ladders and
@@ -154,83 +196,37 @@ assert_exit_nonzero() {
   fi
 }
 
-# ── cases ────────────────────────────────────────────────────────────────────
+# ── case table ───────────────────────────────────────────────────────────────
+# Fields: target|text|exit|label|expected|forbid  (forbid may be empty; see
+# "Case table format" comment above). Order matches the "What each case
+# proves" list above 1:1 by position.
+CASES=(
+  "smoke|Credit balance is too low|1|smoke / insufficient credit|API account state: insufficient credit|"
+  "smoke|Invalid API key · Please run /login|1|smoke / invalid or revoked API key|API account state: invalid or revoked API key|"
+  "smoke|rate_limit_error: too many requests|1|smoke / rate limited|API account state: rate limited|"
+  "smoke|TypeError: cannot read property of undefined|1|smoke / unrelated failure — NEGATIVE CONTROL|smoke step claude exited|API account state"
+  "plugin|Credit balance is too low|1|plugin-load / insufficient credit|API account state: insufficient credit|"
+  "plugin|TypeError: cannot read property of undefined|1|plugin-load / unrelated failure — NEGATIVE CONTROL|plugin-load step claude exited|API account state"
+  "plugin|Invalid API key · Please run /login|1|plugin-load / invalid or revoked API key|API account state: invalid or revoked API key|"
+  "plugin|rate_limit_error: too many requests|1|plugin-load / rate limited|API account state: rate limited|"
+  "smoke|I cannot comply; see the rate limit guidance in the docs|0|smoke / exit 0 but wrong output — GUARD REGRESSION CONTROL|smoke step did not produce expected response|API account state"
+  "plugin|I cannot comply; see the rate limit guidance in the docs|0|plugin-load / exit 0 but wrong output, no /roughly:setup — GUARD REGRESSION CONTROL|plugin loading not verified|API account state"
+)
 
-echo "=== case 1: smoke / insufficient credit ==="
-run_stub smoke "Credit balance is too low" 1
-assert_contains 1 "API account state: insufficient credit"
-assert_exit_nonzero 1
+# ── run all cases ────────────────────────────────────────────────────────────
+CASE_ID=0
+for row in "${CASES[@]}"; do
+  CASE_ID=$((CASE_ID+1))
+  IFS='|' read -r target text exit_code label expected forbid <<< "$row"
 
-echo "=== case 2: smoke / invalid or revoked API key ==="
-run_stub smoke "Invalid API key · Please run /login" 1
-assert_contains 2 "API account state: invalid or revoked API key"
-assert_exit_nonzero 2
-
-echo "=== case 3: smoke / rate limited ==="
-run_stub smoke "rate_limit_error: too many requests" 1
-assert_contains 3 "API account state: rate limited"
-assert_exit_nonzero 3
-
-echo "=== case 4: smoke / unrelated failure — NEGATIVE CONTROL ==="
-# Discriminating negative control: a non-account-state failure must fall
-# through to the pre-existing generic ladder, not be misclassified as an
-# account-state issue. Without this case (and case 6), a classifier that
-# fires on every failure would pass this suite just as well as a correct one.
-run_stub smoke "TypeError: cannot read property of undefined" 1
-assert_contains 4 "smoke step claude exited"
-assert_not_contains 4 "API account state"
-assert_exit_nonzero 4
-
-echo "=== case 5: plugin-load / insufficient credit ==="
-run_stub plugin "Credit balance is too low" 1
-assert_contains 5 "API account state: insufficient credit"
-assert_exit_nonzero 5
-
-echo "=== case 6: plugin-load / unrelated failure — NEGATIVE CONTROL ==="
-# Discriminating negative control (plugin-load side): same rationale as case
-# 4 — proves the generic "plugin-load step claude exited" ladder still fires
-# unmodified for a non-account failure, and no account-state marker leaks in.
-run_stub plugin "TypeError: cannot read property of undefined" 1
-assert_contains 6 "plugin-load step claude exited"
-assert_not_contains 6 "API account state"
-assert_exit_nonzero 6
-
-echo "=== case 7: plugin-load / invalid or revoked API key ==="
-# Coverage symmetry with the smoke ladder. The rung condition is byte-identical
-# between the two ladders and classify_account_state is shared, so this is
-# defence-in-depth rather than a distinct code path — but it is near-free, and
-# it means "every classification is proven at every rung" needs no caveat.
-run_stub plugin "Invalid API key · Please run /login" 1
-assert_contains 7 "API account state: invalid or revoked API key"
-assert_exit_nonzero 7
-
-echo "=== case 8: plugin-load / rate limited ==="
-run_stub plugin "rate_limit_error: too many requests" 1
-assert_contains 8 "API account state: rate limited"
-assert_exit_nonzero 8
-
-echo "=== case 9: smoke / exit 0 but wrong output — GUARD REGRESSION CONTROL ==="
-# The only case with STUB_EXIT=0. Exercises the `grep -qx "ok"` assertion rung
-# that sits directly BELOW the new account-state rung, and therefore pins the
-# `$SMOKE_EXIT != 0` guard on that new rung.
-#
-# Why this matters: the account-state rung was inserted above a rung that
-# assumes a zero exit never reaches it. If a future edit drops or reorders that
-# guard, a successful-but-wrong response would be diverted into the
-# account-state path and reported as an API account problem. Without this case
-# the suite would still report green, because every other case forces a
-# non-zero exit and can never reach this rung.
-#
-# The stub text deliberately CONTAINS an account-state phrase ("rate limit")
-# while exiting 0. That is what makes this case discriminating rather than
-# decorative: a neutral string would match no classifier pattern, so dropping
-# the guard would change nothing and the case would pass either way. With this
-# text, removing the `$SMOKE_EXIT != 0` guard makes classify_account_state
-# match and the assert_not_contains below fails — verified by mutation.
-run_stub smoke "I cannot comply; see the rate limit guidance in the docs" 0
-assert_contains 9 "smoke step did not produce expected response"
-assert_not_contains 9 "API account state"
-assert_exit_nonzero 9
+  echo "=== case $CASE_ID: $label ==="
+  run_stub "$target" "$text" "$exit_code"
+  assert_contains "$CASE_ID" "$expected"
+  if [ -n "$forbid" ]; then
+    assert_not_contains "$CASE_ID" "$forbid"
+  fi
+  assert_exit_nonzero "$CASE_ID"
+done
 
 echo "---"
 echo "assertions passed: $PASS, failed: $FAILED"
