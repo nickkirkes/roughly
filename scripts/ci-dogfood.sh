@@ -20,6 +20,86 @@ else
   exit 1
 fi
 
+# Classify a failure message into a known account-state category.
+# Echoes a classification string and returns 0 when $1 matches a known
+# account-state failure; returns 1 (no output) otherwise. Never calls exit —
+# callers own control flow. Matching is case-insensitive via grep -qiE against
+# `printf '%s\n' "$1"`, matching this file's existing grep-based idiom rather
+# than `[[ =~ ]]`.
+classify_account_state() {
+  local msg
+  msg="$1"
+
+  # observed — the 2026-07-18 dogfood run; quoted in docs/runbooks/dogfood-ci.md
+  # under "## Cost" (and again under "## Risk 3 consecutive-green accounting").
+  # Section anchors, not line numbers: this script and that runbook are edited
+  # together, so an absolute line cite goes stale within a single change-set.
+  if printf '%s\n' "$msg" | grep -qiE 'credit balance is too low|insufficient credit'; then
+    echo "insufficient credit"
+    return 0
+  fi
+
+  # MIXED provenance — labelled per pattern, not per classification, because
+  # this group's three patterns do not share an evidence basis:
+  #   `invalid api key`, `not logged in`  — observed; live-asserted at
+  #       .github/workflows/dogfood.yml:71. This pair does not distinguish a
+  #       malformed key from a revoked one.
+  #   `authentication_error`              — inferred from the documented
+  #       Anthropic API error taxonomy; no captured sample exists in this repo.
+  # Do not collapse these back into a single "observed" label: an inferred
+  # pattern grouped under an observed one is the exact laundering this repo's
+  # verified-tag-provenance pitfall exists to prevent.
+  if printf '%s\n' "$msg" | grep -qiE 'invalid api key|not logged in|authentication_error'; then
+    echo "invalid or revoked API key"
+    return 0
+  fi
+
+  # inferred — no captured sample exists in this repo; patterns written from
+  # the documented Anthropic API error taxonomy, not from an observed harness
+  # failure.
+  if printf '%s\n' "$msg" | grep -qiE 'rate limit|rate_limit_error|too many requests'; then
+    echo "rate limited"
+    return 0
+  fi
+
+  return 1
+}
+
+# Account-state rung: fires only when $1 (the captured exit code) is neither
+# 0 nor 124 AND $2 (the captured output) matches a known account-state
+# pattern via classify_account_state (insufficient credit, invalid/revoked
+# key, rate limit). Pass by value — takes the exit code and output as
+# positional arguments, not variable names; no `${!var}` indirection or
+# `eval`. Calling classify_account_state as the last element of the `&&`
+# chain in the `if` condition is errexit-exempt — the intended convention
+# per its own doc comment (this file, ~L25) — so a non-matching failure
+# returns normally and this function returns 1 (no output), letting the
+# caller's generic non-zero rung handle it untouched.
+#
+# Scope constraint: the "no Roughly pipeline behavior was exercised" message
+# below is true ONLY for ladders that run BEFORE any pipeline scenario has
+# started — i.e. the smoke and plugin-load steps below. Do NOT reuse this
+# helper inside any of the 6 paid scenario ladders without parameterising
+# that message — there, a scenario has already run by the time a failure
+# could occur, so the claim would be false.
+#
+# `exit 1` (not `return`) is deliberate: invoked in the same shell (never a
+# subshell or command substitution), so it correctly terminates the script.
+# Do not convert this to a `return` that callers must re-check — that would
+# just move the duplication back to the call sites.
+account_state_rung() {
+  local exit_code="$1"
+  local out="$2"
+  local account_state
+  if [ "$exit_code" != 0 ] && [ "$exit_code" != 124 ] && account_state="$(classify_account_state "$out")"; then
+    echo "ci-dogfood: FAIL — API account state: $account_state" >&2
+    echo "ci-dogfood: no Roughly pipeline behavior was exercised — no scenario had run when this failed, so a pipeline regression is unlikely; re-running will reproduce it while the account remains in this state" >&2
+    echo "ci-dogfood: NOTE — the classification above is a substring match on the captured output below, not a verdict. If the account is known-good, treat this as a possible misclassification and read the output." >&2
+    printf '%s\n' "$out" | sed 's/^/    /' >&2
+    exit 1
+  fi
+}
+
 # Guard: ANTHROPIC_API_KEY must be set (the ${VAR:-} form is required because `set -u` is active above).
 if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
   echo "ci-dogfood: FAIL — ANTHROPIC_API_KEY not set or empty (configure in GitHub Settings → Secrets and variables → Actions, or export for local repro)" >&2
@@ -79,6 +159,8 @@ if [ "$SMOKE_EXIT" = 124 ]; then
   printf '%s\n' "$SMOKE_OUT" | sed 's/^/    /' >&2
   exit 1
 fi
+# Account-state rung: see account_state_rung's doc comment (this file, ~L68).
+account_state_rung "$SMOKE_EXIT" "$SMOKE_OUT"
 if [ "$SMOKE_EXIT" != 0 ]; then
   echo "ci-dogfood: FAIL — smoke step claude exited $SMOKE_EXIT" >&2
   printf '%s\n' "$SMOKE_OUT" | sed 's/^/    /' >&2
@@ -110,6 +192,8 @@ if [ "$PLUGIN_EXIT" = 124 ]; then
   printf '%s\n' "$PLUGIN_OUT" | sed 's/^/    /' >&2
   exit 1
 fi
+# Account-state rung: see account_state_rung's doc comment (this file, ~L68).
+account_state_rung "$PLUGIN_EXIT" "$PLUGIN_OUT"
 if [ "$PLUGIN_EXIT" != 0 ]; then
   echo "ci-dogfood: FAIL — plugin-load step claude exited $PLUGIN_EXIT" >&2
   printf '%s\n' "$PLUGIN_OUT" | sed 's/^/    /' >&2
